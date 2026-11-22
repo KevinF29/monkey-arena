@@ -383,6 +383,11 @@ function hurt(f, dmg, st, kind){
 }
 function heal(f, v){ if(v>0 && f.hp<f.maxHp) f.hp = Math.min(f.maxHp, f.hp+v); }
 function strike(att, tgt, st, rnd){
+  const n0 = st.events.length;
+  strikeInner(att, tgt, st, rnd);
+  for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1;
+}
+function strikeInner(att, tgt, st, rnd){
   if(rnd() < Math.min(0.6, tgt.dodge)){ st.events.push({side:tgt.side, txt:'Esquive', kind:'miss'}); return; }
   let d = att.atk*(0.9 + rnd()*0.2);
   if(att.berserk) d *= 1 + att.berserk*(1 - att.hp/att.maxHp);
@@ -833,6 +838,11 @@ function buildParts(img){
   x.fillStyle = `rgb(${px[0]},${px[1]},${px[2]})`;
   x.beginPath(); x.moveTo(56,190); x.lineTo(80,186); x.lineTo(82,346); x.lineTo(54,346); x.closePath(); x.fill();
   out.torso = t;
+  const reg = probe.getImageData(140,215,50,100).data; let n=0, sk=[0,0,0];
+  for(let i=0;i<reg.length;i+=4){ const r=reg[i],g=reg[i+1],b=reg[i+2]; if(reg[i+3]>200 && r>170 && r>b+40 && g>100){ sk[0]+=r; sk[1]+=g; sk[2]+=b; n++; } }
+  sk = n ? sk.map(v=>Math.round(v/n)) : [232,170,130];
+  out.skin = `rgb(${sk[0]},${sk[1]},${sk[2]})`;
+  out.skinDark = `rgb(${Math.round(sk[0]*.72)},${Math.round(sk[1]*.68)},${Math.round(sk[2]*.66)})`;
   return out;
 }
 
@@ -858,7 +868,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // arme : les armes d'hast passent derrière le corps, la main reste devant
   const polearm = ['trident','lance'].includes(L.weapon);
   const weapon = ()=>{
-    c.save(); c.translate(66,-190); c.rotate(P.wpn);
+    c.save(); c.translate(72,-185); c.rotate(P.wpn);
     c.imageSmoothingEnabled = false; blitPix(c, G.weapon, WPN_BOX, flash); c.imageSmoothingEnabled = true;
     drawWeaponImg(c, L.weapon||'gladius', flash);
     c.restore();
@@ -906,8 +916,24 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   at(PIV.armF, P.armF, ()=>{
     img(PT.armF);
     if(!polearm) weapon();
+    c.imageSmoothingEnabled = false; blitPix(c, getFist(S.parts), FIST_BOX, flash); c.imageSmoothingEnabled = true;
   });
   c.restore();
+}
+
+
+/* --- poing fermé autour du manche --- */
+const FIST_BOX = {x:36, y:-226, w:72, h:80};
+const FIST_CACHE = {};
+function getFist(PT){
+  const key = PT.skin;
+  if(!FIST_CACHE[key]) FIST_CACHE[key] = pixelize(FIST_BOX, c=>{
+    c.fillStyle = PT.skin; rr(c,54,-205,38,42,12);
+    c.beginPath(); c.ellipse(80,-206,13,8,-0.3,0,7); c.fill();
+    c.strokeStyle = PT.skinDark; c.lineWidth = 5;
+    c.beginPath(); for(const yy of [-194,-183,-172]){ c.moveTo(74,yy); c.lineTo(91,yy); } c.stroke();
+  });
+  return FIST_CACHE[key];
 }
 
 /* --- poses --- */
@@ -1021,7 +1047,7 @@ function showIntro(){
 function prepareFight(){
   const e = makeEnemy(N, BOSSES);
   ST = newFight(P, e); floats = []; lastLog = [];
-  VIS = {a:newVis(), b:newVis()}; parts = []; shake = 0; freeze = 0; timeScale = 1; zoom = null; endT = 0;
+  VIS = {a:newVis(), b:newVis()}; PEND = []; parts = []; shake = 0; freeze = 0; timeScale = 1; zoom = null; endT = 0;
   lookA = computeLook(ST.a); lookB = ST.b.beast ? null : computeLook(ST.b);
   const a = actOf(N);
   $('actLabel').textContent = `Acte ${ROMAN[a]} — ${ACT_NAMES[a]}`;
@@ -1044,12 +1070,13 @@ function updateBars(){
     $('eN').innerHTML = (b.emperor ? icImg('laurel')+' ' : b.boss ? icImg('skull')+' ' : '') + b.name;
     $('eBox').classList.toggle('boss', !!b.boss);
   }
-  const pa = Math.max(0,a.hp/a.maxHp*100), pb = Math.max(0,b.hp/b.maxHp*100);
+  const ha = shownHp('a'), hb = shownHp('b');
+  const pa = Math.max(0,ha/a.maxHp*100), pb = Math.max(0,hb/b.maxHp*100);
   $('pBar').style.width = pa+'%'; $('pTr').style.width = pa+'%';
   $('eBar').style.width = pb+'%'; $('eTr').style.width = pb+'%';
   $('pBox').classList.toggle('low', pa>0 && pa<30);
-  $('pHp').textContent = `${Math.max(0,Math.ceil(a.hp))} / ${a.maxHp} PV`;
-  $('eHp').textContent = `${Math.max(0,Math.ceil(b.hp))} / ${b.maxHp} PV`;
+  $('pHp').textContent = `${Math.ceil(ha)} / ${a.maxHp} PV`;
+  $('eHp').textContent = `${Math.ceil(hb)} / ${b.maxHp} PV`;
 }
 function renderChips(){
   const html = P.augs.length ? P.augs.map(id=>{const g=AUGS.find(x=>x.id===id);return `<span class="chip" style="--rc:${RAR[g.r].c}">${augArt(g,true)}${g.n}</span>`}).join('') : '<span class="chip empty">Aucun augment</span>';
@@ -1301,8 +1328,12 @@ function drawArena(){
     ctx.restore();
   }
 }
+let PEND = [];
+const IMPACT = ATK_T*0.5;
+function pendDmg(side){ let d=0; for(const p of PEND){ const e=p.ev; if(e.side===side && (e.kind==='hit'||e.kind==='crit'||e.kind==='thorns')) d += +String(e.txt).replace('!','')||0; } return d; }
+function shownHp(side){ const f=ST[side]; return Math.max(0, Math.min(f.maxHp, f.hp + pendDmg(side))); }
 let VIS = {a:null, b:null}, parts = [], shake = 0, freeze = 0, timeScale = 1, zoom = null, endT = 0;
-const newVis = ()=>({atk:0, hit:0, dodge:0, kb:1, die:0, win:0});
+const newVis = ()=>({atk:0, hit:0, dodge:0, kb:1, die:0, win:0, flash:0});
 function drawFighter(f, side){
   const p = POS[side], dir = side==='a'?1:-1, v = VIS[side] || newVis();
   const t = perfT + (side==='b'?1.3:0);
@@ -1310,12 +1341,12 @@ function drawFighter(f, side){
   if(f.beast || !(side==='a'?lookA:lookB).sprite || !SPR[(side==='a'?lookA:lookB).sprite]){
     const anim = v.atk>0 ? v.atk/ATK_T*0.22 : 0;
     const off = (v.hit>0 ? -14*v.kb*v.hit/HIT_T : 0) + (v.dodge>0 ? -40*Math.sin((1-v.dodge/DODGE_T)*Math.PI) : 0);
-    const st = {anim, flash:f.flash, dead:f.hp<=0, scale, t};
+    const st = {anim, flash:v.flash, dead:shownHp(side)<=0, scale, t};
     if(f.beast) drawBeast(ctx, p.x + dir*off, p.y, dir, f.beast, Object.assign({}, st, {scale:1.2}));
     else drawGlad(ctx, p.x + dir*off, p.y, dir, side==='a'?lookA:lookB, st);
     return;
   }
-  drawGlad(ctx, p.x, p.y, dir, side==='a'?lookA:lookB, {flash:f.flash, scale, t, pose: poseOf(v, t)});
+  drawGlad(ctx, p.x, p.y, dir, side==='a'?lookA:lookB, {flash:v.flash, scale, t, pose: poseOf(v, t)});
 }
 function burst(side, kind, n){
   const p = POS[side], dir = side==='a'?1:-1;
@@ -1371,8 +1402,9 @@ function loop(ts){
   if(freeze > 0) freeze -= dtReal;
   const dt = freeze > 0 ? 0 : dtReal*speed*timeScale;
   if(!ST.over){ let rem = dt; while(rem>0){ const s=Math.min(0.02,rem); step(ST,s); rem-=s; } }
-  for(const ev of ST.events){
+  const handle = (ev)=>{
     spawnFloat(ev); if(ev.log) addLog(ev.log);
+    if(['hit','crit','thorns','poison'].includes(ev.kind)) VIS[ev.side].flash = 0.18;
     const v = VIS[ev.side], other = ev.side==='a'?'b':'a';
     if(ev.kind==='swing') v.atk = ATK_T;
     if(ev.kind==='hit' || ev.kind==='crit'){
@@ -1386,15 +1418,23 @@ function loop(ts){
     if(ev.kind==='thorns') burst(ev.side, 'spark', 4);
     if(ev.kind==='poison') burst(ev.side, 'poison', 3);
     if(ev.kind==='miss'){ v.dodge = DODGE_T; burst(ev.side, 'sand', 6); }
+  };
+  for(const ev of ST.events){
+    if(ev.kind==='swing') VIS[ev.side].atk = ATK_T;
+    else if(ev.strike) PEND.push({ev, t:IMPACT});
+    else handle(ev);
   }
   ST.events.length = 0;
-  for(const sd of ['a','b']){ const v = VIS[sd]; for(const k of ['atk','hit','dodge']) if(v[k]>0) v[k] = Math.max(0, v[k]-dt); }
+  for(const p of PEND) p.t -= dt;
+  const ready = PEND.filter(p=>p.t<=0); PEND = PEND.filter(p=>p.t>0);
+  for(const p of ready) handle(p.ev);
+  for(const sd of ['a','b']){ const v = VIS[sd]; for(const k of ['atk','hit','dodge']) if(v[k]>0) v[k] = Math.max(0, v[k]-dt); if(v.flash>0) v.flash = Math.max(0, v.flash - (freeze>0 ? 0 : dtReal*Math.max(speed*timeScale,0.5))); }
   for(const f of floats){ f.y -= 40*dtReal; f.life -= dtReal; }
   floats = floats.filter(f=>f.life>0);
   crowd = Math.max(0.3, crowd - dtReal*0.8);
   shake *= Math.pow(0.0005, dtReal);
   lastDrawDt = freeze > 0 ? 0 : dtReal*Math.max(timeScale,0.3);
-  if(ST.over){
+  if(ST.over && PEND.length===0){
     const loser = ST.winner==='a' ? 'b' : 'a';
     if(!endT){
       endT = 1.9; timeScale = 0.3; shake = 10; crowd = 1.6; freeze = 0.12;
@@ -1403,7 +1443,6 @@ function loop(ts){
       VIS[ST.winner].atk = 0;
     }
     endT -= dtReal;
-    for(const f of [ST.a, ST.b]) if(f.flash>0) f.flash -= dtReal*Math.max(timeScale,0.5);
     VIS[loser].die += dtReal * (endT > 1.3 ? 0.6 : 1.6);
     if(endT < 1.3){ timeScale = 1; VIS[ST.winner].win = 1; }
     zoom.z = 1 + 0.1*Math.min(1, (1.9-endT)/0.4) * (endT < 0.5 ? endT/0.5 : 1);
