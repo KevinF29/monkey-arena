@@ -624,7 +624,7 @@ function loadSprites(cb){
 
 
 /* --- objets dessinés (assets/items) --- */
-const ITEM_FILES = ['gladius','glaive','champion','dague','hache','trident','lance','fouet','bouclier-bois','bouclier-pointes','egide','casque','plastron','jambieres','manica','peau-lion','filet'];
+const ITEM_FILES = ['gladius','glaive','champion','dague','hache','trident','lance','fouet','bouclier-bois','bouclier-pointes','egide','casque','plastron','jambieres','manica','peau-lion','filet','laurier','echarpe','crane'];
 const IMG = {};
 // armes : longueur (unités du sprite) + point de prise (fraction pommeau → pointe)
 const WEAPON_IMG = {
@@ -642,7 +642,10 @@ const WEAR = {
   'bouclier-pointes':{cx:-40, cy:-245, h:205},
   egide:{cx:-46, cy:-245, h:205},
   casque:{x:-100, y:-532, w:188},
-  'peau-lion':{x:-160, y:-530, w:268}
+  'peau-lion':{x:-160, y:-530, w:268},
+  laurier:{cx:6, cy:-442, w:150},
+  echarpe:{x:-74, y:-350, h:190},
+  crane:{x:-4, y:-240, h:78}
 };
 function loadItems(cb){
   let left = ITEM_FILES.length;
@@ -699,8 +702,8 @@ function gearFront(c, L){
   if(L.chest && !hasImg('plastron')){ c.fillStyle='#c8923a'; rr(c,-80,-350,132,108,22);
     c.strokeStyle='#7a4a16'; c.lineWidth=7; c.beginPath(); c.moveTo(-50,-315); c.quadraticCurveTo(-14,-280,22,-315); c.moveTo(-14,-345); c.lineTo(-14,-252); c.stroke();
     c.fillStyle='#f0c040'; circ(c,-60,-330,8); circ(c,32,-330,8); }
-  if(L.emperor){ c.strokeStyle='#f0c040'; c.lineWidth=20; c.beginPath(); c.moveTo(-72,-338); c.lineTo(46,-240); c.stroke(); }
-  if(L.skull){ c.fillStyle='#ece4d4'; circ(c,-55,-215,15); c.fillStyle='#22120a'; circ(c,-61,-217,4.5); circ(c,-49,-217,4.5); }
+  if(L.emperor && !hasImg('echarpe')){ c.strokeStyle='#f0c040'; c.lineWidth=20; c.beginPath(); c.moveTo(-72,-338); c.lineTo(46,-240); c.stroke(); }
+  if(L.skull && !hasImg('crane')){ c.fillStyle='#ece4d4'; circ(c,-55,-215,15); c.fillStyle='#22120a'; circ(c,-61,-217,4.5); circ(c,-49,-217,4.5); }
   if(L.lion && !hasImg('peau-lion')){ c.fillStyle='#c8962e'; c.beginPath(); c.ellipse(30,-318,42,16,0.35,0,7); c.fill(); }
   if(L.manica && !hasImg('manica')){ c.fillStyle=steel; rr(c,38,-292,44,80,14);
     c.strokeStyle=dark; c.lineWidth=6; c.beginPath(); for(let yy=-276; yy<-215; yy+=18){ c.moveTo(40,yy); c.lineTo(80,yy);} c.stroke(); }
@@ -743,7 +746,7 @@ function gearFront(c, L){
   }
 }
 function gearHead(c, L){
-  if(!L.emperor) return;
+  if(!L.emperor || hasImg('laurier')) return;
   c.fillStyle='#f0c040';
   for(let i=0;i<9;i++){ const a=Math.PI*(1.02+i*0.12); c.beginPath(); c.ellipse(8+Math.cos(a)*66,-420+Math.sin(a)*66,20,10,a+Math.PI/2,0,7); c.fill(); }
 }
@@ -858,12 +861,15 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // torse
   img(PT.torso);
   if(L.chest) wear(c,'plastron',flash);
+  if(L.skull) wear(c,'crane',flash);
+  if(L.emperor) wear(c,'echarpe',flash);
   c.imageSmoothingEnabled = false; blitPix(c, G.front, GEAR_BOX, flash); c.imageSmoothingEnabled = true;
   // tête
   at(PIV.head, P.head, ()=>{
     img(PT.head);
     if(L.lion){ c.save(); c.beginPath(); c.rect(-300,-620,600,280); c.rect(-15,-345,200,120); c.clip(); wear(c,'peau-lion',flash); c.restore(); }
     else if(L.helmet) wear(c,'casque',flash);
+    if(L.emperor) wear(c,'laurier',flash);
     c.imageSmoothingEnabled = false; blitPix(c, G.head, GEAR_BOX, flash); c.imageSmoothingEnabled = true;
   });
   // bras arrière + bouclier / filet
