@@ -916,7 +916,10 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   at(PIV.armF, P.armF, ()=>{
     img(PT.armF);
     if(!polearm) weapon();
+    // poing incliné dans l'axe de l'arme (45°) et qui suit sa rotation
+    c.save(); c.translate(72,-185); c.rotate(P.wpn + Math.PI/4); c.translate(-73,184);
     c.imageSmoothingEnabled = false; blitPix(c, getFist(S.parts), FIST_BOX, flash); c.imageSmoothingEnabled = true;
+    c.restore();
   });
   c.restore();
 }
