@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monkey Arena — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1410; --panel:#241c16; --panel2:#2e241c; --line:#4a3a2c;
+  --sand:#d9b77e; --gold:#e8b04a; --txt:#f3e9da; --mute:#b09f8a;
+  --red:#e0533d; --green:#5cc26b; --blue:#4aa3ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;min-height:100%}
+body{display:flex;justify-content:center;padding:12px}
+#app{width:100%;max-width:620px}
+h1,h2,h3{font-family:Cinzel,serif;letter-spacing:.04em}
+h1{font-size:30px;text-align:center;color:var(--gold);margin:8px 0 2px}
+.sub{text-align:center;color:var(--mute);font-size:14px;margin-bottom:16px}
+.screen{display:none}
+.screen.on{display:block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--gold);color:#2a1a08;border:none;border-radius:10px;padding:13px 18px;font-weight:700;font-size:16px;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+.btn.small{padding:7px 11px;font-size:13px}
+.btn.wide{width:100%}
+.cards{display:grid;gap:10px}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s, transform .1s}
+.card:hover{border-color:var(--gold)}
+.card.sel{border-color:var(--gold);background:var(--panel2)}
+.card .row{display:flex;gap:12px;align-items:center}
+.card h3{font-size:17px}
+.card p{color:var(--mute);font-size:13.5px;margin-top:4px;line-height:1.4}
+.tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:6px;margin-right:6px}
+.statline{font-size:12px;color:var(--txt);margin-top:6px;opacity:.85}
+label{font-size:13px;color:var(--mute)}
+input[type=text]{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;font-size:16px;font-family:inherit;margin:6px 0 14px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+.act{font-family:Cinzel,serif;color:var(--gold);font-size:15px}
+.pips{display:flex;gap:4px;margin:6px 0 10px;flex-wrap:wrap}
+.pip{width:22px;height:8px;border-radius:4px;background:var(--line)}
+.pip.done{background:var(--gold)}
+.pip.cur{background:var(--txt)}
+.pip.boss{outline:1px solid var(--red)}
+.fighters{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}
+.fbox{flex:1}
+.fbox.r{text-align:right}
+.fname{font-weight:700;font-size:14px}
+.bar{height:10px;background:#120d0a;border-radius:5px;overflow:hidden;margin-top:4px;border:1px solid var(--line)}
+.bar>div{height:100%;background:var(--green);transition:width .12s}
+.fbox.r .bar>div{background:var(--red);margin-left:auto}
+.hpnum{font-size:11px;color:var(--mute);margin-top:2px}
+canvas{width:100%;display:block;border-radius:14px;border:1px solid var(--line);background:#3a2a1c}
+.controls{display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap}
+.log{font-size:12.5px;color:var(--mute);margin-top:10px;min-height:54px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.chip{font-size:11.5px;padding:3px 8px;border-radius:999px;background:var(--panel2);border:1px solid var(--line)}
+.center{text-align:center}
+.big{font-size:56px;line-height:1;margin:18px 0 6px}
+.statsgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:13px;margin:12px 0}
+.statsgrid b{color:var(--gold);float:right}
+.typeic{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.note{font-size:12px;color:var(--mute);margin-top:14px;text-align:center;line-height:1.5}
+.portrait{width:56px;height:56px;flex:none}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- START -->
+  <section id="s-start" class="screen on">
+    <h1>Monkey Arena</h1>
+    <div class="sub">Gagne ta liberté par le sang et l'acier.<br>3 actes · 30 combats · l'Empereur.</div>
+    <label for="pname">Nom de ton gladiateur (mets le nom d'un pote !)</label>
+    <input id="pname" type="text" maxlength="18" placeholder="Maximus">
+    <div class="cards" id="classList"></div>
+    <div style="margin-top:14px"><button class="btn wide" id="btnStart">Entrer dans l'arène</button></div>
+    <div class="note">Prototype : les combats sont automatiques. Après chaque victoire, choisis 1 augment parmi 3 (arme, armure, aptitude).</div>
+  </section>
+
+  <!-- FIGHT -->
+  <section id="s-fight" class="screen">
+    <div class="topbar">
+      <div class="act" id="actLabel">Acte I</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn ghost small" id="btnStats">Stats</button>
+        <button class="btn ghost small" id="btnSpeed">Vitesse ×1</button>
+      </div>
+    </div>
+    <div class="pips" id="pips"></div>
+    <div class="fighters">
+      <div class="fbox"><div class="fname" id="pN">—</div><div class="bar"><div id="pBar"></div></div><div class="hpnum" id="pHp"></div></div>
+      <div class="fbox r"><div class="fname" id="eN">—</div><div class="bar"><div id="eBar"></div></div><div class="hpnum" id="eHp"></div></div>
+    </div>
+    <canvas id="cv" width="600" height="330"></canvas>
+    <div class="log" id="log"></div>
+    <div id="preFight" class="controls"><button class="btn wide" id="btnFight">Combattre !</button></div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <!-- REWARD -->
+  <section id="s-reward" class="screen">
+    <h2 class="center" style="color:var(--gold);margin-top:6px">Victoire !</h2>
+    <div class="sub" id="rewardSub">La foule t'acclame. Choisis ta récompense.</div>
+    <div class="cards" id="rewardList"></div>
+  </section>
+
+  <!-- STATS overlay screen -->
+  <section id="s-stats" class="screen">
+    <h2 class="center" style="color:var(--gold)">Ton gladiateur</h2>
+    <div class="statsgrid" id="statsGrid"></div>
+    <h3 style="font-size:15px;margin-top:6px">Augments</h3>
+    <div class="chips" id="chips2"></div>
+    <div style="margin-top:16px"><button class="btn wide" id="btnBack">Retour</button></div>
+  </section>
+
+  <!-- END -->
+  <section id="s-end" class="screen center">
+    <div class="big" id="endIcon">⚔️</div>
+    <h1 id="endTitle">Mort dans l'arène</h1>
+    <div class="sub" id="endSub"></div>
+    <div class="statsgrid" id="endStats" style="text-align:left"></div>
+    <button class="btn wide" id="btnRestart">Nouvelle run</button>
+  </section>
+</div>
+
+<script>
+//LOGIC-START
+const RAR = {
+  C:{n:'Commun',c:'#9aa4ad'},
+  R:{n:'Rare',c:'#4aa3ff'},
+  L:{n:'Légendaire',c:'#ffb02e'}
+};
+const TYPES = {
+  arme:{n:'Arme',ic:'🗡️',c:'#7a2f22'},
+  armure:{n:'Armure',ic:'🛡️',c:'#2d4a6b'},
+  aptitude:{n:'Aptitude',ic:'✨',c:'#4b3470'}
+};
+
+const CLASSES = [
+  {id:'colosse', name:'Le Colosse', def:'Maximus', color:'#b5523b', desc:'Encaisse tout. Réduit les dégâts subis de 10 %.',
+   stats:{maxHp:150, atk:9, def:3, spd:0.8, dr:0.10}},
+  {id:'renard', name:'Le Renard', def:'Lucius', color:'#3b8fb5', desc:'Rapide et insaisissable. 12 % d\'esquive, 12 % de critique.',
+   stats:{maxHp:100, atk:9, def:1, spd:1.2, dodge:0.12, crit:0.12}},
+  {id:'fou', name:'Le Fou', def:'Brutus', color:'#6fa53b', desc:'Plus il saigne, plus il frappe fort. Vol de vie 5 %.',
+   stats:{maxHp:115, atk:12, def:1, spd:1.0, lifesteal:0.05, berserk:0.4}}
+];
+
+const AUGS = [
+  // ARMES
+  {id:'glaive', t:'arme', r:'C', n:'Glaive rouillé', d:'+4 attaque', a:p=>{p.atk+=4}},
+  {id:'trident', t:'arme', r:'C', n:'Trident', d:'+3 attaque, +5 % critique', a:p=>{p.atk+=3;p.crit+=.05}},
+  {id:'fouet', t:'arme', r:'C', n:'Fouet', d:'+15 % vitesse d\'attaque', a:p=>{p.spd*=1.15}},
+  {id:'gladius', t:'arme', r:'R', n:'Gladius aiguisé', d:'+8 attaque', a:p=>{p.atk+=8}},
+  {id:'hache', t:'arme', r:'R', n:'Hache de guerre', d:'+12 attaque, −10 % vitesse', a:p=>{p.atk+=12;p.spd*=.9}},
+  {id:'dague', t:'arme', r:'R', n:'Dague empoisonnée', d:'Chaque coup empoisonne (+2 poison/s, cumulable)', a:p=>{p.poison+=2}},
+  {id:'filet', t:'arme', r:'R', n:'Filet de rétiaire', d:'L\'ennemi attaque 15 % moins vite', a:p=>{p.slow+=.15}},
+  {id:'hydre', t:'arme', r:'L', n:'Lance de l\'Hydre', d:'35 % de chance de frapper deux fois', a:p=>{p.doubleHit+=.35}, u:1},
+  {id:'champion', t:'arme', r:'L', n:'Épée du Champion', d:'+16 attaque, +10 % critique', a:p=>{p.atk+=16;p.crit+=.10}, u:1},
+  // ARMURES
+  {id:'boisb', t:'armure', r:'C', n:'Bouclier en bois', d:'+2 défense', a:p=>{p.def+=2}},
+  {id:'jamb', t:'armure', r:'C', n:'Jambières', d:'+25 PV max', a:p=>{p.maxHp+=25;p.hp+=25}},
+  {id:'casque', t:'armure', r:'C', n:'Casque de mirmillon', d:'+1 défense, +15 PV max', a:p=>{p.def+=1;p.maxHp+=15;p.hp+=15}},
+  {id:'plastron', t:'armure', r:'R', n:'Plastron de bronze', d:'+4 défense', a:p=>{p.def+=4}},
+  {id:'pointes', t:'armure', r:'R', n:'Bouclier à pointes', d:'Renvoie 5 dégâts à chaque coup reçu', a:p=>{p.thorns+=5}},
+  {id:'manica', t:'armure', r:'R', n:'Manica', d:'+8 % esquive, +10 PV max', a:p=>{p.dodge+=.08;p.maxHp+=10;p.hp+=10}},
+  {id:'lion', t:'armure', r:'L', n:'Peau du lion de Némée', d:'+70 PV max, +2 PV/s', a:p=>{p.maxHp+=70;p.hp+=70;p.regen+=2}, u:1},
+  {id:'egide', t:'armure', r:'L', n:'Égide', d:'+7 défense, +6 % esquive', a:p=>{p.def+=7;p.dodge+=.06}, u:1},
+  // APTITUDES
+  {id:'souffle', t:'aptitude', r:'C', n:'Second souffle', d:'+1 PV/s pendant le combat', a:p=>{p.regen+=1}},
+  {id:'rage', t:'aptitude', r:'C', n:'Rage', d:'+8 % critique', a:p=>{p.crit+=.08}},
+  {id:'agile', t:'aptitude', r:'C', n:'Jeu de jambes', d:'+5 % esquive', a:p=>{p.dodge+=.05}},
+  {id:'sang', t:'aptitude', r:'R', n:'Soif de sang', d:'+8 % vol de vie', a:p=>{p.lifesteal+=.08}},
+  {id:'frenesie', t:'aptitude', r:'R', n:'Frénésie', d:'+25 % vitesse d\'attaque', a:p=>{p.spd*=1.25}},
+  {id:'brutal', t:'aptitude', r:'R', n:'Coups brutaux', d:'Critiques +60 % de dégâts', a:p=>{p.critMult+=.6}},
+  {id:'foule', t:'aptitude', r:'R', n:'Ferveur de la foule', d:'+20 % de soin après chaque victoire', a:p=>{p.postHeal+=.2}},
+  {id:'rempart', t:'aptitude', r:'L', n:'Dernier rempart', d:'1 fois par combat : survit à un coup fatal et récupère 30 % PV', a:p=>{p.undying=1}, u:1},
+  {id:'berserk', t:'aptitude', r:'L', n:'Berserker', d:'Jusqu\'à +60 % de dégâts selon les PV manquants', a:p=>{p.berserk+=.6}, u:1},
+  {id:'exec', t:'aptitude', r:'L', n:'Exécution', d:'Dégâts ×2 contre un ennemi sous 25 % PV', a:p=>{p.execute=1}, u:1}
+];
+
+const ACTS = [
+  {n:'Acte I — Les Fosses de Capoue', w:{C:70,R:27,L:3}},
+  {n:'Acte II — L\'Amphithéâtre de Pompéi', w:{C:45,R:45,L:10}},
+  {n:'Acte III — Le Colisée de Rome', w:{C:25,R:50,L:25}}
+];
+const ENEMY_NAMES = ['Esclave thrace','Rétiaire','Mirmillon','Secutor','Hoplomaque','Dimachère','Provocator','Bestiaire','Essédaire','Samnite','Gaulois enchaîné','Thrace vétéran'];
+const BEASTS = ['Loup des Apennins','Ours des Carpates','Lion de Numidie','Tigre d\'Hyrcanie'];
+const BOSSES = {10:{n:'Brutus le Boucher',c:'#5a1c14'}, 20:{n:'Spiculus l\'Invaincu',c:'#1c3a5a'}, 30:{n:'L\'Empereur Commode',c:'#5b2a7a',emperor:1}};
+
+function baseFighter(){
+  return {maxHp:100,hp:100,atk:10,def:0,spd:1,crit:.05,critMult:1.6,dodge:0,lifesteal:0,thorns:0,regen:0,
+    poison:0,slow:0,doubleHit:0,berserk:0,execute:0,undying:0,dr:0,postHeal:.3,augs:[]};
+}
+function makePlayer(cls,name){
+  const p = Object.assign(baseFighter(), cls.stats);
+  p.hp = p.maxHp; p.name = name || cls.def; p.cls = cls.id; p.color = cls.color; p.side='a';
+  return p;
+}
+function makeEnemy(n, rnd=Math.random){
+  const k = n-1;
+  const s = 1 + 0.14*k + 0.0065*k*k;
+  const e = baseFighter();
+  e.side='b';
+  e.maxHp = Math.round(55*s); e.atk = 6*s; e.def = Math.floor(n*0.22); e.spd = 0.85 + rnd()*0.3;
+  e.crit = 0.05 + n*0.003;
+  const boss = BOSSES[n];
+  if(boss){
+    e.name = boss.n; e.color = boss.c; e.boss = 1;
+    e.maxHp = Math.round(e.maxHp*(n===10?1.7:1.9)); e.atk *= (n===10?1.1:1.2); e.def += 2;
+    if(boss.emperor){ e.emperor=1; e.maxHp = Math.round(e.maxHp*1.3); e.atk*=1.05; e.def+=2; e.regen = 2; }
+  } else if(n%10 >= 7 && rnd()<0.35){
+    e.name = BEASTS[Math.min(BEASTS.length-1, Math.floor(k/8))];
+    e.beast = 1; e.color = '#7a5a2a'; e.spd *= 1.3; e.atk *= 0.85; e.def = Math.max(0,e.def-1);
+  } else {
+    e.name = ENEMY_NAMES[Math.floor(rnd()*ENEMY_NAMES.length)];
+    e.color = ['#6b6b6b','#7a3b2a','#3b5a6b','#5a5a3b'][Math.floor(rnd()*4)];
+  }
+  e.hp = e.maxHp;
+  return e;
+}
+function resetRuntime(f){ f.cd = 0.4 + Math.random()*0.3; f.pst = 0; f.ptick = 0; f.usedUndying = 0; f.enraged = 0; f.anim=0; f.flash=0; }
+
+function newFight(p,e){
+  resetRuntime(p); resetRuntime(e);
+  return {a:p,b:e,t:0,events:[],over:false,winner:null,lionT:0};
+}
+function hurt(f, dmg, st, kind){
+  dmg = Math.max(0, Math.round(dmg));
+  f.hp -= dmg; f.flash = 0.18;
+  st.events.push({side:f.side, txt:(kind==='crit'?dmg+'!':String(dmg)), kind});
+  if(f.hp<=0 && f.undying && !f.usedUndying){
+    f.usedUndying = 1; f.hp = Math.round(f.maxHp*0.3);
+    st.events.push({side:f.side, txt:'Dernier rempart !', kind:'special', log:`${f.name} refuse de tomber !`});
+  }
+}
+function heal(f, v, st){
+  if(v<=0 || f.hp>=f.maxHp) return;
+  f.hp = Math.min(f.maxHp, f.hp+v);
+}
+function strike(att, tgt, st, rnd){
+  if(rnd() < Math.min(0.6, tgt.dodge)){ st.events.push({side:tgt.side, txt:'Esquive', kind:'miss'}); return; }
+  let d = att.atk*(0.9 + rnd()*0.2);
+  if(att.berserk) d *= 1 + att.berserk*(1 - att.hp/att.maxHp);
+  const crit = rnd() < att.crit;
+  if(crit) d *= att.critMult;
+  if(att.execute && tgt.hp < tgt.maxHp*0.25) d *= 2;
+  d = Math.max(1, d - tgt.def) * (1 - tgt.dr);
+  hurt(tgt, d, st, crit?'crit':'hit');
+  if(att.lifesteal) heal(att, d*att.lifesteal, st);
+  if(att.poison) tgt.pst = Math.min(tgt.pst + att.poison, att.poison*6);
+  if(tgt.thorns && tgt.hp>0) hurt(att, tgt.thorns, st, 'thorns');
+}
+function effSpd(f, o){ return f.spd * (1 - Math.min(0.5, o.slow)) * (f.enraged?1.45:1); }
+function step(st, dt, rnd=Math.random){
+  if(st.over) return;
+  st.t += dt;
+  const pair = [[st.a,st.b],[st.b,st.a]];
+  for(const [f,o] of pair){
+    if(f.regen) heal(f, f.regen*dt, st);
+    if(f.pst>0){
+      f.ptick += dt;
+      if(f.ptick>=1){ f.ptick-=1; hurt(f, f.pst, st, 'poison'); f.pst = Math.max(0, f.pst-1); }
+    }
+    if(f.anim>0) f.anim -= dt;
+    if(f.flash>0) f.flash -= dt;
+  }
+  // arène : les lions sont lâchés après 45 s
+  if(st.t>45){
+    st.lionT += dt;
+    if(st.lionT>=1){ st.lionT-=1; for(const f of [st.a,st.b]) hurt(f, f.maxHp*0.03, st, 'poison');
+      if(!st.lionMsg){ st.lionMsg=1; st.events.push({side:'a',txt:'',kind:'none',log:'La foule s\'impatiente : on lâche les lions !'}); } }
+  }
+  if(st.b.emperor && !st.b.enraged && st.b.hp < st.b.maxHp*0.5){
+    st.b.enraged = 1; st.events.push({side:'b',txt:'FUREUR',kind:'special',log:'L\'Empereur entre dans une fureur divine !'});
+  }
+  for(const [f,o] of pair){
+    if(st.a.hp<=0 || st.b.hp<=0) break;
+    f.cd -= dt * effSpd(f,o);
+    if(f.cd<=0){
+      f.cd += 1; f.anim = 0.22;
+      strike(f,o,st,rnd);
+      if(f.doubleHit && o.hp>0 && rnd()<f.doubleHit) strike(f,o,st,rnd);
+    }
+  }
+  if(st.b.hp<=0){ st.over=true; st.winner='a'; st.b.hp=0; }
+  else if(st.a.hp<=0){ st.over=true; st.winner='b'; st.a.hp=0; }
+}
+function pickRarity(w, rnd){
+  const tot = w.C+w.R+w.L; let x = rnd()*tot;
+  if((x-=w.C)<0) return 'C'; if((x-=w.R)<0) return 'R'; return 'L';
+}
+function rollChoices(n, p, rnd=Math.random){
+  const act = Math.min(2, Math.floor((n-1)/10));
+  let w = Object.assign({}, ACTS[act].w);
+  if(BOSSES[n]) w = {C:0,R:60,L:40};
+  const out = [];
+  for(const t of ['arme','armure','aptitude']){
+    let r = pickRarity(w, rnd);
+    const order = r==='L'?['L','R','C']:r==='R'?['R','C']:['C','R'];
+    let pool = [];
+    for(const rr of order){
+      pool = AUGS.filter(a=>a.t===t && a.r===rr && !(a.u && p.augs.includes(a.id)));
+      if(pool.length) break;
+    }
+    out.push(pool[Math.floor(rnd()*pool.length)]);
+  }
+  return out;
+}
+function applyAug(p, aug){ aug.a(p); p.augs.push(aug.id); }
+function postWin(p){ p.hp = Math.min(p.maxHp, Math.round(p.hp + p.maxHp*p.postHeal)); p.pst=0; }
+//LOGIC-END
+
+/* ================= UI ================= */
+const $ = id => document.getElementById(id);
+let selClass = CLASSES[0];
+let P = null, N = 1, ST = null, speed = 1, running = false, floats = [], lastLog = [];
+let returnTo = 's-fight';
+
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); window.scrollTo(0,0); }
+
+function portraitSVG(color, emperor){
+  return `<svg class="portrait" viewBox="0 0 56 56"><circle cx="28" cy="28" r="27" fill="#3a2a1c"/>
+  <rect x="17" y="33" width="22" height="18" rx="5" fill="${color}"/>
+  <circle cx="28" cy="24" r="10" fill="#e0b48a"/>
+  <path d="M17 24 a11 11 0 0 1 22 0 z" fill="${emperor?'#e8b04a':'#9a9a9a'}"/>
+  <rect x="26" y="8" width="4" height="9" rx="2" fill="${color}"/></svg>`;
+}
+
+function renderClasses(){
+  $('classList').innerHTML = CLASSES.map(c=>`
+    <div class="card ${c===selClass?'sel':''}" data-id="${c.id}">
+      <div class="row">${portraitSVG(c.color)}
+        <div><h3>${c.name}</h3><p>${c.desc}</p>
+        <div class="statline">❤️ ${c.stats.maxHp} · ⚔️ ${c.stats.atk} · 🛡️ ${c.stats.def} · ⚡ ${c.stats.spd}</div></div>
+      </div></div>`).join('');
+  $('classList').querySelectorAll('.card').forEach(el=>el.onclick=()=>{
+    selClass = CLASSES.find(c=>c.id===el.dataset.id); renderClasses();
+    $('pname').placeholder = selClass.def;
+  });
+}
+
+function startRun(){
+  P = makePlayer(selClass, $('pname').value.trim());
+  N = 1; prepareFight();
+}
+
+function actOf(n){ return Math.min(2, Math.floor((n-1)/10)); }
+
+function prepareFight(){
+  const e = makeEnemy(N);
+  ST = newFight(P, e);
+  floats = []; lastLog = [];
+  const a = actOf(N);
+  $('actLabel').textContent = ACTS[a].n;
+  let pips = '';
+  for(let i=a*10+1;i<=a*10+10;i++) pips += `<div class="pip ${i<N?'done':i===N?'cur':''} ${BOSSES[i]?'boss':''}"></div>`;
+  $('pips').innerHTML = pips;
+  addLog(BOSSES[N] ? `⚠️ Combat ${N} — ${e.name} entre dans l'arène !` : `Combat ${N}/30 — face à ${e.name}.`);
+  if(N===1) addLog(`${P.name} est un esclave. Gagne 30 combats pour être libre.`);
+  $('preFight').style.display='flex';
+  $('btnFight').textContent = BOSSES[N] ? 'Affronter le champion !' : 'Combattre !';
+  if(BOSSES[N]&&BOSSES[N].emperor) $('btnFight').textContent = 'Affronter l\'Empereur !';
+  renderChips(); updateBars(); draw();
+  show('s-fight');
+}
+
+function addLog(t){ lastLog.push(t); if(lastLog.length>3) lastLog.shift(); $('log').innerHTML = lastLog.map(x=>'• '+x).join('<br>'); }
+
+function updateBars(){
+  const a=ST.a,b=ST.b;
+  $('pN').textContent = a.name; $('eN').textContent = b.name;
+  $('pBar').style.width = Math.max(0,a.hp/a.maxHp*100)+'%';
+  $('eBar').style.width = Math.max(0,b.hp/b.maxHp*100)+'%';
+  $('pHp').textContent = `${Math.max(0,Math.ceil(a.hp))} / ${a.maxHp} PV`;
+  $('eHp').textContent = `${Math.max(0,Math.ceil(b.hp))} / ${b.maxHp} PV`;
+}
+
+function renderChips(){
+  const html = P.augs.length ? P.augs.map(id=>{const g=AUGS.find(x=>x.id===id);return `<span class="chip" style="border-color:${RAR[g.r].c}">${TYPES[g.t].ic} ${g.n}</span>`}).join('') : '<span class="chip">Aucun augment</span>';
+  $('chips').innerHTML = html; $('chips2').innerHTML = html;
+}
+
+/* ---------- canvas ---------- */
+const cv = $('cv'), ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const POS = {a:{x:190,y:235}, b:{x:410,y:235}};
+
+function drawArena(){
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#2b1f16'); g.addColorStop(.45,'#4a3524'); g.addColorStop(.46,'#c9a36a'); g.addColorStop(1,'#a8834f');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // gradins
+  ctx.fillStyle='#3a2a1d';
+  for(let r=0;r<4;r++){ ctx.fillRect(0, 20+r*28, W, 14); }
+  // foule
+  for(let r=0;r<4;r++) for(let i=0;i<34;i++){
+    const x = 8 + i*18 + (r%2)*9, y = 18 + r*28;
+    ctx.fillStyle = ['#8a5a3a','#6a4a3a','#9a7a5a','#5a3a2a'][(i*7+r)%4];
+    ctx.beginPath(); ctx.arc(x, y + Math.sin(perfT*3 + i + r)*1.2*crowd, 5, 0, 7); ctx.fill();
+  }
+  // tribune impériale
+  ctx.fillStyle='#5b2a7a'; ctx.fillRect(W/2-50, 10, 100, 40);
+  ctx.fillStyle='#e8b04a'; ctx.fillRect(W/2-50, 48, 100, 4);
+  ctx.fillStyle='#e0b48a'; ctx.beginPath(); ctx.arc(W/2, 30, 7, 0, 7); ctx.fill();
+  ctx.fillStyle='#e8b04a'; ctx.fillRect(W/2-8, 21, 16, 3);
+  // sable
+  ctx.fillStyle='rgba(0,0,0,.08)';
+  ctx.beginPath(); ctx.ellipse(W/2, 260, 260, 50, 0, 0, 7); ctx.fill();
+}
+
+function drawGlad(f, side){
+  const p = POS[side], dir = side==='a'?1:-1;
+  const lunge = f.anim>0 ? Math.sin((0.22-f.anim)/0.22*Math.PI)*34 : 0;
+  const dead = f.hp<=0;
+  const x = p.x + dir*lunge, y = p.y;
+  ctx.save();
+  ctx.translate(x,y);
+  if(dead){ ctx.rotate(dir*-1.35); ctx.translate(0,-6); }
+  const sc = f.boss? 1.18 : f.beast? 1 : 1;
+  ctx.scale(dir*sc, sc);
+  // ombre
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(0,4,26,7,0,0,7); ctx.fill();
+  if(f.beast){
+    ctx.fillStyle = f.flash>0?'#fff':f.color;
+    ctx.beginPath(); ctx.ellipse(0,-26,32,16,0,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(28,-38,13,0,7); ctx.fill();
+    ctx.fillRect(-24,-16,7,18); ctx.fillRect(14,-16,7,18);
+    ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(33,-41,2,0,7); ctx.fill();
+    ctx.restore(); return;
+  }
+  const skin = f.flash>0 ? '#fff' : '#e0b48a';
+  const body = f.flash>0 ? '#fff' : f.color;
+  // jambes
+  ctx.strokeStyle=skin; ctx.lineWidth=7; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-7,-28); ctx.lineTo(-10,0); ctx.moveTo(7,-28); ctx.lineTo(10,0); ctx.stroke();
+  // tunique
+  ctx.fillStyle=body; ctx.beginPath(); ctx.roundRect(-15,-64,30,40,6); ctx.fill();
+  ctx.fillStyle='#5a3a1a'; ctx.fillRect(-15,-36,30,5);
+  if(f.emperor){ ctx.fillStyle='#e8b04a'; ctx.fillRect(-15,-64,6,40); }
+  // bouclier
+  ctx.fillStyle = f.flash>0?'#fff':'#8a6a2a';
+  ctx.beginPath(); ctx.roundRect(-30,-62,14,34,4); ctx.fill();
+  ctx.fillStyle='#e8b04a'; ctx.beginPath(); ctx.arc(-23,-45,3,0,7); ctx.fill();
+  // bras + épée
+  const swing = f.anim>0 ? -0.9 + (0.22-f.anim)/0.22*1.8 : -0.5;
+  ctx.save(); ctx.translate(13,-56); ctx.rotate(swing);
+  ctx.strokeStyle=skin; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(14,10); ctx.stroke();
+  ctx.strokeStyle='#d8dde2'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(14,10); ctx.lineTo(40,-6); ctx.stroke();
+  ctx.strokeStyle='#5a3a1a'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(12,4); ctx.lineTo(16,16); ctx.stroke();
+  ctx.restore();
+  // tête
+  ctx.fillStyle=skin; ctx.beginPath(); ctx.arc(0,-76,11,0,7); ctx.fill();
+  if(f.emperor){
+    ctx.strokeStyle='#e8b04a'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,-78,11,Math.PI*1.05,Math.PI*1.95); ctx.stroke();
+  } else {
+    ctx.fillStyle = f.flash>0?'#fff':'#9aa0a6';
+    ctx.beginPath(); ctx.arc(0,-78,12,Math.PI,0); ctx.fill();
+    ctx.fillRect(-12,-78,24,4);
+    ctx.fillStyle = body; ctx.beginPath(); ctx.roundRect(-3,-98,8,14,3); ctx.fill();
+  }
+  ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(5,-75,1.8,0,7); ctx.fill();
+  ctx.restore();
+}
+
+let perfT = 0, crowd = 0.3;
+function draw(){
+  drawArena();
+  drawGlad(ST.a,'a'); drawGlad(ST.b,'b');
+  // flottants
+  ctx.textAlign='center';
+  for(const f of floats){
+    ctx.globalAlpha = Math.max(0, Math.min(1, f.life*1.6));
+    ctx.font = `700 ${f.size}px Inter, sans-serif`;
+    ctx.lineWidth = 4; ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.strokeText(f.txt, f.x, f.y);
+    ctx.fillStyle = f.col; ctx.fillText(f.txt, f.x, f.y);
+  }
+  ctx.globalAlpha=1;
+  if(ST.b.enraged){ ctx.fillStyle='rgba(120,0,160,.12)'; ctx.fillRect(0,0,W,H); }
+}
+
+function spawnFloat(ev){
+  if(ev.kind==='none' || !ev.txt) return;
+  const p = POS[ev.side];
+  const col = {hit:'#fff', crit:'#ffcf3a', miss:'#9ad', thorns:'#ff9a6a', poison:'#9be36b', special:'#d9a6ff'}[ev.kind] || '#fff';
+  const size = ev.kind==='crit'?26: ev.kind==='special'?20:18;
+  floats.push({x:p.x + (Math.random()*30-15), y:p.y-110, txt:ev.txt, col, size, life:1});
+}
+
+let lastT = 0;
+function loop(ts){
+  if(!running) return;
+  const dtReal = Math.min(0.05, (ts-lastT)/1000 || 0); lastT = ts;
+  perfT += dtReal;
+  const dt = dtReal*speed;
+  // sous-pas pour stabilité
+  let rem = dt;
+  while(rem>0){ const s=Math.min(0.02,rem); step(ST,s); rem-=s; }
+  for(const ev of ST.events){ spawnFloat(ev); if(ev.log) addLog(ev.log); if(ev.kind==='crit') crowd = 1.2; }
+  ST.events.length = 0;
+  for(const f of floats){ f.y -= 40*dtReal; f.life -= dtReal; }
+  floats = floats.filter(f=>f.life>0);
+  crowd = Math.max(0.3, crowd - dtReal*0.8);
+  updateBars(); draw();
+  if(ST.over){
+    running = false;
+    setTimeout(endFight, 900/Math.min(speed,2));
+    // dessine encore les flottants restants
+    let fade = 0; const tail = ()=>{ fade+=1; for(const f of floats){f.y-=1.2;f.life-=0.03;} floats=floats.filter(f=>f.life>0); draw(); if(fade<25) requestAnimationFrame(tail); };
+    requestAnimationFrame(tail);
+    return;
+  }
+  requestAnimationFrame(loop);
+}
+
+function startFight(){
+  $('preFight').style.display='none';
+  running = true; lastT = performance.now();
+  requestAnimationFrame(loop);
+}
+
+function endFight(){
+  if(ST.winner==='a'){
+    if(N===30){ return endRun(true); }
+    addLog(`${ST.b.name} est vaincu !`);
+    postWin(P);
+    showReward();
+  } else endRun(false);
+}
+
+function showReward(){
+  const choices = rollChoices(N, P);
+  $('rewardSub').textContent = BOSSES[N] ? `Champion terrassé ! Récompense de choix.` : `Combat ${N}/30 remporté. Choisis ta récompense.`;
+  $('rewardList').innerHTML = choices.map((g,i)=>`
+    <div class="card" data-i="${i}" style="border-color:${RAR[g.r].c}55">
+      <div class="row">
+        <div class="typeic" style="background:${TYPES[g.t].c}">${TYPES[g.t].ic}</div>
+        <div><span class="tag" style="background:${RAR[g.r].c};color:#111">${RAR[g.r].n}</span><span class="tag" style="background:var(--panel2)">${TYPES[g.t].n}</span>
+        <h3 style="margin-top:6px">${g.n}</h3><p>${g.d}</p></div>
+      </div></div>`).join('');
+  $('rewardList').querySelectorAll('.card').forEach(el=>el.onclick=()=>{
+    applyAug(P, choices[+el.dataset.i]);
+    N++;
+    if(N===11) addLog('Acte II');
+    prepareFight();
+  });
+  show('s-reward');
+}
+
+function statsHTML(p){
+  const pct = v=>Math.round(v*100)+' %';
+  return [
+    ['PV', `${Math.ceil(p.hp)} / ${p.maxHp}`],['Attaque', p.atk.toFixed(1)],
+    ['Défense', p.def],['Vitesse', p.spd.toFixed(2)+'/s'],
+    ['Critique', pct(p.crit)],['Dégâts crit.', '×'+p.critMult.toFixed(1)],
+    ['Esquive', pct(Math.min(.6,p.dodge))],['Vol de vie', pct(p.lifesteal)],
+    ['Régén.', p.regen+' PV/s'],['Épines', p.thorns],
+    ['Poison', p.poison],['Ralentit', pct(p.slow)],
+    ['Double coup', pct(p.doubleHit)],['Soin post-combat', pct(p.postHeal)]
+  ].map(([k,v])=>`<div>${k}<b>${v}</b></div>`).join('');
+}
+
+function endRun(win){
+  $('endIcon').textContent = win ? '🕊️' : '💀';
+  $('endTitle').textContent = win ? 'LIBRE !' : 'Mort dans l\'arène';
+  $('endTitle').style.color = win ? 'var(--gold)' : 'var(--red)';
+  $('endSub').innerHTML = win
+    ? `${P.name} a terrassé l'Empereur Commode.<br>La foule scande son nom : il a gagné sa liberté.`
+    : `${P.name} est tombé au combat ${N}/30 face à ${ST.b.name}.<br>${ACTS[actOf(N)].n}`;
+  $('endStats').innerHTML = statsHTML(P);
+  show('s-end');
+}
+
+$('btnStart').onclick = startRun;
+$('btnFight').onclick = startFight;
+$('btnRestart').onclick = ()=>{ show('s-start'); };
+$('btnSpeed').onclick = ()=>{ speed = speed===1?2:speed===2?4:1; $('btnSpeed').textContent = 'Vitesse ×'+speed; };
+$('btnStats').onclick = ()=>{ $('statsGrid').innerHTML = statsHTML(P); renderChips(); show('s-stats'); };
+$('btnBack').onclick = ()=>{ show('s-fight'); };
+
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h){ this.rect(x,y,w,h); };
+}
+renderClasses();
+</script>
+</body>
+</html>
