@@ -8,72 +8,159 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#1a1410; --panel:#241c16; --panel2:#2e241c; --line:#4a3a2c;
-  --gold:#e8b04a; --txt:#f3e9da; --mute:#b09f8a; --red:#e0533d; --green:#5cc26b;
+  --bg:#15100c; --panel:#2a2018; --panel2:#34281e; --line:#5a4530; --ink:#0c0805;
+  --gold:#e8b04a; --gold2:#ffd98a; --bronze:#a8661a; --txt:#f3e9da; --mute:#b8a68e; --red:#e0533d; --green:#5cc26b;
+  --parch:#ead9b2; --parchInk:#3a2614;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;min-height:100%}
-body{display:flex;justify-content:center;padding:12px}
+html,body{color:var(--txt);font-family:Inter,system-ui,sans-serif;min-height:100%}
+html{background:var(--bg)}
+body{display:flex;justify-content:center;padding:14px 12px 28px;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(232,176,74,.13), transparent 70%),
+    radial-gradient(ellipse at 50% 120%, rgba(0,0,0,.6), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 26px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 2px, transparent 2px 52px),
+    var(--bg);
+  min-height:100vh}
 #app{width:100%;max-width:640px}
-h1,h2,h3{font-family:Cinzel,serif;letter-spacing:.04em}
-h1{font-size:30px;text-align:center;color:var(--gold);margin:8px 0 2px}
+h1,h2,h3{font-family:Cinzel,Georgia,serif;letter-spacing:.05em}
+h1{font-size:32px;text-align:center;color:var(--gold);margin:6px 0 4px;text-shadow:0 2px 0 var(--ink),0 0 18px rgba(232,176,74,.35);display:flex;align-items:center;justify-content:center;gap:10px;text-transform:uppercase}
 h2{font-size:22px}
+.title2{text-align:center;color:var(--gold);margin-top:6px;font-size:26px;text-shadow:0 2px 0 var(--ink),0 0 16px rgba(232,176,74,.35);display:flex;align-items:center;justify-content:center;gap:10px;text-transform:uppercase}
 .sub{text-align:center;color:var(--mute);font-size:14px;margin-bottom:14px;line-height:1.5}
-.screen{display:none}.screen.on{display:block}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--gold);color:#2a1a08;border:none;border-radius:10px;padding:13px 18px;font-weight:700;font-size:16px;cursor:pointer;font-family:inherit}
-.btn:active{transform:translateY(1px)}
+.screen{display:none}.screen.on{display:block;animation:fadeIn .25s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* icônes pixel */
+.pxi{width:18px;height:18px;image-rendering:pixelated;vertical-align:-4px;display:inline-block}
+.pxi.lg{width:36px;height:36px}
+.pxi.flip{transform:scaleX(-1)}
+.pxi.big{width:56px;height:56px}
+
+/* boutons : bronze en relief */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  font-family:Cinzel,Georgia,serif;font-weight:800;font-size:17px;letter-spacing:.08em;text-transform:uppercase;
+  color:#2a1505;background:linear-gradient(#f6cf6a,#d89a2c);
+  border:2px solid var(--ink);border-radius:6px;padding:12px 18px;
+  box-shadow:inset 0 2px 0 #ffeeb0, inset 0 -3px 0 var(--bronze), 0 4px 0 var(--ink);
+  transition:transform .06s, filter .15s; margin-bottom:4px}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffeeb0, inset 0 -2px 0 var(--bronze), 0 1px 0 var(--ink)}
 .btn:disabled{opacity:.4}
-.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
-.btn.small{padding:7px 11px;font-size:13px}
+.btn.ghost{color:var(--txt);background:linear-gradient(#3e3024,#2c2219);box-shadow:inset 0 2px 0 #5a4634, inset 0 -3px 0 #1e1610, 0 3px 0 var(--ink);font-size:13px}
+.btn.small{padding:6px 11px;font-size:12px;margin-bottom:3px}
 .btn.wide{width:100%}
-.grid8{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+
+/* panneaux de pierre et parchemin */
+.tablet{background:linear-gradient(#30251b,#251c15);border:2px solid var(--ink);border-radius:6px;box-shadow:inset 0 0 0 2px #4e3c2a, inset 0 3px 0 2px rgba(255,220,160,.05)}
+.desc{background:linear-gradient(#f0e2c0,#e2cfa4);color:var(--parchInk);border:2px solid var(--ink);border-radius:6px;
+  box-shadow:inset 0 0 0 2px #c9ad78, inset 0 0 24px rgba(140,100,40,.25);padding:12px 14px;margin:14px 0;font-size:14px;line-height:1.45}
+.desc b{color:#8a2a14;font-family:Cinzel,Georgia,serif;font-size:15px}
+.statline{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.stat{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;background:rgba(90,60,20,.12);border:1px solid rgba(90,60,20,.3);border-radius:4px;padding:2px 7px}
+
+/* sélection des gladiateurs */
+.grid8{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
 @media (max-width:520px){.grid8{grid-template-columns:repeat(2,1fr)}}
-.pc{background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:6px 6px 8px;cursor:pointer;text-align:center}
-.pc.sel{border-color:var(--gold);background:var(--panel2)}
-.pc canvas{width:100%;height:auto;border:none;background:transparent}
-.pc .nm{font-weight:700;font-size:13.5px}
-.pc .tt{font-size:11px;color:var(--mute)}
-.desc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;font-size:14px;line-height:1.45}
-.desc b{color:var(--gold)}
-.statline{font-size:12px;opacity:.85;margin-top:6px}
-.cards{display:grid;gap:10px}
-.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px;cursor:pointer}
-.card:hover{border-color:var(--gold)}
-.card .row{display:flex;gap:12px;align-items:center}
-.card h3{font-size:17px}
-.card p{color:var(--mute);font-size:13.5px;margin-top:4px;line-height:1.4}
-.tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:6px;margin-right:6px}
-.typeic{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.pc{cursor:pointer;text-align:center;border:2px solid var(--ink);border-radius:6px;overflow:hidden;
+  background:linear-gradient(180deg,#221912 0%,#3b2b1e 62%,#c09a5e 62%,#a8834f 100%);
+  box-shadow:inset 0 0 0 2px #4e3c2a, 0 3px 0 var(--ink);transition:transform .12s, box-shadow .15s}
+.pc:hover{transform:translateY(-3px)}
+.pc.sel{transform:translateY(-3px);box-shadow:inset 0 0 0 2px var(--gold), 0 0 0 2px var(--gold), 0 0 22px rgba(232,176,74,.5), 0 3px 0 var(--ink)}
+.pc canvas{width:100%;height:auto;display:block;padding:6px 6px 0}
+.pc .plate{background:linear-gradient(#3a2c20,#2a2018);border-top:2px solid var(--ink);padding:5px 4px 6px}
+.pc.sel .plate{background:linear-gradient(#5a4020,#3a2a14)}
+.pc .nm{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:13px;color:var(--gold2);letter-spacing:.03em}
+.pc .tt{font-size:10.5px;color:var(--mute);font-style:italic}
+
+/* intro d'acte */
+.intro{text-align:center;padding-top:8px}
+.intro .num{display:inline-block;font-family:Cinzel,Georgia,serif;font-weight:800;color:#2a1505;font-size:13px;letter-spacing:.25em;
+  background:linear-gradient(#f6cf6a,#d89a2c);border:2px solid var(--ink);padding:4px 22px;position:relative;isolation:isolate;box-shadow:0 3px 0 var(--ink)}
+.intro .num::before,.intro .num::after{content:"";position:absolute;top:6px;width:14px;height:100%;background:#b07a22;border:2px solid var(--ink);z-index:-1}
+.intro .num::before{left:-12px;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,40% 50%)}
+.intro .num::after{right:-12px;clip-path:polygon(0 0,100% 0,60% 50%,100% 100%,0 100%)}
+.intro h2{color:var(--gold);margin:10px 0 8px;font-size:26px;text-shadow:0 2px 0 var(--ink)}
+.journey{display:flex;justify-content:center;gap:10px;margin:14px 0 18px;position:relative}
+.journey::before{content:"";position:absolute;left:50%;top:50%;width:min(300px,80%);height:2px;background:var(--line);transform:translate(-50%,-50%);z-index:0}
+.jdot{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);font-family:Cinzel,Georgia,serif;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--mute);background:#2a2018;box-shadow:inset 0 0 0 2px #4e3c2a}
+.jdot.done{background:radial-gradient(circle at 35% 30%,#ffe9a0,#d89a2c 60%,#a8661a);color:#2a1505;box-shadow:inset 0 0 0 2px #ffd98a}
+.jdot.cur{background:#3a1410;color:var(--txt);box-shadow:inset 0 0 0 2px var(--red),0 0 12px rgba(224,83,61,.7);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{box-shadow:inset 0 0 0 2px var(--red),0 0 20px rgba(224,83,61,.95)}}
+.lbl{color:var(--mute);font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-family:Cinzel,Georgia,serif}
+.stage{position:relative;isolation:isolate;display:inline-block;padding:10px 30px 0;margin:6px 0 4px;
+  background:radial-gradient(ellipse 50% 55% at 50% 38%, rgba(255,210,130,.22), transparent 70%)}
+.stage::after{content:"";position:absolute;left:50%;bottom:4px;width:150px;height:22px;transform:translateX(-50%);z-index:-1;
+  background:linear-gradient(#8a7a64,#5a4a3a);border:2px solid var(--ink);border-radius:50%;box-shadow:0 4px 0 var(--ink)}
+.stage canvas{display:block;width:180px;height:216px}
+.stage.sm canvas{width:150px;height:180px}
+.bossname{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:24px;color:var(--red);margin-top:8px;text-shadow:0 2px 0 var(--ink),0 0 14px rgba(224,83,61,.45)}
+
+/* combat */
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px}
-.act{font-family:Cinzel,serif;color:var(--gold);font-size:14px}
-.pips{display:flex;gap:4px;margin:6px 0 10px}
-.pip{flex:1;height:8px;border-radius:4px;background:var(--line)}
-.pip.done{background:var(--gold)}.pip.cur{background:var(--txt)}
-.pip.boss{flex:1.6;outline:1px solid var(--red)}
-.fighters{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}
-.fbox{flex:1}.fbox.r{text-align:right}
-.fname{font-weight:700;font-size:14px}
-.bar{height:10px;background:#120d0a;border-radius:5px;overflow:hidden;margin-top:4px;border:1px solid var(--line)}
-.bar>div{height:100%;background:var(--green);transition:width .12s}
-.fbox.r .bar>div{background:var(--red);margin-left:auto}
-.hpnum{font-size:11px;color:var(--mute);margin-top:2px}
-#cv{width:100%;display:block;border-radius:14px;border:1px solid var(--line);background:#3a2a1c}
-.controls{display:flex;gap:8px;margin-top:10px}
-.log{font-size:12.5px;color:var(--mute);margin-top:10px;min-height:54px;line-height:1.5}
-.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-.chip{font-size:11.5px;padding:3px 8px;border-radius:999px;background:var(--panel2);border:1px solid var(--line)}
+.act{font-family:Cinzel,Georgia,serif;font-weight:800;color:var(--gold);font-size:14px;text-shadow:0 2px 0 var(--ink)}
+.pips{display:flex;gap:5px;margin:6px 0 12px;align-items:center}
+.pip{flex:1;height:10px;border:2px solid var(--ink);border-radius:2px;background:#2a2018;box-shadow:inset 0 0 0 1px #4e3c2a}
+.pip.done{background:linear-gradient(#ffd98a,#d89a2c);box-shadow:none}
+.pip.cur{background:linear-gradient(#fff,#cfc2ae);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.55}}
+.pip.boss{flex:none;width:26px;height:26px;border-radius:50%;background:#3a1410 var(--skull) center/18px no-repeat;image-rendering:pixelated;box-shadow:inset 0 0 0 2px var(--red)}
+.pip.boss.cur{box-shadow:inset 0 0 0 2px var(--red),0 0 12px rgba(224,83,61,.8);opacity:1;animation:pulse 1.4s infinite}
+.pip.boss.done{background-color:#5a4020;box-shadow:inset 0 0 0 2px var(--gold)}
+.fighters{display:flex;justify-content:space-between;gap:14px;margin-bottom:8px}
+.fbox{flex:1;min-width:0}.fbox.r{text-align:right}
+.fname{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 var(--ink)}
+.fbox.r .fname{color:#ffb4a4}
+.fbox.boss .fname{color:var(--red)}
+.bar{position:relative;height:16px;background:#1a0c08;border:2px solid var(--ink);border-radius:3px;overflow:hidden;margin-top:4px;box-shadow:0 0 0 1px #5a4530}
+.bar>div{position:absolute;top:0;bottom:0;left:0}
+.fbox.r .bar>div{left:auto;right:0}
+.bar .trail{background:#ffe9b0;transition:width .7s ease-out}
+.bar .fill{background:linear-gradient(#9cf07e 0 30%,#4cb84a 30% 75%,#2e8a32 75%);transition:width .1s}
+.fbox.r .bar .fill{background:linear-gradient(#ff9a7a 0 30%,#e0453a 30% 75%,#a82a22 75%)}
+.fbox.low .bar .fill{background:linear-gradient(#ffb07a 0 30%,#e8742a 30% 75%,#b04a1a 75%);animation:blink .6s infinite}
+.bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(0,0,0,.35) calc(10% - 2px) 10%);pointer-events:none}
+.hpnum{font-size:11px;color:var(--mute);margin-top:3px;font-variant-numeric:tabular-nums}
+#cv{width:100%;display:block;border:3px solid var(--ink);border-radius:4px;background:#3a2a1c;box-shadow:0 0 0 2px #8a6a3a, 0 0 0 4px var(--ink), 0 8px 18px rgba(0,0,0,.5)}
+.controls{display:flex;gap:8px;margin-top:14px}
+.log{font-size:12.5px;color:var(--mute);margin-top:12px;min-height:58px;line-height:1.55;padding:7px 12px;border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(232,176,74,.08),transparent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 8px 3px 4px;border-radius:4px;background:linear-gradient(#34281e,#2a2018);border:2px solid var(--ink);box-shadow:inset 0 0 0 1px var(--rc,#5a4530)}
+.chip img{width:20px;height:20px;object-fit:contain;image-rendering:pixelated}
+.chip.empty{padding:3px 9px;color:var(--mute)}
+
+/* récompenses */
+.cards{display:grid;gap:12px;perspective:800px}
+.card{--rc:#9aa4ad;position:relative;display:flex;gap:14px;align-items:center;cursor:pointer;padding:12px;overflow:hidden;
+  background:linear-gradient(#30251b,#241b14);border:2px solid var(--ink);border-radius:6px;
+  box-shadow:inset 0 0 0 2px var(--rc), inset 0 0 22px color-mix(in srgb, var(--rc) 22%, transparent), 0 4px 0 var(--ink);
+  animation:cardIn .45s cubic-bezier(.2,.9,.3,1.2) both;animation-delay:calc(var(--i)*.12s);transition:transform .12s, filter .12s}
+.card:hover{transform:translateY(-4px) scale(1.01);filter:brightness(1.1)}
+.card:active{transform:translateY(0) scale(.99)}
+@keyframes cardIn{from{opacity:0;transform:rotateX(70deg) translateY(20px)}to{opacity:1;transform:none}}
+.card.r-L{box-shadow:inset 0 0 0 2px var(--rc), inset 0 0 30px color-mix(in srgb, var(--rc) 35%, transparent), 0 0 18px color-mix(in srgb, var(--rc) 45%, transparent), 0 4px 0 var(--ink)}
+.card.r-L::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,240,190,.28) 50%,transparent 65%);background-size:250% 100%;animation:shine 2.6s infinite;pointer-events:none}
+@keyframes shine{from{background-position:150% 0}to{background-position:-100% 0}}
+.art{flex:none;width:76px;height:76px;display:flex;align-items:center;justify-content:center;border:2px solid var(--ink);border-radius:6px;
+  background:radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--rc) 35%, #2a2018), #1a130e 75%);box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--rc) 70%, #000)}
+.art img.itm{max-width:62px;max-height:62px;object-fit:contain;filter:drop-shadow(0 2px 0 rgba(0,0,0,.6))}
+.card .info{min-width:0}
+.tags{display:flex;gap:6px;align-items:center}
+.tag{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.1em}
+.tag.rar{color:var(--rc)}
+.tag.typ{color:var(--mute)}
+.card h3{font-size:18px;margin-top:3px;color:var(--txt)}
+.card p{color:var(--mute);font-size:13.5px;margin-top:3px;line-height:1.4}
+
+/* stats / fin */
 .center{text-align:center}
-.statsgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:13px;margin:12px 0;text-align:left}
-.statsgrid b{color:var(--gold);float:right}
-.intro{text-align:center;padding-top:10px}
-.intro .num{font-family:Cinzel,serif;color:var(--mute);font-size:14px;letter-spacing:.2em}
-.intro h2{color:var(--gold);margin:4px 0 14px}
-.intro canvas{width:180px;height:216px}
-.bossname{font-family:Cinzel,serif;font-size:22px;color:var(--red);margin-top:4px}
-.journey{display:flex;justify-content:center;gap:5px;margin:14px 0}
-.jdot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--mute)}
-.jdot.done{background:var(--gold);color:#2a1a08;border-color:var(--gold)}
-.jdot.cur{border-color:var(--red);color:var(--txt)}
+.statsgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;padding:8px 12px;font-size:13px;margin:12px 0;text-align:left;
+  background:linear-gradient(#30251b,#251c15);border:2px solid var(--ink);border-radius:6px;box-shadow:inset 0 0 0 2px #4e3c2a}
+.statsgrid>div{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(90,69,48,.5)}
+.statsgrid b{color:var(--gold);margin-left:auto;font-variant-numeric:tabular-nums}
+.sec{font-family:Cinzel,Georgia,serif;font-size:15px;color:var(--gold);margin-top:4px}
+.endtitle{font-size:34px}
 .note{font-size:12px;color:var(--mute);margin-top:14px;text-align:center;line-height:1.5}
 </style>
 </head>
@@ -81,7 +168,7 @@ h2{font-size:22px}
 <div id="app">
 
   <section id="s-start" class="screen on">
-    <h1>Monkey Arena</h1>
+    <h1><img class="pxi lg" data-ic="laurel" alt="">Monkey Arena<img class="pxi lg flip" data-ic="laurel" alt=""></h1>
     <div class="sub">Choisis ton gladiateur. Les 7 autres seront tes boss…<br>et l'un d'eux sera couronné Empereur.</div>
     <div class="grid8" id="charGrid"></div>
     <div class="desc" id="charDesc"></div>
@@ -93,8 +180,8 @@ h2{font-size:22px}
     <div class="num" id="introNum">ACTE I</div>
     <h2 id="introName"></h2>
     <div class="journey" id="journey"></div>
-    <div style="color:var(--mute);font-size:13px" id="introBossLbl">Le champion de cette arène</div>
-    <canvas id="introCv" width="180" height="216"></canvas>
+    <div class="lbl" id="introBossLbl">Le champion de cette arène</div>
+    <div class="stage"><canvas id="introCv" width="180" height="216"></canvas></div>
     <div class="bossname" id="introBoss"></div>
     <div class="sub" id="introBossDesc" style="margin-top:6px"></div>
     <button class="btn wide" id="btnIntro">Entrer dans l'arène</button>
@@ -110,8 +197,8 @@ h2{font-size:22px}
     </div>
     <div class="pips" id="pips"></div>
     <div class="fighters">
-      <div class="fbox"><div class="fname" id="pN"></div><div class="bar"><div id="pBar"></div></div><div class="hpnum" id="pHp"></div></div>
-      <div class="fbox r"><div class="fname" id="eN"></div><div class="bar"><div id="eBar"></div></div><div class="hpnum" id="eHp"></div></div>
+      <div class="fbox" id="pBox"><div class="fname" id="pN"></div><div class="bar"><div class="trail" id="pTr"></div><div class="fill" id="pBar"></div></div><div class="hpnum" id="pHp"></div></div>
+      <div class="fbox r" id="eBox"><div class="fname" id="eN"></div><div class="bar"><div class="trail" id="eTr"></div><div class="fill" id="eBar"></div></div><div class="hpnum" id="eHp"></div></div>
     </div>
     <canvas id="cv" width="600" height="330"></canvas>
     <div class="log" id="log"></div>
@@ -120,23 +207,23 @@ h2{font-size:22px}
   </section>
 
   <section id="s-reward" class="screen">
-    <h2 class="center" style="color:var(--gold);margin-top:6px">Victoire !</h2>
+    <h2 class="title2"><img class="pxi lg" data-ic="laurel" alt="">Victoire !<img class="pxi lg flip" data-ic="laurel" alt=""></h2>
     <div class="sub" id="rewardSub"></div>
     <div class="cards" id="rewardList"></div>
   </section>
 
   <section id="s-stats" class="screen">
-    <h2 class="center" style="color:var(--gold)">Ton gladiateur</h2>
-    <div class="center"><canvas id="statsCv" width="180" height="216" style="width:150px;height:180px"></canvas></div>
+    <h2 class="title2">Ton gladiateur</h2>
+    <div class="center"><div class="stage sm"><canvas id="statsCv" width="180" height="216"></canvas></div></div>
     <div class="statsgrid" id="statsGrid"></div>
-    <h3 style="font-size:15px">Augments</h3>
+    <h3 class="sec">Augments</h3>
     <div class="chips" id="chips2"></div>
     <div style="margin-top:16px"><button class="btn wide" id="btnBack">Retour</button></div>
   </section>
 
   <section id="s-end" class="screen center">
-    <canvas id="endCv" width="180" height="216" style="width:150px;height:180px;margin-top:10px"></canvas>
-    <h1 id="endTitle"></h1>
+    <div class="stage sm" style="margin-top:10px"><canvas id="endCv" width="180" height="216"></canvas></div>
+    <h1 id="endTitle" class="endtitle"></h1>
     <div class="sub" id="endSub"></div>
     <div class="statsgrid" id="endStats"></div>
     <button class="btn wide" id="btnRestart">Nouvelle run</button>
@@ -887,7 +974,7 @@ function paintFig(canvas, f, opts={}){
 
 function renderChars(){
   $('charGrid').innerHTML = CHARS.map(ch=>`<div class="pc ${ch===selChar?'sel':''}" data-id="${ch.id}">
-    <canvas width="100" height="120"></canvas><div class="nm">${ch.name}</div><div class="tt">${ch.title}</div></div>`).join('');
+    <canvas width="100" height="120"></canvas><div class="plate"><div class="nm">${ch.name}</div><div class="tt">${ch.title}</div></div></div>`).join('');
   $('charGrid').querySelectorAll('.pc').forEach(el=>{
     const ch = CHARS.find(c=>c.id===el.dataset.id);
     paintFig(el.querySelector('canvas'), {baseLook:ch.look, augs:[]});
@@ -895,7 +982,7 @@ function renderChars(){
   });
   const s = selChar.stats;
   $('charDesc').innerHTML = `<b>${selChar.name}, ${selChar.title}</b><br>${selChar.desc}
-    <div class="statline">❤️ ${s.maxHp} PV · ⚔️ ${s.atk} attaque · 🛡️ ${s.def} défense · ⚡ ${s.spd} att/s</div>`;
+    <div class="statline"><span class="stat">${icImg('heart')} ${s.maxHp} PV</span><span class="stat">${icImg('sword')} ${s.atk} attaque</span><span class="stat">${icImg('shield')} ${s.def} défense</span><span class="stat">${icImg('bolt')} ${s.spd} att/s</span></div>`;
 }
 
 function startRun(){
@@ -939,16 +1026,71 @@ function prepareFight(){
 function addLog(t){ lastLog.push(t); if(lastLog.length>3) lastLog.shift(); $('log').innerHTML = lastLog.map(x=>'• '+x).join('<br>'); }
 function updateBars(){
   const a=ST.a,b=ST.b;
-  $('pN').textContent = a.name; $('eN').textContent = b.name;
-  $('pBar').style.width = Math.max(0,a.hp/a.maxHp*100)+'%';
-  $('eBar').style.width = Math.max(0,b.hp/b.maxHp*100)+'%';
+  if($('eN').dataset.n !== b.name){
+    $('pN').textContent = a.name; $('eN').dataset.n = b.name;
+    $('eN').innerHTML = (b.emperor ? icImg('laurel')+' ' : b.boss ? icImg('skull')+' ' : '') + b.name;
+    $('eBox').classList.toggle('boss', !!b.boss);
+  }
+  const pa = Math.max(0,a.hp/a.maxHp*100), pb = Math.max(0,b.hp/b.maxHp*100);
+  $('pBar').style.width = pa+'%'; $('pTr').style.width = pa+'%';
+  $('eBar').style.width = pb+'%'; $('eTr').style.width = pb+'%';
+  $('pBox').classList.toggle('low', pa>0 && pa<30);
   $('pHp').textContent = `${Math.max(0,Math.ceil(a.hp))} / ${a.maxHp} PV`;
   $('eHp').textContent = `${Math.max(0,Math.ceil(b.hp))} / ${b.maxHp} PV`;
 }
 function renderChips(){
-  const html = P.augs.length ? P.augs.map(id=>{const g=AUGS.find(x=>x.id===id);return `<span class="chip" style="border-color:${RAR[g.r].c}">${TYPES[g.t].ic} ${g.n}</span>`}).join('') : '<span class="chip">Aucun augment</span>';
+  const html = P.augs.length ? P.augs.map(id=>{const g=AUGS.find(x=>x.id===id);return `<span class="chip" style="--rc:${RAR[g.r].c}">${augArt(g,true)}${g.n}</span>`}).join('') : '<span class="chip empty">Aucun augment</span>';
   $('chips').innerHTML = html; $('chips2').innerHTML = html;
 }
+
+/* --- icônes pixel art (12×12) --- */
+const ICON_DEF = {
+  heart:{p:{R:'#d83a2a',r:'#9a2218',w:'#ffd0c0'}, g:[
+'............','..oo...oo...','.oRRo.oRRo..','oRwRRoRRRRo.','oRwRRRRRRRo.','oRRRRRRRRro.','.oRRRRRRro..','..oRRRRro...','...oRRro....','....oro.....','.....o......','............']},
+  sword:{p:{W:'#e8eef2',B:'#7a4a22',G:'#e8b04a'}, g:[
+'..........oo','.........oWo','........oWo.','.......oWo..','......oWo...','.....oWo....','..o.oWo.....','..oGoo......','...oGo......','..oBooGo....','.oBo..oo....','.oo.........']},
+  shield:{p:{G:'#e8b04a',B:'#b83a2a'}, g:[
+'.oooooooooo.','.oGGGGGGGGo.','.oGBBGGBBGo.','.oGBBGGBBGo.','.oGGGGGGGGo.','.oGBBGGBBGo.','.oGBBGGBBGo.','..oGBGGBGo..','..oGGGGGGo..','...oGGGGo...','....oGGo....','.....oo.....']},
+  bolt:{p:{Y:'#ffd23a'}, g:[
+'......oooo..','.....oYYYo..','....oYYYo...','...oYYYo....','..oYYYYooo..','.oYYYYYYYo..','.oooooYYo...','.....oYYo...','....oYYo....','....oYo.....','...oYo......','...oo.......']},
+  flame:{p:{R:'#e8501a',Y:'#ffb02a',W:'#fff0a0'}, g:[
+'.....o......','....oRo.....','....oRo..o..','...oRYRo.oRo','..oRYYRooRRo','..oRYYYRRYRo','.oRYYWYYRYRo','.oRYWWWYYYRo','.oRYWWWWYYRo','.oRYYWWYYRo.','..oRYYYYRo..','...oooooo...']},
+  wing:{p:{W:'#e8f0f8',B:'#8ab0d8'}, g:[
+'..........oo','........ooWo','......ooWWWo','....ooWWWBWo','...oWWWWBWo.','..oWWWWBWWo.','..oWWWBWWo..','.oWWWBWWo...','.oWWBWoo....','.oWBoo......','oBoo........','oo..........']},
+  drop:{p:{R:'#c81a1a',r:'#8a0e0e',w:'#ff9a8a'}, g:[
+'.....oo.....','....oRRo....','....oRRo....','...oRRRRo...','...oRRRRo...','..oRwRRRRo..','..oRwRRRRo..','.oRwRRRRRro.','.oRRRRRRRro.','.oRRRRRRrro.','..oRRrrrro..','...oooooo...']},
+  burst:{p:{Y:'#ff8a2a',W:'#ffe07a'}, g:[
+'.....oo.....','....oYYo....','.o..oYYo..o.','.oYooYYooYo.','..oYYWWYYo..','oooYWWWWYooo','oYYYWWWWYYYo','oooYYWWYYooo','..oYYooYYo..','.oYo.oo.oYo.','.oo..oo..oo.','............']},
+  laurel:{p:{L:'#6aa83a',l:'#3e7a22',G:'#e8b04a'}, g:[
+'............','.oo......oo.','oLLo....oLLo','oLlo....olLo','oLLo....oLLo','.oLo....oLo.','.oLLo..oLLo.','..olo..olo..','..oLLooLLo..','...ooGGoo...','....oGGo....','.....oo.....']},
+  tower:{p:{S:'#b0b0b8',s:'#80808a',G:'#e8b04a'}, g:[
+'.oooo..oooo.','.oSSo..oSSo.','.oSSooooSSo.','.oSSSSSSSso.','oooooooooooo','.oSSSSSSSso.','.oSSooSSSso.','.oSSooSSSso.','.oSSSSSSSso.','.oSSSSSSSso.','oooooooooooo','oGGGGGGGGGGo']},
+  skull:{p:{W:'#efe6d0',w:'#b8ae98',R:'#ff3a2a'}, g:[
+'...oooooo...','..oWWWWWWo..','.oWWWWWWWWo.','.oWWWWWWWwo.','.oWRoWWRowo.','.oWooWWoowo.','.oWWWoWWWwo.','..oWWWWWwo..','...oWWWWo...','...oWoWowo..','...oooooo...','............']},
+  axe:{p:{S:'#c8ccd4',W:'#ffffff',B:'#7a4a22'}, g:[
+'............','...oooo.....','..oSSSSo....','.oSWSSSSo...','.oSWSSSSo...','.oSSSSoBo...','..oSSoBo....','...ooBo.....','....oBo.....','...oBo......','..oBo.......','..oo........']},
+};
+const ICO_CACHE = {};
+function ic(name, over){
+  const key = name + (over ? JSON.stringify(over) : '');
+  if(ICO_CACHE[key]) return ICO_CACHE[key];
+  const d = ICON_DEF[name], pal = Object.assign({o:'#1a0f08'}, d.p, over||{});
+  const c = document.createElement('canvas'); c.width = 12; c.height = 12;
+  const x = c.getContext('2d');
+  d.g.forEach((row,y)=>[...row].forEach((ch,i)=>{ if(pal[ch]){ x.fillStyle = pal[ch]; x.fillRect(i,y,1,1); } }));
+  return ICO_CACHE[key] = c.toDataURL();
+}
+function icImg(name, cls='', over){ return `<img class="pxi ${cls}" src="${ic(name,over)}" alt="">`; }
+const POISON = {R:'#6ac83a', r:'#3a8a1a', w:'#d0ffa8'};
+const AUG_ICON = {souffle:'heart', rage:'flame', agile:'wing', sang:'drop', frenesie:'bolt', brutal:'burst', foule:'laurel', rempart:'tower', berserk:'skull', exec:'axe'};
+const AUG_IMG = {boisb:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', casque:'casque', plastron:'plastron', jamb:'jambieres', manica:'manica', lion:'peau-lion', filet:'filet'};
+function augFile(g){ return AUG_IMG[g.id] || WEAPON_OF[g.id] || null; }
+function augArt(g, small){
+  const f = augFile(g);
+  if(f) return `<img class="itm" src="assets/items/${f}.png" alt="">`;
+  return icImg(AUG_ICON[g.id] || 'burst', small ? '' : 'big');
+}
+function fillIcons(){ document.querySelectorAll('[data-ic]').forEach(el=>{ el.src = ic(el.dataset.ic); }); document.documentElement.style.setProperty('--skull', `url(${ic('skull')})`); }
 
 /* --- arène --- */
 const cv = $('cv'), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
@@ -1281,12 +1423,11 @@ function showReward(){
     ? `${ST.b.name} est terrassé ! Récompense de champion.` + (P.glory?' Gloire : +2 attaque, +12 PV max.':'')
     : `${ST.b.name} est vaincu. Choisis ta récompense.`;
   $('rewardList').innerHTML = choices.map((g,i)=>`
-    <div class="card" data-i="${i}" style="border-color:${RAR[g.r].c}66">
-      <div class="row">
-        <div class="typeic" style="background:${TYPES[g.t].c}">${TYPES[g.t].ic}</div>
-        <div><span class="tag" style="background:${RAR[g.r].c};color:#111">${RAR[g.r].n}</span><span class="tag" style="background:var(--panel2)">${TYPES[g.t].n}</span>
-        <h3 style="margin-top:6px">${g.n}</h3><p>${g.d}</p></div>
-      </div></div>`).join('');
+    <div class="card r-${g.r}" data-i="${i}" style="--rc:${RAR[g.r].c};--i:${i}">
+      <div class="art">${augArt(g)}</div>
+      <div class="info"><div class="tags"><span class="tag rar">${RAR[g.r].n}</span><span class="tag typ">· ${TYPES[g.t].n}</span></div>
+      <h3>${g.n}</h3><p>${g.d}</p></div>
+    </div>`).join('');
   $('rewardList').querySelectorAll('.card').forEach(el=>el.onclick=()=>{
     applyAug(P, choices[+el.dataset.i]);
     N++;
@@ -1294,12 +1435,13 @@ function showReward(){
   });
   show('s-reward');
 }
+const STAT_IC = [['heart'],['sword'],['shield'],['bolt'],['flame'],['burst'],['wing'],['drop'],['heart'],['shield'],['drop',POISON],['wing',{W:'#c8c8d0',B:'#8a8a94'}],['sword'],['laurel']].map(([n,o])=>icImg(n,'',o));
 function statsHTML(p){
   const pct = v=>Math.round(v*100)+' %';
   return [['PV', `${Math.ceil(p.hp)} / ${p.maxHp}`],['Attaque', p.atk.toFixed(1)],['Défense', p.def],['Vitesse', p.spd.toFixed(2)+'/s'],
     ['Critique', pct(p.crit)],['Dégâts crit.', '×'+p.critMult.toFixed(1)],['Esquive', pct(Math.min(.6,p.dodge))],['Vol de vie', pct(p.lifesteal)],
     ['Régén.', p.regen+' PV/s'],['Épines', p.thorns],['Poison', p.poison],['Ralentit', pct(p.slow)],
-    ['Double coup', pct(p.doubleHit)],['Soin post-combat', pct(p.postHeal)]].map(([k,v])=>`<div>${k}<b>${v}</b></div>`).join('');
+    ['Double coup', pct(p.doubleHit)],['Soin post-combat', pct(p.postHeal)]].map(([k,v],i)=>`<div>${STAT_IC[i]}${k}<b>${v}</b></div>`).join('');
 }
 function endRun(win){
   $('endTitle').textContent = win ? 'LIBRE !' : 'Mort dans l\'arène';
@@ -1320,6 +1462,7 @@ $('btnRestart').onclick = ()=>{ renderChars(); show('s-start'); };
 $('btnSpeed').onclick = ()=>{ speed = speed===1?2:speed===2?4:1; $('btnSpeed').textContent = '×'+speed; };
 $('btnStats').onclick = ()=>{ $('statsGrid').innerHTML = statsHTML(P); renderChips(); paintFig($('statsCv'), P); show('s-stats'); };
 $('btnBack').onclick = ()=>show('s-fight');
+fillIcons();
 renderChars();
 loadSprites(()=>{ if($('s-start').classList.contains('on')) renderChars(); });
 loadItems(()=>{ if($('s-start').classList.contains('on')) renderChars(); });
