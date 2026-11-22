@@ -152,28 +152,28 @@ const TYPES = {arme:{n:'Arme',ic:'🗡️',c:'#7a2f22'}, armure:{n:'Armure',ic:'
 const CHARS = [
   {id:'darkkus', name:'DarkKus', title:"L'Ombre", desc:'Son premier coup de chaque combat est un critique garanti. 15 % de critique.',
    stats:{maxHp:100, atk:10, def:1, spd:1.1, crit:.15, firstCrit:1},
-   look:{skin:'#c99a6e', hair:'#151515', hairStyle:'long', beard:'courte', tunic:'#2a2a38', build:'fin', weapon:'dague'}},
+   look:{sprite:'darkkus', skin:'#c99a6e', hair:'#151515', hairStyle:'long', beard:'courte', tunic:'#2a2a38', build:'fin', weapon:'dague'}},
   {id:'fredhus', name:'Fredhus', title:'Le Roc', desc:'Une montagne de muscles : réduit les dégâts subis de 12 %.',
    stats:{maxHp:150, atk:9, def:3, spd:.8, dr:.12},
-   look:{skin:'#e8c09a', hair:'#8a5a2a', hairStyle:'court', beard:'longue', tunic:'#9a3a2a', build:'costaud', weapon:'hache'}},
+   look:{sprite:'fredhus', skin:'#e8c09a', hair:'#8a5a2a', hairStyle:'court', beard:'longue', tunic:'#9a3a2a', build:'costaud', weapon:'hache'}},
   {id:'sweevus', name:'Sweevus', title:"L'Insaisissable", desc:'Vif comme l\'éclair : 15 % d\'esquive et attaque très vite.',
    stats:{maxHp:95, atk:8, def:1, spd:1.3, dodge:.15},
-   look:{skin:'#f0caa0', hair:'#d8b040', hairStyle:'crete', beard:'none', tunic:'#2a7a9a', build:'fin', weapon:'gladius'}},
+   look:{sprite:'sweevus', skin:'#f0caa0', hair:'#d8b040', hairStyle:'crete', beard:'none', tunic:'#2a7a9a', build:'fin', weapon:'gladius'}},
   {id:'chelmacus', name:'Chelmacus', title:'Le Furieux', desc:'Plus il saigne, plus il frappe fort. 5 % de vol de vie.',
    stats:{maxHp:115, atk:12, def:1, spd:1, lifesteal:.04, berserk:.3},
-   look:{skin:'#d8a878', hair:'#5a2a1a', hairStyle:'chauve', beard:'longue', tunic:'#6a9a3a', build:'costaud', weapon:'glaive'}},
+   look:{sprite:'chelmacus', skin:'#d8a878', hair:'#5a2a1a', hairStyle:'chauve', beard:'longue', tunic:'#6a9a3a', build:'costaud', weapon:'glaive'}},
   {id:'dridricus', name:'Dridricus', title:'Le Rétiaire', desc:'Son filet ralentit l\'adversaire de 15 %. Armé d\'un trident.',
    stats:{maxHp:110, atk:9, def:2, spd:1, slow:.15},
-   look:{skin:'#b07a50', hair:'#2a1a10', hairStyle:'queue', beard:'moustache', tunic:'#3a5a9a', build:'normal', weapon:'trident', net:1}},
+   look:{sprite:'dridricus', skin:'#b07a50', hair:'#2a1a10', hairStyle:'queue', beard:'moustache', tunic:'#3a5a9a', build:'normal', weapon:'trident', net:1}},
   {id:'kubenicus', name:'Kubenicus', title:"L'Increvable", desc:'Régénère 2 PV/s et récupère 40 % de PV après chaque victoire.',
    stats:{maxHp:120, atk:10, def:2, spd:.95, regen:2, postHeal:.4},
-   look:{skin:'#e0b080', hair:'#3a2a1a', hairStyle:'court', beard:'none', glasses:1, tunic:'#8a6a2a', build:'normal', weapon:'gladius'}},
+   look:{sprite:'kubenicus', skin:'#e0b080', hair:'#3a2a1a', hairStyle:'court', beard:'none', glasses:1, tunic:'#8a6a2a', build:'normal', weapon:'gladius'}},
   {id:'maximusrr', name:'MaximusRr', title:'Le Champion', desc:'Gloire : +2 attaque et +12 PV max à chaque boss vaincu.',
    stats:{maxHp:115, atk:10, def:2, spd:1, glory:1},
-   look:{skin:'#e8b890', hair:'#6a4a2a', hairStyle:'court', beard:'courte', tunic:'#a02a2a', build:'normal', weapon:'gladius'}},
+   look:{sprite:'maximusrr', skin:'#e8b890', hair:'#6a4a2a', hairStyle:'court', beard:'courte', tunic:'#a02a2a', build:'normal', weapon:'gladius'}},
   {id:'beelgraalus', name:"Beel'Graalus", title:'Le Maudit', desc:'Lames empoisonnées (+2 poison/s) et renvoie 3 dégâts à chaque coup reçu.',
    stats:{maxHp:105, atk:9, def:1, spd:1, poison:2, thorns:3},
-   look:{skin:'#b8c8a0', hair:'#4a1a5a', hairStyle:'long', beard:'none', tunic:'#4a2a5a', build:'fin', weapon:'dague'}}
+   look:{sprite:'beelgraalus', skin:'#b8c8a0', hair:'#4a1a5a', hairStyle:'long', beard:'none', tunic:'#4a2a5a', build:'fin', weapon:'dague'}}
 ];
 
 const AUGS = [
@@ -434,6 +434,7 @@ function drawHair(c, L, hair){
 }
 
 function drawGlad(c, x, y, dir, L, st={}){
+  if(L.sprite && SPR[L.sprite]) return drawSpriteGlad(c, x, y, dir, L, st);
   const anim = st.anim||0, flash = (st.flash||0) > 0, sc = st.scale||1;
   const lunge = anim>0 ? Math.sin((0.22-anim)/0.22*Math.PI)*34 : 0;
   c.save();
@@ -513,11 +514,110 @@ function drawGlad(c, x, y, dir, L, st={}){
   c.restore();
 }
 
+
+/* ============ SPRITES DES POTES ============ */
+const SPR = {};
+const SPR_AX = 100, SPR_AY = 488, SPR_H = 478;   // ancre = entre les pieds
+function loadSprites(cb){
+  let left = CHARS.length;
+  const done = ()=>{ if(--left===0) cb(); };
+  for(const ch of CHARS){
+    const img = new Image();
+    img.onload = ()=>{
+      const wc = document.createElement('canvas'); wc.width = img.width; wc.height = img.height;
+      const x = wc.getContext('2d'); x.drawImage(img,0,0);
+      x.globalCompositeOperation = 'source-in'; x.fillStyle = '#fff'; x.fillRect(0,0,wc.width,wc.height);
+      SPR[ch.id] = {img, white:wc};
+      done();
+    };
+    img.onerror = done;
+    img.src = 'assets/persos/' + ch.id + '.png';
+  }
+}
+
+function drawSpriteGlad(c, x, y, dir, L, st={}){
+  const S = SPR[L.sprite], anim = st.anim||0, flash = (st.flash||0) > 0, sc = st.scale||1;
+  const k = sc * 1.12 * 100 / SPR_H;
+  const ph = (0.22-anim)/0.22;
+  const lunge = anim>0 ? Math.sin(ph*Math.PI)*34 : 0;
+  const breath = st.dead ? 0 : Math.sin((st.t||0)*3)*0.012;
+  const steel = flash?'#fff':'#9aa0a6';
+  c.save();
+  c.translate(x + dir*lunge, y);
+  if(st.dead){ c.rotate(-dir*1.4); c.translate(0,-6); }
+  else if(anim>0) c.rotate(dir*0.12*Math.sin(ph*Math.PI));
+  c.scale(dir*k, k*(1+breath));
+  c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+  c.lineCap = 'round'; c.lineJoin = 'round';
+
+  // ombre + aura
+  c.fillStyle='rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0,6,115,26,0,0,7); c.fill();
+  if(L.aura){ const g=c.createRadialGradient(0,-250,30,0,-250,290); g.addColorStop(0,L.aura+'88'); g.addColorStop(1,L.aura+'00'); c.fillStyle=g; circ(c,0,-250,290); }
+  // derrière le corps : capes
+  if(L.emperor){ c.fillStyle=flash?'#fff':'#5b2a7a'; c.beginPath(); c.moveTo(-40,-330); c.quadraticCurveTo(-175,-200,-150,-15); c.lineTo(-50,-60); c.closePath(); c.fill();
+    c.strokeStyle='#e8b04a'; c.lineWidth=8; c.beginPath(); c.moveTo(-150,-15); c.lineTo(-50,-60); c.stroke(); }
+  if(L.lion){ c.fillStyle=flash?'#fff':'#b8862e'; c.beginPath(); c.moveTo(-30,-450); c.quadraticCurveTo(-190,-280,-150,-30); c.lineTo(-60,-120); c.closePath(); c.fill();
+    c.fillStyle=flash?'#fff':'#7a4a16'; circ(c,-150,-40,18); circ(c,-55,-400,62); }
+
+  c.drawImage(flash ? S.white : S.img, -SPR_AX, -SPR_AY);
+
+  // jambières
+  if(L.greaves){ c.fillStyle=steel; rr(c,-54,-104,44,64,10); rr(c,6,-104,44,64,10);
+    c.strokeStyle='#5a6066'; c.lineWidth=4; c.beginPath(); for(const gx of [-32,28]){ c.moveTo(gx,-98); c.lineTo(gx,-46);} c.stroke(); }
+  // plastron
+  if(L.chest){ c.fillStyle=flash?'#fff':'#c08a3a'; rr(c,-80,-350,132,108,22);
+    c.strokeStyle='#7a4a16'; c.lineWidth=6; c.beginPath(); c.moveTo(-50,-315); c.quadraticCurveTo(-14,-280,22,-315); c.moveTo(-14,-345); c.lineTo(-14,-250); c.stroke();
+    c.fillStyle='#e8b04a'; circ(c,-60,-330,7); circ(c,32,-330,7); }
+  if(L.emperor){ c.strokeStyle=flash?'#fff':'#e8b04a'; c.lineWidth=18; c.beginPath(); c.moveTo(-72,-338); c.lineTo(46,-240); c.stroke(); }
+  if(L.skull){ c.fillStyle='#eee'; circ(c,-55,-215,14); c.fillStyle='#222'; circ(c,-60,-217,3.5); circ(c,-50,-217,3.5); }
+  if(L.lion){ c.fillStyle=flash?'#fff':'#c8962e'; c.beginPath(); c.ellipse(30,-318,42,16,0.35,0,7); c.fill(); }
+  // manica (bras armé)
+  if(L.manica){ c.fillStyle=steel; rr(c,38,-292,44,80,14);
+    c.strokeStyle='#5a6066'; c.lineWidth=4; c.beginPath(); for(let yy=-276; yy<-215; yy+=16){ c.moveTo(40,yy); c.lineTo(80,yy);} c.stroke(); }
+  // tête : casque / peau de lion / laurier
+  if(L.lion){
+    c.fillStyle=flash?'#fff':'#c8962e';
+    c.beginPath(); c.arc(8,-432,72,Math.PI*0.95,Math.PI*2.05); c.fill();
+    circ(c,-30,-500,20); circ(c,34,-505,20);
+    c.beginPath(); c.ellipse(72,-462,38,24,0.1,0,7); c.fill();
+    c.fillStyle='#2a1a0a'; circ(c,62,-478,5); circ(c,104,-458,6);
+  } else if(L.helmet){
+    c.fillStyle=steel; c.beginPath(); c.arc(8,-428,68,Math.PI,0); c.fill();
+    rr(c,-64,-432,152,16,6); rr(c,-62,-430,22,58,6);
+    c.strokeStyle='#4a5056'; c.lineWidth=4; c.beginPath();
+    for(const gx of [48,60,72]){ c.moveTo(gx,-418); c.lineTo(gx,-368); } c.moveTo(42,-394); c.lineTo(80,-394); c.stroke();
+    c.fillStyle=flash?'#fff':'#b8322a'; rr(c,-30,-540,72,62,22);
+    c.fillStyle=steel; rr(c,-6,-492,24,22,4);
+  }
+  if(L.emperor){
+    c.fillStyle=flash?'#fff':'#e8b04a';
+    for(let i=0;i<9;i++){ const a=Math.PI*(1.02+i*0.12); c.beginPath(); c.ellipse(8+Math.cos(a)*66,-420+Math.sin(a)*66,20,9,a+Math.PI/2,0,7); c.fill(); }
+  }
+  // bouclier / filet (main arrière)
+  if(L.shield==='bois'){ c.fillStyle=flash?'#fff':'#8a6a2a'; rr(c,-108,-330,64,170,16);
+    c.strokeStyle='#5a3a14'; c.lineWidth=5; c.beginPath(); c.moveTo(-76,-322); c.lineTo(-76,-168); c.stroke(); c.fillStyle='#e8b04a'; circ(c,-76,-245,13); }
+  if(L.shield==='pointes'){ c.fillStyle=flash?'#fff':'#7a8088'; rr(c,-114,-340,74,186,16);
+    c.beginPath(); for(const sy of [-310,-245,-180]){ c.moveTo(-114,sy-16); c.lineTo(-152,sy); c.lineTo(-114,sy+16); } c.fill();
+    c.fillStyle='#c8ccd0'; circ(c,-77,-247,16); }
+  if(L.shield==='egide'){ c.fillStyle=flash?'#fff':'#d8a83a'; circ(c,-76,-245,82); c.fillStyle='#8a5a1a'; circ(c,-76,-245,52); c.fillStyle='#3a8a6a'; circ(c,-76,-245,28); }
+  if(L.net){
+    const nx = L.shield? -118 : -70, ny = L.shield? -170 : -175, nr = L.shield? 32 : 55;
+    c.strokeStyle=flash?'#fff':'#d8c89a'; c.lineWidth=3.5; c.beginPath(); c.arc(nx,ny,nr,0,7);
+    for(let i=-nr+10;i<nr;i+=16){ c.moveTo(nx+i,ny-nr+6); c.lineTo(nx+i,ny+nr-6); c.moveTo(nx-nr+6,ny+i); c.lineTo(nx+nr-6,ny+i); } c.stroke();
+  }
+  // arme dans la main avant
+  const swing = anim>0 ? -0.9 + ph*1.8 : -0.5;
+  c.save(); c.translate(66,-190); c.rotate(swing); c.scale(4.4,4.4); c.translate(-14,-10);
+  drawWeapon(c, L.weapon||'gladius', flash);
+  c.restore();
+  c.restore();
+}
+
 function drawBeast(c, x, y, dir, name, st={}){
   const flash = (st.flash||0)>0, anim = st.anim||0;
   const lunge = anim>0 ? Math.sin((0.22-anim)/0.22*Math.PI)*40 : 0;
   const col = flash?'#fff': name.includes('Loup')?'#7a7a80': name.includes('Ours')?'#5a3a22': name.includes('Tigre')?'#d87a2a':'#c89a4a';
-  c.save(); c.translate(x+dir*lunge,y); if(st.dead){ c.rotate(-dir*0.3); } c.scale(dir,1);
+  c.save(); c.translate(x+dir*lunge,y); if(st.dead){ c.rotate(-dir*0.3); } c.scale(dir*(st.scale||1),(st.scale||1));
   c.fillStyle='rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0,4,34,7,0,0,7); c.fill();
   c.fillStyle=col;
   c.beginPath(); c.ellipse(0,-28,34,17,0,0,7); c.fill();
@@ -610,7 +710,7 @@ function renderChips(){
 
 /* --- arène --- */
 const cv = $('cv'), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
-const POS = {a:{x:190,y:262}, b:{x:410,y:262}};
+const POS = {a:{x:185,y:285}, b:{x:415,y:285}};
 let perfT = 0, crowd = 0.3, lookA = null, lookB = null;
 
 function drawArena(){
@@ -631,8 +731,8 @@ function drawArena(){
 }
 function drawFighter(f, side){
   const p = POS[side], dir = side==='a'?1:-1;
-  const st = {anim:f.anim, flash:f.flash, dead:f.hp<=0, scale: f.boss?1.15:1};
-  if(f.beast) drawBeast(ctx, p.x, p.y, dir, f.beast, st);
+  const st = {anim:f.anim, flash:f.flash, dead:f.hp<=0, scale: (f.boss?1.15:1)*1.3, t: perfT + (side==='b'?1.3:0)};
+  if(f.beast) drawBeast(ctx, p.x, p.y, dir, f.beast, Object.assign({}, st, {scale:1.2}));
   else drawGlad(ctx, p.x, p.y, dir, side==='a'?lookA:lookB, st);
 }
 function draw(){
@@ -652,7 +752,7 @@ function spawnFloat(ev){
   if(ev.kind==='none' || !ev.txt) return;
   const p = POS[ev.side];
   const col = {hit:'#fff', crit:'#ffcf3a', miss:'#9ad', thorns:'#ff9a6a', poison:'#9be36b', special:'#d9a6ff'}[ev.kind] || '#fff';
-  floats.push({x:p.x + (Math.random()*30-15), y:p.y-125, txt:ev.txt, col, size: ev.kind==='crit'?26: ev.kind==='special'?20:18, life:1});
+  floats.push({x:p.x + (Math.random()*30-15), y:p.y-165, txt:ev.txt, col, size: ev.kind==='crit'?26: ev.kind==='special'?20:18, life:1});
 }
 
 let lastT = 0;
@@ -737,6 +837,7 @@ $('btnSpeed').onclick = ()=>{ speed = speed===1?2:speed===2?4:1; $('btnSpeed').t
 $('btnStats').onclick = ()=>{ $('statsGrid').innerHTML = statsHTML(P); renderChips(); paintFig($('statsCv'), P); show('s-stats'); };
 $('btnBack').onclick = ()=>show('s-fight');
 renderChars();
+loadSprites(()=>{ if($('s-start').classList.contains('on')) renderChars(); });
 </script>
 </body>
 </html>
