@@ -636,7 +636,7 @@ const WEAPON_IMG = {
 const WEAR = {
   jambieres:{x:-58, y:-128, w:116},
   plastron:{x:-84, y:-354, w:138},
-  manica:{x:32, y:-296, h:128},
+  manica:{x:-86, y:-298, h:140, flip:1},
   filet:{x:-124, y:-212, w:112},
   'bouclier-bois':{cx:-46, cy:-245, h:205},
   'bouclier-pointes':{cx:-40, cy:-245, h:205},
@@ -668,7 +668,8 @@ function wear(c, f, flash){
   let w, h;
   if(r.w){ w = r.w; h = w*ih/iw; } else { h = r.h; w = h*iw/ih; }
   const x = r.cx!==undefined ? r.cx - w/2 : r.x, y = r.cy!==undefined ? r.cy - h/2 : r.y;
-  c.drawImage(flash ? it.w : it.n, x, y, w, h);
+  if(r.flip){ c.save(); c.translate(x + w/2, 0); c.scale(-1, 1); c.drawImage(flash ? it.w : it.n, -w/2, y, w, h); c.restore(); }
+  else c.drawImage(flash ? it.w : it.n, x, y, w, h);
 }
 function drawWeaponImg(c, type, flash){
   const d = WEAPON_IMG[type] || WEAPON_IMG.gladius, it = IMG[d.f];
@@ -854,6 +855,15 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   blitPix(c, G.back, GEAR_BOX, flash);
   c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
   if(L.lion) wear(c,'peau-lion',flash);
+  // arme : les armes d'hast passent derrière le corps, la main reste devant
+  const polearm = ['trident','lance'].includes(L.weapon);
+  const weapon = ()=>{
+    c.save(); c.translate(66,-190); c.rotate(P.wpn);
+    c.imageSmoothingEnabled = false; blitPix(c, G.weapon, WPN_BOX, flash); c.imageSmoothingEnabled = true;
+    drawWeaponImg(c, L.weapon||'gladius', flash);
+    c.restore();
+  };
+  if(polearm) at(PIV.armF, P.armF, weapon);
   // jambes (sous la tunique)
   const greave = (side)=>{ if(!L.greaves || !IMG.jambieres) return; c.save(); c.beginPath(); side<0 ? c.rect(-200,-200,200,250) : c.rect(0,-200,200,250); c.clip(); wear(c,'jambieres',flash); c.restore(); };
   at(PIV.legB, P.legB, ()=>{ img(PT.legB); greave(-1); });
@@ -875,6 +885,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // bras arrière + bouclier / filet
   at(PIV.armB, P.armB, ()=>{
     img(PT.armB);
+    if(L.manica) wear(c,'manica',flash);
     if(L.net) wear(c,'filet',flash);
     const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide'}[L.shield];
     if(shImg) wear(c,shImg,flash);
@@ -894,11 +905,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // bras avant + arme
   at(PIV.armF, P.armF, ()=>{
     img(PT.armF);
-    if(L.manica) wear(c,'manica',flash);
-    c.save(); c.translate(66,-190); c.rotate(P.wpn);
-    c.imageSmoothingEnabled = false; blitPix(c, G.weapon, WPN_BOX, flash); c.imageSmoothingEnabled = true;
-    drawWeaponImg(c, L.weapon||'gladius', flash);
-    c.restore();
+    if(!polearm) weapon();
   });
   c.restore();
 }
