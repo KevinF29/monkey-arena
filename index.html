@@ -332,7 +332,7 @@ function step(st, dt, rnd=Math.random){
     if(st.a.hp<=0 || st.b.hp<=0) break;
     f.cd -= dt * effSpd(f,o);
     if(f.cd<=0){
-      f.cd += 1; f.anim = 0.22;
+      f.cd += 1; f.anim = 0.22; st.events.push({side:f.side, kind:'swing'});
       strike(f,o,st,rnd);
       if(f.doubleHit && o.hp>0 && rnd()<f.doubleHit) strike(f,o,st,rnd);
     }
@@ -527,7 +527,7 @@ function loadSprites(cb){
       const wc = document.createElement('canvas'); wc.width = img.width; wc.height = img.height;
       const x = wc.getContext('2d'); x.drawImage(img,0,0);
       x.globalCompositeOperation = 'source-in'; x.fillStyle = '#fff'; x.fillRect(0,0,wc.width,wc.height);
-      SPR[ch.id] = {img, white:wc};
+      SPR[ch.id] = {img, white:wc, parts: buildParts(img), wparts: buildParts(wc)};
       done();
     };
     img.onerror = done;
@@ -636,7 +636,7 @@ function gearFront(c, L){
     c.fillStyle='#c0342a'; rr(c,-30,-540,72,62,22);
     c.fillStyle=steel; rr(c,-6,-494,24,24,4);
   }
-  if(L.emperor){
+  if(L.emperor && !c.__noLaurel){
     c.fillStyle='#f0c040';
     for(let i=0;i<9;i++){ const a=Math.PI*(1.02+i*0.12); c.beginPath(); c.ellipse(8+Math.cos(a)*66,-420+Math.sin(a)*66,20,10,a+Math.PI/2,0,7); c.fill(); }
   }
@@ -654,6 +654,11 @@ function gearFront(c, L){
     c.strokeStyle='#e0d0a0'; c.lineWidth=6; c.beginPath(); c.arc(nx,ny,nr,0,7);
     for(let i=-nr+12;i<nr;i+=18){ c.moveTo(nx+i,ny-nr+8); c.lineTo(nx+i,ny+nr-8); c.moveTo(nx-nr+8,ny+i); c.lineTo(nx+nr-8,ny+i); } c.stroke();
   }
+}
+function gearHead(c, L){
+  if(!L.emperor) return;
+  c.fillStyle='#f0c040';
+  for(let i=0;i<9;i++){ const a=Math.PI*(1.02+i*0.12); c.beginPath(); c.ellipse(8+Math.cos(a)*66,-420+Math.sin(a)*66,20,10,a+Math.PI/2,0,7); c.fill(); }
 }
 function gearWeapon(c, L){
   if(WEAPON_IMG[L.weapon||'gladius'] && hasImg(WEAPON_IMG[L.weapon||'gladius'].f)) return;
@@ -695,7 +700,8 @@ function getGear(L){
   const key = Object.keys(IMG).length + '#' + ['weapon','shield','net','helmet','chest','greaves','manica','lion','skull','emperor'].map(k=>L[k]||0).join('|');
   if(!GEAR_CACHE[key]) GEAR_CACHE[key] = {
     back: pixelize(GEAR_BOX, c=>gearBack(c,L)),
-    front: pixelize(GEAR_BOX, c=>gearFront(c,L)),
+    front: pixelize(GEAR_BOX, c=>{ c.__noLaurel=1; gearFront(c,L); }),
+    head: pixelize(GEAR_BOX, c=>gearHead(c,L)),
     weapon: pixelize(WPN_BOX, c=>gearWeapon(c,L))
   };
   return GEAR_CACHE[key];
@@ -705,43 +711,147 @@ function blitPix(c, layer, box, flash){
   c.drawImage(flash ? layer.w : layer.n, box.x, box.y, box.w, box.h);
 }
 
+
+/* --- marionnette : découpe commune aux 8 persos (coordonnées du sprite 204×490) --- */
+const PART_POLY = {
+  head: [[0,0],[204,0],[204,146],[0,146]],
+  armB: [[10,186],[74,186],[77,262],[73,340],[8,340]],
+  armF: [[134,198],[162,191],[196,246],[198,336],[146,336],[134,270]],
+  legB: [[24,347],[101,347],[104,490],[14,490]],
+  legF: [[101,347],[204,347],[204,490],[104,490]]
+};
+// pivots en coordonnées relatives (origine entre les pieds)
+const PIV = {head:[5,-346], armB:[-55,-298], armF:[48,-290], legB:[-30,-142], legF:[25,-142]};
+function buildParts(img){
+  const mk = ()=>{ const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; return c; };
+  const poly = (x, pts)=>{ x.beginPath(); pts.forEach(([a,b],i)=> i?x.lineTo(a,b):x.moveTo(a,b)); x.closePath(); };
+  const out = {};
+  for(const k in PART_POLY){
+    const c = mk(), x = c.getContext('2d');
+    x.save(); poly(x, PART_POLY[k]); x.clip(); x.drawImage(img,0,0); x.restore();
+    out[k] = c;
+  }
+  const t = mk(), x = t.getContext('2d');
+  x.drawImage(img,0,0);
+  x.globalCompositeOperation = 'destination-out';
+  for(const k in PART_POLY){ poly(x, PART_POLY[k]); x.fill(); }
+  // bouche le trou laissé par le bras arrière avec la couleur de la tunique
+  x.globalCompositeOperation = 'destination-over';
+  const probe = document.createElement('canvas').getContext('2d'); probe.canvas.width=img.width; probe.canvas.height=img.height;
+  probe.drawImage(img,0,0); const px = probe.getImageData(100,300,1,1).data;
+  x.fillStyle = `rgb(${px[0]},${px[1]},${px[2]})`;
+  x.beginPath(); x.moveTo(56,190); x.lineTo(80,186); x.lineTo(82,346); x.lineTo(54,346); x.closePath(); x.fill();
+  out.torso = t;
+  return out;
+}
+
 function drawSpriteGlad(c, x, y, dir, L, st={}){
-  const S = SPR[L.sprite], anim = st.anim||0, flash = (st.flash||0) > 0, sc = st.scale||1;
+  const S = SPR[L.sprite], flash = (st.flash||0) > 0, sc = st.scale||1;
   const G = getGear(L);
+  const P = st.pose || poseIdle(st.t||0);
   const k = sc * 1.12 * 100 / SPR_H;
-  const ph = (0.22-anim)/0.22;
-  const lunge = anim>0 ? Math.sin(ph*Math.PI)*34 : 0;
-  const breath = st.dead ? 0 : Math.sin((st.t||0)*3)*0.012;
+  const PT = flash ? S.wparts : S.parts;
+  const at = (piv, rot, fn)=>{ c.save(); c.translate(piv[0],piv[1]); c.rotate(rot); c.translate(-piv[0],-piv[1]); fn(); c.restore(); };
+  const img = cv2 => c.drawImage(cv2, -SPR_AX, -SPR_AY);
   c.save();
-  c.translate(x + dir*lunge, y);
-  if(st.dead){ c.rotate(-dir*1.4); c.translate(0,-6); }
-  else if(anim>0) c.rotate(dir*0.12*Math.sin(ph*Math.PI));
-  c.scale(dir*k, k*(1+breath));
-  c.fillStyle='rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0,6,115,26,0,0,7); c.fill();
+  c.translate(x + dir*P.x, y + P.y);
+  c.scale(dir*k*P.sx, k*P.sy);
+  // ombre (ne tourne pas)
+  c.fillStyle='rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(-P.x*0.3/k,6,115,26,0,0,7); c.fill();
+  c.rotate(P.rot);
   if(L.aura){ const g=c.createRadialGradient(0,-250,30,0,-250,290); g.addColorStop(0,L.aura+'88'); g.addColorStop(1,L.aura+'00'); c.fillStyle=g; circ(c,0,-250,290); }
   c.imageSmoothingEnabled = false;
   blitPix(c, G.back, GEAR_BOX, flash);
   c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
-  if(L.lion) wear(c,'peau-lion',flash);            // fourrure dans le dos
-  c.drawImage(flash ? S.white : S.img, -SPR_AX, -SPR_AY);
-  // pièces dessinées
-  if(L.greaves) wear(c,'jambieres',flash);
+  if(L.lion) wear(c,'peau-lion',flash);
+  // jambes (sous la tunique)
+  const greave = (side)=>{ if(!L.greaves || !IMG.jambieres) return; c.save(); c.beginPath(); side<0 ? c.rect(-200,-200,200,250) : c.rect(0,-200,200,250); c.clip(); wear(c,'jambieres',flash); c.restore(); };
+  at(PIV.legB, P.legB, ()=>{ img(PT.legB); greave(-1); });
+  at(PIV.legF, P.legF, ()=>{ img(PT.legF); greave(1); });
+  // torse
+  img(PT.torso);
   if(L.chest) wear(c,'plastron',flash);
-  if(L.manica) wear(c,'manica',flash);
-  if(L.net) wear(c,'filet',flash);
-  const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide'}[L.shield];
-  if(shImg) wear(c,shImg,flash);
-  if(L.lion){ c.save(); c.beginPath(); c.rect(-300,-620,600,280); c.rect(-15,-345,200,120); c.clip(); wear(c,'peau-lion',flash); c.restore(); }
-  else if(L.helmet) wear(c,'casque',flash);
-  c.imageSmoothingEnabled = false;
-  blitPix(c, G.front, GEAR_BOX, flash);
-  const swing = anim>0 ? -0.9 + ph*1.8 : -0.5;
-  c.save(); c.translate(66,-190); c.rotate(swing+0.5);
-  blitPix(c, G.weapon, WPN_BOX, flash);
-  c.imageSmoothingEnabled = true;
-  drawWeaponImg(c, L.weapon||'gladius', flash);
+  c.imageSmoothingEnabled = false; blitPix(c, G.front, GEAR_BOX, flash); c.imageSmoothingEnabled = true;
+  // tête
+  at(PIV.head, P.head, ()=>{
+    img(PT.head);
+    if(L.lion){ c.save(); c.beginPath(); c.rect(-300,-620,600,280); c.rect(-15,-345,200,120); c.clip(); wear(c,'peau-lion',flash); c.restore(); }
+    else if(L.helmet) wear(c,'casque',flash);
+    c.imageSmoothingEnabled = false; blitPix(c, G.head, GEAR_BOX, flash); c.imageSmoothingEnabled = true;
+  });
+  // bras arrière + bouclier / filet
+  at(PIV.armB, P.armB, ()=>{
+    img(PT.armB);
+    if(L.net) wear(c,'filet',flash);
+    const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide'}[L.shield];
+    if(shImg) wear(c,shImg,flash);
+  });
+  // traînée de l'arme
+  if(P.trail && !flash){
+    const [a0,a1] = P.trail, R = 120 + 230;
+    c.save(); c.translate(PIV.armF[0], PIV.armF[1]);
+    const n = 10;
+    for(let i=0;i<n;i++){
+      const ta = a0 + (a1-a0)*i/n, tb = a0 + (a1-a0)*(i+1)/n;
+      c.strokeStyle = `rgba(255,248,220,${0.05 + 0.5*i/n})`; c.lineWidth = 10 + 40*i/n;
+      c.beginPath(); c.moveTo(-Math.sin(ta)*R, Math.cos(ta)*R); c.lineTo(-Math.sin(tb)*R, Math.cos(tb)*R); c.stroke();
+    }
+    c.restore();
+  }
+  // bras avant + arme
+  at(PIV.armF, P.armF, ()=>{
+    img(PT.armF);
+    if(L.manica) wear(c,'manica',flash);
+    c.save(); c.translate(66,-190); c.rotate(P.wpn);
+    c.imageSmoothingEnabled = false; blitPix(c, G.weapon, WPN_BOX, flash); c.imageSmoothingEnabled = true;
+    drawWeaponImg(c, L.weapon||'gladius', flash);
+    c.restore();
+  });
   c.restore();
-  c.restore();
+}
+
+/* --- poses --- */
+const ATK_T = 0.38, HIT_T = 0.28, DODGE_T = 0.34, DIE_T = 0.8;
+const ease = q => q<0.5 ? 2*q*q : 1-Math.pow(-2*q+2,2)/2;
+const lerp = (a,b,q) => a+(b-a)*q;
+function poseIdle(t){
+  return {x:0, y:0, rot:0, sx:1, sy:1+Math.sin(t*3)*0.012, head:Math.sin(t*1.6)*0.035,
+          armF:Math.sin(t*3+1)*0.05, armB:-Math.sin(t*3)*0.05, legF:0, legB:0, wpn:0, trail:null};
+}
+function poseOf(v, t){
+  const P = poseIdle(t);
+  if(v.die > 0){
+    const q = ease(Math.min(1, v.die/DIE_T));
+    P.rot = -1.5*q; P.head = -0.5*q; P.armF = 0.9*q; P.armB = -1.2*q; P.legF = 0.35*q; P.legB = -0.1*q; P.sy = 1; P.x = 30*q;
+    return P;
+  }
+  if(v.win){
+    const b = Math.abs(Math.sin(t*5));
+    P.y = -b*10; P.armF = 3.0 + Math.sin(t*6)*0.12; P.wpn = 2.5; P.armB = -0.5; P.head = -0.15;
+    return P;
+  }
+  if(v.atk > 0){
+    const p = 1 - v.atk/ATK_T;
+    if(p < 0.35){ const q = ease(p/0.35);
+      P.armF = lerp(P.armF, 2.3, q); P.wpn = -4.18*q; P.rot = -0.08*q; P.x = -8*q; P.armB = -0.2*q; P.head = -0.06*q; }
+    else if(p < 0.6){ const q = ease((p-0.35)/0.25);
+      P.armF = lerp(2.3, 4.9, q); P.wpn = -4.18; P.rot = lerp(-0.08, 0.14, q); P.x = lerp(-8, 44, q);
+      P.legF = 0.4*q; P.legB = -0.3*q; P.armB = lerp(-0.2, 0.3, q); P.head = 0.08*q; P.trail = [2.3, lerp(2.3,4.9,q)]; }
+    else { const q = ease((p-0.6)/0.4);
+      P.armF = lerp(4.9, Math.PI*2 + P.armF, q); P.wpn = 2.1*(1-q); P.rot = 0.14*(1-q); P.x = 44*(1-q);
+      P.legF = 0.4*(1-q); P.legB = -0.3*(1-q); P.armB = 0.3*(1-q);
+      if(q < 0.35) P.trail = [lerp(2.3,4.9,q/0.35*0.9), 4.9]; }
+  }
+  if(v.dodge > 0){
+    const q = Math.sin((1 - v.dodge/DODGE_T)*Math.PI);
+    P.x += -46*q; P.y += -16*q; P.rot += -0.28*q; P.legF += -0.35*q; P.legB += 0.25*q; P.armB += -0.4*q; P.head += -0.15*q;
+  }
+  if(v.hit > 0){
+    const q = v.hit/HIT_T, s = Math.sin((1-q)*Math.PI);
+    P.x += -16*v.kb*q; P.rot += -0.16*s; P.head += -0.3*s; P.sx *= 1 + 0.07*s; P.sy *= 1 - 0.06*s;
+    P.armF += 0.35*s; P.armB += -0.45*s;
+  }
+  return P;
 }
 
 function drawBeast(c, x, y, dir, name, st={}){
@@ -811,6 +921,7 @@ function showIntro(){
 function prepareFight(){
   const e = makeEnemy(N, BOSSES);
   ST = newFight(P, e); floats = []; lastLog = [];
+  VIS = {a:newVis(), b:newVis()}; parts = []; shake = 0; freeze = 0; timeScale = 1; zoom = null; endT = 0;
   lookA = computeLook(ST.a); lookB = ST.b.beast ? null : computeLook(ST.b);
   const a = actOf(N);
   $('actLabel').textContent = `Acte ${ROMAN[a]} — ${ACT_NAMES[a]}`;
@@ -860,23 +971,59 @@ function drawArena(){
   ctx.fillStyle='#e8b04a'; ctx.fillRect(W/2-8, 21, 16, 3);
   ctx.fillStyle='rgba(0,0,0,.08)'; ctx.beginPath(); ctx.ellipse(W/2, 275, 270, 45, 0, 0, 7); ctx.fill();
 }
+let VIS = {a:null, b:null}, parts = [], shake = 0, freeze = 0, timeScale = 1, zoom = null, endT = 0;
+const newVis = ()=>({atk:0, hit:0, dodge:0, kb:1, die:0, win:0});
 function drawFighter(f, side){
-  const p = POS[side], dir = side==='a'?1:-1;
-  const st = {anim:f.anim, flash:f.flash, dead:f.hp<=0, scale: (f.boss?1.15:1)*1.3, t: perfT + (side==='b'?1.3:0)};
-  if(f.beast) drawBeast(ctx, p.x, p.y, dir, f.beast, Object.assign({}, st, {scale:1.2}));
-  else drawGlad(ctx, p.x, p.y, dir, side==='a'?lookA:lookB, st);
+  const p = POS[side], dir = side==='a'?1:-1, v = VIS[side] || newVis();
+  const t = perfT + (side==='b'?1.3:0);
+  const scale = (f.boss?1.15:1)*1.3;
+  if(f.beast || !(side==='a'?lookA:lookB).sprite || !SPR[(side==='a'?lookA:lookB).sprite]){
+    const anim = v.atk>0 ? v.atk/ATK_T*0.22 : 0;
+    const off = (v.hit>0 ? -14*v.kb*v.hit/HIT_T : 0) + (v.dodge>0 ? -40*Math.sin((1-v.dodge/DODGE_T)*Math.PI) : 0);
+    const st = {anim, flash:f.flash, dead:f.hp<=0, scale, t};
+    if(f.beast) drawBeast(ctx, p.x + dir*off, p.y, dir, f.beast, Object.assign({}, st, {scale:1.2}));
+    else drawGlad(ctx, p.x + dir*off, p.y, dir, side==='a'?lookA:lookB, st);
+    return;
+  }
+  drawGlad(ctx, p.x, p.y, dir, side==='a'?lookA:lookB, {flash:f.flash, scale, t, pose: poseOf(v, t)});
 }
+function burst(side, kind, n){
+  const p = POS[side], dir = side==='a'?1:-1;
+  for(let i=0;i<n;i++){
+    const o = {x:p.x + (Math.random()*20-10), y:p.y - 70 - Math.random()*40, vx:(Math.random()*2-1)*120 - dir*60, vy:-Math.random()*160-40, life:0.5+Math.random()*0.4, s:3, c:'#fff', g:500};
+    if(kind==='spark'){ o.c = Math.random()<.5?'#ffe27a':'#ffffff'; o.s = 3; o.life*=0.6; }
+    if(kind==='blood'){ o.c = Math.random()<.5?'#b81c1c':'#7a0e0e'; o.s = 4; }
+    if(kind==='sand'){ o.y = p.y - 2; o.vy = -Math.random()*90-20; o.vx = (Math.random()*2-1)*110; o.c = Math.random()<.5?'#d9b77e':'#b08a52'; o.s = 4; }
+    if(kind==='poison'){ o.c = '#8be05a'; o.vy = -Math.random()*60-20; o.vx*=0.3; o.g = -40; o.s = 4; }
+    parts.push(o);
+  }
+}
+function drawParts(dt){
+  for(const o of parts){ o.vy += o.g*dt; o.x += o.vx*dt; o.y += o.vy*dt; o.life -= dt; }
+  parts = parts.filter(o=>o.life>0 && o.y < H+10);
+  for(const o of parts){ ctx.globalAlpha = Math.min(1, o.life*2.5); ctx.fillStyle = o.c; ctx.fillRect(Math.round(o.x), Math.round(o.y), o.s, o.s); }
+  ctx.globalAlpha = 1;
+}
+let lastDrawDt = 0;
 function draw(){
+  ctx.save();
+  if(shake > 0.3){ ctx.translate((Math.random()*2-1)*shake, (Math.random()*2-1)*shake); }
+  if(zoom){ ctx.translate(zoom.x, zoom.y); ctx.scale(zoom.z, zoom.z); ctx.translate(-zoom.x, -zoom.y); }
   drawArena();
-  drawFighter(ST.a,'a'); drawFighter(ST.b,'b');
+  // celui qui attaque passe devant
+  const order = (VIS.b && VIS.b.atk>0) ? ['a','b'] : ['b','a'];
+  for(const sd of order) drawFighter(ST[sd], sd);
+  drawParts(lastDrawDt);
   ctx.textAlign='center';
   for(const f of floats){
     ctx.globalAlpha = Math.max(0, Math.min(1, f.life*1.6));
-    ctx.font = `700 ${f.size}px Inter, sans-serif`;
+    const pop = 1 + Math.max(0, f.life-0.85)*3;
+    ctx.font = `700 ${Math.round(f.size*pop)}px Inter, sans-serif`;
     ctx.lineWidth = 4; ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.strokeText(f.txt, f.x, f.y);
     ctx.fillStyle = f.col; ctx.fillText(f.txt, f.x, f.y);
   }
   ctx.globalAlpha=1;
+  ctx.restore();
   if(ST.b.enraged){ ctx.fillStyle='rgba(120,0,160,.12)'; ctx.fillRect(0,0,W,H); }
 }
 function spawnFloat(ev){
@@ -891,21 +1038,52 @@ function loop(ts){
   if(!running) return;
   const dtReal = Math.min(0.05, (ts-lastT)/1000 || 0); lastT = ts;
   perfT += dtReal;
-  let rem = dtReal*speed;
-  while(rem>0){ const s=Math.min(0.02,rem); step(ST,s); rem-=s; }
-  for(const ev of ST.events){ spawnFloat(ev); if(ev.log) addLog(ev.log); if(ev.kind==='crit') crowd = 1.2; }
+  if(freeze > 0) freeze -= dtReal;
+  const dt = freeze > 0 ? 0 : dtReal*speed*timeScale;
+  if(!ST.over){ let rem = dt; while(rem>0){ const s=Math.min(0.02,rem); step(ST,s); rem-=s; } }
+  for(const ev of ST.events){
+    spawnFloat(ev); if(ev.log) addLog(ev.log);
+    const v = VIS[ev.side], other = ev.side==='a'?'b':'a';
+    if(ev.kind==='swing') v.atk = ATK_T;
+    if(ev.kind==='hit' || ev.kind==='crit'){
+      const f = ST[ev.side], big = (+ev.txt.replace('!','')||0) > f.maxHp*0.12;
+      v.hit = HIT_T; v.kb = ev.kind==='crit' ? 1.8 : big ? 1.3 : 1;
+      burst(ev.side, 'spark', 6); burst(ev.side, 'sand', 4);
+      if(ev.kind==='crit'){ burst(ev.side, 'blood', 8); freeze = 0.09; shake = Math.max(shake, 8); crowd = 1.3; }
+      else if(big){ freeze = Math.max(freeze, 0.05); shake = Math.max(shake, 4); }
+      else shake = Math.max(shake, 1.5);
+    }
+    if(ev.kind==='thorns') burst(ev.side, 'spark', 4);
+    if(ev.kind==='poison') burst(ev.side, 'poison', 3);
+    if(ev.kind==='miss'){ v.dodge = DODGE_T; burst(ev.side, 'sand', 6); }
+  }
   ST.events.length = 0;
+  for(const sd of ['a','b']){ const v = VIS[sd]; for(const k of ['atk','hit','dodge']) if(v[k]>0) v[k] = Math.max(0, v[k]-dt); }
   for(const f of floats){ f.y -= 40*dtReal; f.life -= dtReal; }
   floats = floats.filter(f=>f.life>0);
   crowd = Math.max(0.3, crowd - dtReal*0.8);
-  updateBars(); draw();
+  shake *= Math.pow(0.0005, dtReal);
+  lastDrawDt = freeze > 0 ? 0 : dtReal*Math.max(timeScale,0.3);
   if(ST.over){
-    running = false;
-    setTimeout(endFight, 900/Math.min(speed,2));
-    let k=0; const tail=()=>{ k++; for(const f of floats){f.y-=1.2;f.life-=0.03;} floats=floats.filter(f=>f.life>0); draw(); if(k<25) requestAnimationFrame(tail); };
-    requestAnimationFrame(tail);
+    const loser = ST.winner==='a' ? 'b' : 'a';
+    if(!endT){
+      endT = 1.9; timeScale = 0.3; shake = 10; crowd = 1.6; freeze = 0.12;
+      burst(loser, 'blood', 14); burst(loser, 'sand', 12);
+      zoom = {x:lerp(W/2, POS[loser].x, 0.35), y:POS[loser].y-70, z:1};
+      VIS[ST.winner].atk = 0;
+    }
+    endT -= dtReal;
+    for(const f of [ST.a, ST.b]) if(f.flash>0) f.flash -= dtReal*Math.max(timeScale,0.5);
+    VIS[loser].die += dtReal * (endT > 1.3 ? 0.6 : 1.6);
+    if(endT < 1.3){ timeScale = 1; VIS[ST.winner].win = 1; }
+    zoom.z = 1 + 0.1*Math.min(1, (1.9-endT)/0.4) * (endT < 0.5 ? endT/0.5 : 1);
+    crowd = Math.max(crowd, 1.2);
+    updateBars(); draw();
+    if(endT <= 0){ running = false; zoom = null; timeScale = 1; endFight(); return; }
+    requestAnimationFrame(loop);
     return;
   }
+  updateBars(); draw();
   requestAnimationFrame(loop);
 }
 function startFight(){
