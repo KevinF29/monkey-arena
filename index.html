@@ -955,21 +955,196 @@ const cv = $('cv'), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
 const POS = {a:{x:185,y:285}, b:{x:415,y:285}};
 let perfT = 0, crowd = 0.3, lookA = null, lookB = null;
 
-function drawArena(){
-  const g = ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,'#2b1f16'); g.addColorStop(.45,'#4a3524'); g.addColorStop(.46,'#c9a36a'); g.addColorStop(1,'#a8834f');
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#3a2a1d'; for(let r=0;r<4;r++) ctx.fillRect(0, 20+r*28, W, 14);
-  for(let r=0;r<4;r++) for(let i=0;i<34;i++){
-    const x = 8 + i*18 + (r%2)*9, y = 18 + r*28;
-    ctx.fillStyle = ['#8a5a3a','#6a4a3a','#9a7a5a','#5a3a2a'][(i*7+r)%4];
-    circ(ctx, x, y + Math.sin(perfT*3 + i + r)*1.2*crowd, 5);
+/* décor pixel art : dessiné en basse résolution (200×110) puis agrandi ×3, un thème par acte */
+const AW = 200, AH = 110, HZ = 64, WALL = 52;
+const ARENAS = [
+  { // I — Les Fosses de Capoue : fosse creusée dans la roche, nuit, torches
+    top:'rock', sky:['#0d0a10','#1d1519'], stands:'wood', tiers:2, crowd:0.35, wall:'wood', woodC:'#4a3020',
+    stone:'#3e342c', sand:'#6e5a40', torches:[30,70,130,170], blood:7, hay:1, dark:0.5 },
+  { // II — Le Ludus de Ravenne : terrain d'entraînement en bois, plein jour
+    top:'sky', sky:['#7fb0dc','#d8e8ee'], clouds:1, far:'trees', stands:'wood', tiers:2, crowd:0.45, wall:'wood', woodC:'#7a5434',
+    stone:'#8a6a48', sand:'#c9a36a', palus:1, blood:2 },
+  { // III — L'Arène de Nîmes : pierre calcaire, ciel d'été
+    top:'arches', sky:['#5f9ad6','#bcd8ee'], clouds:1, stands:'stone', tiers:3, crowd:0.65, wall:'stone',
+    stone:'#c8b48a', panel:'#8a3a2a', sand:'#d4ae72', box:'#8a2a22', torches:[], blood:3 },
+  { // IV — L'Amphithéâtre de Pompéi : gradins bas, le Vésuve fume au loin
+    top:'sky', sky:['#8ab0d0','#f0dcb8'], clouds:1, far:'vesuvius', stands:'stone', tiers:2, crowd:0.7, wall:'stone',
+    stone:'#bca486', panel:'#a83a28', sand:'#cfa468', box:'#6a3a8a', blood:4 },
+  { // V — Le Cirque de Carthage : coucher de soleil, palmiers, vélum bleu
+    top:'sky', sky:['#e8783a','#f8d890'], far:'palms', stands:'stone', tiers:3, crowd:0.75, wall:'stone', velum:['#2a5a9a','#eae0c8'],
+    stone:'#d8aa70', panel:'#2a5a8a', sand:'#e0a85a', box:'#2a4a8a', torches:[40,160], blood:5 },
+  { // VI — L'Arène de Vérone : marbre rose, crépuscule
+    top:'arches', sky:['#2e2850','#c07a78'], stands:'stone', tiers:3, crowd:0.85, wall:'stone',
+    stone:'#d4a090', panel:'#5a2a4a', sand:'#b88a64', box:'#5a2a6a', torches:[25,62,138,175], blood:6, dark:0.25 },
+  { // VII — Le Colisée de Rome : immense, foule compacte, vélum, loge impériale
+    top:'arches', sky:['#5a96d0','#f0dcaa'], stands:'stone', tiers:4, crowd:1, wall:'stone', velum:['#a82a22','#efe4c8'],
+    stone:'#dccaa0', panel:'#6a2a7a', sand:'#d8b070', box:'#5b2a7a', banners:1, torches:[30,170], blood:8 },
+];
+const SKINS = ['#f0c8a0','#e0b48a','#c8956a','#a8744a','#7a4e30'];
+const TUNICS = ['#b83a2a','#e8e0c8','#3a5a9a','#6a8a3a','#c8a040','#8a4a8a','#d87a3a','#5a5a5a','#2a7a7a','#e8c8a0'];
+
+function srnd(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function hex2(c){ return [parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]; }
+function rgb(a){ return '#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+function shade(c,f){ return rgb(hex2(c).map(v=> f>=1 ? v+(255-v)*(f-1) : v*f)); }
+function mix(a,b,t){ const A=hex2(a),B=hex2(b); return rgb(A.map((v,i)=>v+(B[i]-v)*t)); }
+function PX1(c,x,y,w,h,col){ c.fillStyle=col; c.fillRect(Math.round(x),Math.round(y),w,h); }
+function pline(c,x0,y0,x1,y1,col){ const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))|0; for(let i=0;i<=n;i++){ const t=n?i/n:0; PX1(c,x0+(x1-x0)*t,y0+(y1-y0)*t,1,1,col); } }
+function pdisc(c,cx,cy,r,col){ for(let y=-r;y<=r;y++){ const w=Math.round(Math.sqrt(r*r-y*y)); PX1(c,cx-w,cy+y,w*2+1,1,col); } }
+
+let ARENA = {key:'', bg:null, crowd:[], torches:[], th:null};
+const FR = document.createElement('canvas'); FR.width = AW; FR.height = AH;
+const fx = FR.getContext('2d');
+
+function bakeArena(act, emptyThrone){
+  const T = ARENAS[act], R = srnd(1000 + act*77);
+  const cv = document.createElement('canvas'); cv.width = AW; cv.height = AH;
+  const c = cv.getContext('2d');
+  const standTop = WALL - T.tiers*8, boxY = Math.max(standTop-8, WALL-27);
+  const crowd = [];
+
+  // --- ciel / roche ---
+  const skyH = T.top==='arches' ? standTop-14 : standTop;
+  for(let y=0;y<Math.max(skyH,standTop);y++){ const t = Math.floor(y/Math.max(1,standTop)*6)/6; PX1(c,0,y,AW,1,mix(T.sky[0],T.sky[1],t)); }
+  if(T.top==='rock'){
+    for(let y=0;y<standTop;y+=5) for(let x=-(y%10);x<AW;x+=10){
+      const col = shade('#3a2e28', 0.75+R()*0.4); PX1(c,x+1,y+1,9,4,col); PX1(c,x+1,y+1,9,1,shade(col,1.12));
+    }
+    for(let i=0;i<5;i++){ const x=10+R()*180; pline(c,x,0,x+R()*6-3,standTop-2,'#1a1412'); }
   }
-  ctx.fillStyle='#5b2a7a'; ctx.fillRect(W/2-50, 10, 100, 40);
-  ctx.fillStyle='#e8b04a'; ctx.fillRect(W/2-50, 48, 100, 4);
-  ctx.fillStyle='#e0b48a'; circ(ctx, W/2, 30, 7);
-  ctx.fillStyle='#e8b04a'; ctx.fillRect(W/2-8, 21, 16, 3);
-  ctx.fillStyle='rgba(0,0,0,.08)'; ctx.beginPath(); ctx.ellipse(W/2, 275, 270, 45, 0, 0, 7); ctx.fill();
+  if(T.clouds) for(let i=0;i<4;i++){ const x=R()*AW, y=2+R()*Math.max(2,skyH-10), w=10+R()*16;
+    PX1(c,x,y+2,w,3,'#f4f6f8'); PX1(c,x+3,y,w-7,2,'#f4f6f8'); PX1(c,x+1,y+4,w-2,1,'#d8e2ea'); }
+  if(T.far==='vesuvius'){
+    const pk=46, base=standTop;
+    for(let y=8;y<base;y++){ const hw=(y-8)*2.4; PX1(c,pk-hw,y,hw*2,1,shade('#7a6a78',0.85+(y-8)/base*0.2)); PX1(c,pk,y,hw,1,shade('#5e5060',0.9)); }
+    PX1(c,pk-4,8,9,1,'#3a2a2a');
+    for(let i=0;i<7;i++) pdisc(c,pk+2+i*3,6-i*1.2,2+i*0.5,mix('#8a8288','#c8c0c0',i/7));
+  }
+  if(T.far==='trees') for(let x=-4;x<AW;x+=9+R()*6){ const h=6+R()*8; pdisc(c,x,standTop-h,5+R()*3,shade('#4a7a3a',0.8+R()*0.3)); PX1(c,x,standTop-h,2,h,'#4a3424'); }
+  if(T.far==='palms') for(const x of [14,52,148,188]){
+    const h = 16+R()*8, lean = R()*6-3;
+    for(let i=0;i<h;i++) PX1(c,x+lean*i/h,standTop-i,2,1,i%3?'#7a5432':'#5a3a22');
+    const tx=x+lean, ty=standTop-h;
+    for(const [dx,dy] of [[-9,4],[9,4],[-7,-2],[7,-2],[0,-5],[-11,1],[11,1]]) { pline(c,tx,ty,tx+dx,ty+dy,'#3a6a2a'); pline(c,tx,ty+1,tx+dx,ty+dy+1,'#2a4a1e'); }
+  }
+
+  // --- façade à arcades ---
+  if(T.top==='arches'){
+    const y0 = skyH, h = standTop-skyH;
+    PX1(c,0,y0,AW,h,shade(T.stone,0.92)); PX1(c,0,y0,AW,1,shade(T.stone,1.15)); PX1(c,0,y0+h-1,AW,1,shade(T.stone,0.7));
+    for(let x=2;x<AW;x+=12){ PX1(c,x+2,y0+4,6,h-5,'#2a2018'); PX1(c,x+3,y0+3,4,1,'#2a2018'); PX1(c,x+1,y0+2,1,h-2,shade(T.stone,1.1)); PX1(c,x+8,y0+2,1,h-2,shade(T.stone,0.8)); }
+    if(T.banners) for(let x=8;x<AW;x+=24){ PX1(c,x,y0-8,1,9,'#5a4a3a'); PX1(c,x+1,y0-7,4,6,'#a82a22'); PX1(c,x+1,y0-7,4,1,'#e8b04a'); PX1(c,x+2,y0-4,2,1,'#e8b04a'); }
+  }
+  if(T.velum){ for(let x=0;x<AW;x+=8){ const col=T.velum[(x/8)%2]; PX1(c,x,0,8,4,col); PX1(c,x+2,4,4,1,col); PX1(c,x,0,8,1,shade(col,0.8)); } }
+
+  // --- gradins ---
+  for(let i=0;i<T.tiers;i++){
+    const y = standTop + i*8;
+    if(T.stands==='wood'){
+      PX1(c,0,y,AW,8,shade(T.woodC,0.7)); PX1(c,0,y+6,AW,2,shade(T.woodC,1.15)); PX1(c,0,y+7,AW,1,shade(T.woodC,0.85));
+      for(let x=(i*7)%16;x<AW;x+=16) PX1(c,x,y,1,6,shade(T.woodC,0.5));
+    } else {
+      PX1(c,0,y,AW,8,shade(T.stone,0.62)); PX1(c,0,y+6,AW,1,shade(T.stone,1.05)); PX1(c,0,y+7,AW,1,shade(T.stone,0.82));
+      for(let x=(i*5)%14;x<AW;x+=14) PX1(c,x,y+6,1,2,shade(T.stone,0.7));
+    }
+    for(let x=1+R()*2;x<AW-2;x+=2.6+R()*1.6){
+      if(T.box && x>82 && x<118 && y+6>boxY) continue;
+      if(R() > T.crowd) continue;
+      crowd.push({x:Math.round(x), y:y+1, skin:SKINS[(R()*SKINS.length)|0], tun:TUNICS[(R()*TUNICS.length)|0], ph:R()*6.28, fan:R()});
+    }
+  }
+  crowd.sort((a,b)=>a.y-b.y);
+
+  // --- loge (impériale / du magistrat) ---
+  if(T.box){
+    const x=86, w=28, y0=boxY, cream='#efe4c8', gold='#e8b04a';
+    for(let k=0;k<5;k++) PX1(c,x+k*3-1,y0+4-k,w+2-k*6,1,k?cream:shade(cream,0.8));
+    PX1(c,x-2,y0+5,w+4,1,gold); PX1(c,x-1,y0+4,w+2,1,cream);
+    PX1(c,x,y0+6,w,WALL-y0-6,shade(T.box,0.4));
+    for(let k=0;k<w;k+=4) PX1(c,x+k,y0+6,2,2,T.box);
+    PX1(c,x,y0+6,2,WALL-y0-6,cream); PX1(c,x+w-2,y0+6,2,WALL-y0-6,cream); PX1(c,x+1,y0+6,1,WALL-y0-6,shade(cream,0.8)); PX1(c,x+w-1,y0+6,1,WALL-y0-6,shade(cream,0.8));
+    const tx=x+w/2, ty=WALL-17;
+    PX1(c,tx-4,ty,8,11,'#a8741e'); PX1(c,tx-3,ty+1,6,10,gold); PX1(c,tx-5,ty+7,10,2,'#a8741e');
+    if(!emptyThrone){
+      PX1(c,tx-2,ty+4,5,7,'#5b2a7a'); PX1(c,tx-2,ty+4,1,7,'#7a3a9a'); PX1(c,tx+1,ty+5,1,5,cream);
+      PX1(c,tx-1,ty+1,3,3,'#e0b48a'); PX1(c,tx-2,ty+1,1,1,'#4a8a2a'); PX1(c,tx+2,ty+1,1,1,'#4a8a2a'); PX1(c,tx-1,ty,3,1,'#4a8a2a');
+    }
+    for(const gx of [x+4, x+w-7]){ PX1(c,gx,ty+4,3,7,'#b8302a'); PX1(c,gx,ty+1,3,3,'#e0b48a'); PX1(c,gx,ty,3,1,'#c8c8d0'); PX1(c,gx+1,ty-2,1,2,'#c82a22'); PX1(c,gx+(gx<tx?-1:3),ty-3,1,14,'#8a6a4a'); }
+    PX1(c,x-1,WALL-6,w+2,6,T.box); PX1(c,x-1,WALL-6,w+2,1,gold);
+    for(let k=0;k<w+2;k+=2) PX1(c,x-1+k,WALL-1,1,1,gold);
+    PX1(c,tx-2,WALL-4,4,2,gold); PX1(c,tx-3,WALL-5,1,1,gold); PX1(c,tx+2,WALL-5,1,1,gold);
+  }
+
+  // --- mur du podium ---
+  const wh = HZ-WALL;
+  if(T.wall==='wood'){
+    for(let x=0;x<AW;x+=3) PX1(c,x,WALL,3,wh,shade(T.woodC,0.85+((x*7)%5)/20));
+    for(let x=0;x<AW;x+=3) PX1(c,x,WALL,1,wh,shade(T.woodC,0.6));
+    PX1(c,0,WALL+2,AW,2,shade(T.woodC,0.65)); PX1(c,0,WALL+8,AW,2,shade(T.woodC,0.65));
+    for(let x=1;x<AW;x+=3) PX1(c,x,WALL-1,2,1,shade(T.woodC,0.9));
+  } else {
+    PX1(c,0,WALL,AW,wh,shade(T.stone,0.85));
+    PX1(c,0,WALL,AW,2,shade(T.stone,1.2)); PX1(c,0,WALL+2,AW,1,shade(T.stone,0.7));
+    for(let x=26;x<AW-26;x+=20){ PX1(c,x,WALL+4,16,6,shade(T.stone,0.65)); PX1(c,x+1,WALL+5,14,4,T.panel); PX1(c,x+1,WALL+5,14,1,shade(T.panel,1.2)); }
+  }
+  PX1(c,0,HZ-1,AW,1,'rgba(0,0,0,.35)');
+  for(const gx of [4,180]){
+    PX1(c,gx,WALL+3,16,wh-3,'#1a120c'); PX1(c,gx+2,WALL+1,12,2,'#1a120c');
+    for(let k=1;k<16;k+=3) PX1(c,gx+k,WALL+2,1,wh-2,'#4e4e56');
+    PX1(c,gx,WALL+6,16,1,'#4e4e56');
+    PX1(c,gx-1,WALL+1,1,wh-1,shade(T.stone,0.6)); PX1(c,gx+16,WALL+1,1,wh-1,shade(T.stone,0.6));
+  }
+
+  // --- sable ---
+  const sand = T.sand;
+  for(let y=HZ;y<AH;y++) for(let x=0;x<AW;x++){
+    const d = ((x-100)/88)**2 + ((y-93)/15)**2;
+    let f = d<1 ? 1.06 : (d<1.2 && (x+y)%2===0) ? 1.06 : 1;
+    if(y<HZ+3) f *= 0.82 + (y-HZ)*0.05;
+    const r = R(); if(r<0.07) f*=0.9; else if(r<0.12) f*=1.07;
+    PX1(c,x,y,1,1,shade(sand,f));
+  }
+  for(let i=0;i<18;i++) PX1(c,R()*AW,HZ+4+R()*44,1,1,shade(sand,R()<0.5?0.7:1.2));
+  for(let i=0;i<(T.blood||0);i++){ const x=10+R()*180, y=HZ+6+R()*38; PX1(c,x,y,2+R()*3|0,1,'#7a2216'); PX1(c,x+1,y+1,1+R()*2|0,1,'#5e1a10'); }
+  if(T.hay) for(let i=0;i<40;i++){ const x=R()*AW, y=HZ+2+R()*12; PX1(c,x,y,2,1,R()<0.5?'#b89a4a':'#8a7236'); }
+  if(T.palus) for(const x of [24,172]){ PX1(c,x-1,HZ+16,5,1,'rgba(0,0,0,.25)'); PX1(c,x,HZ-2,3,18,'#6a4426'); PX1(c,x,HZ-2,1,18,'#8a5e36'); PX1(c,x-1,HZ+2,5,1,'#4a2e18'); }
+
+  const torches = (T.torches||[]).map(x=>({x, y:WALL-1}));
+  for(const t of torches){ PX1(c,t.x,t.y-4,1,5,'#3a2a1a'); PX1(c,t.x-1,t.y-5,3,1,'#5a4a3a'); }
+  ARENA = {key:act+'/'+emptyThrone, bg:cv, crowd, torches, th:T, vig:null};
+}
+
+function drawArena(){
+  const act = actOf(N), empty = ST && ST.b && ST.b.emperor ? 1 : 0;
+  if(ARENA.key !== act+'/'+empty) bakeArena(act, empty);
+  const A = ARENA, ex = crowd + (ST && ST.b && ST.b.boss ? 0.25 : 0);
+  fx.drawImage(A.bg,0,0);
+  for(const s of A.crowd){
+    const up = Math.sin(perfT*(6+s.fan*4) + s.ph) > 1.15 - ex*0.6 ? -1 : 0;
+    PX1(fx,s.x,s.y+2+up,2,4,s.tun); PX1(fx,s.x,s.y+up,2,2,s.skin);
+    if(ex>0.85 && s.fan<0.45){ PX1(fx,s.x-1,s.y-1+up,1,2,s.skin); PX1(fx,s.x+2,s.y-1+up,1,2,s.skin); }
+  }
+  A.torches.forEach((t,i)=>{
+    const h = 3 + Math.round(Math.sin(perfT*13+i*2)+Math.sin(perfT*7.3+i));
+    PX1(fx,t.x-1,t.y-5-h,3,h,'#e84a1a'); PX1(fx,t.x,t.y-6-h,1,h,'#ff9a2a'); PX1(fx,t.x,t.y-5-Math.max(1,h-2),1,Math.max(1,h-2),'#ffe25a');
+  });
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(FR,0,0,W,H);
+  ctx.imageSmoothingEnabled = true;
+  const k = W/AW;
+  if(A.th.dark){
+    if(!A.vig){ const g=ctx.createRadialGradient(W/2,H*0.7,60,W/2,H*0.6,W*0.62); g.addColorStop(0,'rgba(10,5,15,0)'); g.addColorStop(1,`rgba(10,5,15,${A.th.dark})`); A.vig=g; }
+    ctx.fillStyle=A.vig; ctx.fillRect(0,0,W,H);
+  }
+  if(A.torches.length){
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    A.torches.forEach((t,i)=>{
+      const x=t.x*k, y=(t.y-7)*k, r=(A.th.dark?70:45) + Math.sin(perfT*11+i)*4;
+      const g=ctx.createRadialGradient(x,y,2,x,y,r); g.addColorStop(0,'rgba(255,150,50,.35)'); g.addColorStop(1,'rgba(255,120,40,0)');
+      ctx.fillStyle=g; ctx.fillRect(x-r,y-r,r*2,r*2);
+    });
+    ctx.restore();
+  }
 }
 let VIS = {a:null, b:null}, parts = [], shake = 0, freeze = 0, timeScale = 1, zoom = null, endT = 0;
 const newVis = ()=>({atk:0, hit:0, dodge:0, kb:1, die:0, win:0});
