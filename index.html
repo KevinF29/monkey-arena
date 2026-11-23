@@ -721,7 +721,7 @@ function drawGlad(c, x, y, dir, L, st={}){
 /* ============ SPRITES DES POTES ============ */
 // version des images : à augmenter quand une image est remplacée sous le même nom,
 // pour que les navigateurs ne ressortent pas l'ancienne de leur cache
-const ASSET_V = '?v=4';
+const ASSET_V = '?v=5';
 const SPR = {};
 const SPR_AX = 100, SPR_AY = 488, SPR_H = 478;   // ancre = entre les pieds
 function loadSprites(cb){
@@ -955,7 +955,22 @@ const RIG_PERSO = {
 const FISTS = {
   darkkus:{f:[171,287], b:[51,289]}, fredhus:{f:[175,285], b:[50,287]}, sweevus:{f:[174,285], b:[47,285]},
   chelmacus:{f:[172,288], b:[52,291]}, dridricus:{f:[173,283], b:[37,283]}, kubenicus:{f:[171,287], b:[50,288]},
-  maximusrr:{f:[167,255], b:[43,257]}, beelgraalus:{f:[173,285], b:[48,289]}
+  maximusrr:{f:[167,255], b:[43,257]}, beelgraalus:{f:[173,285], b:[48,289]},
+  // adversaires
+  'e:bestiaire':{f:[177,259], b:[50,260]},
+  'e:retiaire':{f:[178,272], b:[38,274]},
+  'e:pirate':{f:[177,271], b:[34,271]},
+  'e:hoplomaque':{f:[168,291], b:[39,292]},
+  'e:thrace-veteran':{f:[173,289], b:[36,290]},
+  'e:samnite':{f:[169,285], b:[38,287]},
+  'e:legionnaire':{f:[181,281], b:[32,278]},
+  'e:dimachere':{f:[176,259], b:[36,258]},
+  'e:esclave-thrace':{f:[174,286], b:[32,288]},
+  'e:gaulois':{f:[180,277], b:[45,277]},
+  'e:mirmillon':{f:[179,270], b:[38,270]},
+  'e:provocator':{f:[184,271], b:[32,274]},
+  'e:secutor':{f:[179,271], b:[34,271]},
+  'e:essedaire':{f:[179,292], b:[37,293]}
 };
 const FIST_B0 = [-50,-200];   // main arrière de référence pour WEAR (boucliers, filet, chope)
 // adversaires : proportions réalistes (tête plus petite, bras plus longs, bassin plus haut)
@@ -966,7 +981,8 @@ const RIG_ENEMY = {
          legB:[[0,300],[102,300],[102,490],[0,490]],
          legF:[[102,300],[204,300],[204,490],[102,490]] },
   piv:{head:[0,-366], armB:[-60,-350], armF:[62,-348], legB:[-25,-183], legF:[25,-183]},
-  hand:[80,-203], probe:[100,220], fill:[[58,128],[74,128],[74,300],[58,300]], skin:[150,170,40,90]
+  hand:[80,-203], probe:[100,220], fill:[[58,128],[74,128],[74,300],[58,300]], skin:[150,170,40,90],
+  fist:true
 };
 function buildParts(img, rig=RIG_PERSO){
   const PART_POLY = rig.poly;
