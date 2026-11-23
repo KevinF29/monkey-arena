@@ -246,20 +246,20 @@ const CHARS = [
   {id:'sweevus', name:'Sweevus', title:"L'Insaisissable", desc:'Vif comme l\'éclair : 15 % d\'esquive et attaque très vite.',
    stats:{maxHp:95, atk:8, def:1, spd:1.3, dodge:.15},
    look:{sprite:'sweevus', skin:'#f0caa0', hair:'#d8b040', hairStyle:'crete', beard:'none', tunic:'#2a7a9a', build:'fin', weapon:'gladius'}},
-  {id:'chelmacus', name:'Chelmacus', title:'Le Furieux', desc:'Plus il saigne, plus il frappe fort. 5 % de vol de vie.',
+  {id:'chelmacus', name:'Chelmacus', title:'Le Furieux', desc:'Plus il saigne, plus il frappe fort. 4 % de vol de vie.',
    stats:{maxHp:115, atk:12, def:1, spd:1, lifesteal:.04, berserk:.3},
    look:{sprite:'chelmacus', skin:'#d8a878', hair:'#5a2a1a', hairStyle:'chauve', beard:'longue', tunic:'#6a9a3a', build:'costaud', weapon:'glaive'}},
   {id:'dridricus', name:'Dridricus', title:'Le Rétiaire', desc:'Son filet ralentit l\'adversaire de 15 %. Armé d\'un trident.',
    stats:{maxHp:110, atk:9, def:2, spd:1, slow:.15},
    look:{sprite:'dridricus', skin:'#b07a50', hair:'#2a1a10', hairStyle:'queue', beard:'moustache', tunic:'#3a5a9a', build:'normal', weapon:'trident', net:1}},
-  {id:'kubenicus', name:'Kubenicus', title:"L'Increvable", desc:'Régénère 2 PV/s et récupère 40 % de PV après chaque victoire.',
-   stats:{maxHp:120, atk:10, def:2, spd:.95, regen:2, postHeal:.4},
+  {id:'kubenicus', name:'Kubenicus', title:"L'Increvable", desc:'Régénère 3 PV/s et récupère 40 % de PV après chaque victoire.',
+   stats:{maxHp:120, atk:10, def:2, spd:.95, regen:3, postHeal:.4},
    look:{sprite:'kubenicus', skin:'#e0b080', hair:'#3a2a1a', hairStyle:'court', beard:'none', glasses:1, tunic:'#8a6a2a', build:'normal', weapon:'gladius'}},
   {id:'maximusrr', name:'MaximusRr', title:'Le Champion', desc:'Gloire : +2 attaque et +12 PV max à chaque boss vaincu.',
-   stats:{maxHp:115, atk:10, def:2, spd:1, glory:1},
+   stats:{maxHp:110, atk:10, def:2, spd:1, glory:1},
    look:{sprite:'maximusrr', skin:'#e8b890', hair:'#6a4a2a', hairStyle:'court', beard:'courte', tunic:'#a02a2a', build:'normal', weapon:'gladius'}},
-  {id:'beelgraalus', name:"Beel'Graalus", title:'Le Maudit', desc:'Lames empoisonnées (+2 poison/s) et renvoie 3 dégâts à chaque coup reçu.',
-   stats:{maxHp:105, atk:9, def:1, spd:1, poison:2, thorns:3},
+  {id:'beelgraalus', name:"Beel'Graalus", title:'Le Maudit', desc:'Lames empoisonnées (+3 poison/s) et renvoie 4 dégâts à chaque coup reçu.',
+   stats:{maxHp:110, atk:9, def:1, spd:1, poison:3, thorns:4},
    look:{sprite:'beelgraalus', skin:'#b8c8a0', hair:'#4a1a5a', hairStyle:'long', beard:'none', tunic:'#4a2a5a', build:'fin', weapon:'dague'}}
 ];
 
@@ -271,6 +271,10 @@ const AUGS = [
   {id:'hache', t:'arme', r:'R', n:'Hache de guerre', d:'+12 attaque, −10 % vitesse', a:p=>{p.atk+=12;p.spd*=.9}},
   {id:'dague', t:'arme', r:'R', n:'Dague empoisonnée', d:'Chaque coup empoisonne (+2 poison/s, cumulable)', a:p=>{p.poison+=2}},
   {id:'filet', t:'arme', r:'R', n:'Filet de rétiaire', d:'L\'ennemi attaque 15 % moins vite', a:p=>{p.slow+=.15}},
+  {id:'caestus', t:'arme', r:'C', n:'Cestes', d:'+2 attaque, +10 % vitesse d\'attaque', a:p=>{p.atk+=2;p.spd*=1.1}},
+  {id:'sica', t:'arme', r:'R', n:'Sica thrace', d:'+3 attaque. Chaque coup fait saigner (30 % des dégâts en 3 s)', a:p=>{p.atk+=3;p.bleed+=.3}},
+  {id:'scissor', t:'arme', r:'R', n:'Scissor', d:'+5 attaque, ignore 50 % de la défense adverse', a:p=>{p.atk+=5;p.pen=Math.min(1,p.pen+.5)}},
+  {id:'pilum', t:'arme', r:'R', n:'Pilum', d:'Ouvre chaque combat par un lancer de javelot (×4 dégâts)', a:p=>{p.pilum+=1}},
   {id:'hydre', t:'arme', r:'L', n:'Lance de l\'Hydre', d:'35 % de chance de frapper deux fois', a:p=>{p.doubleHit+=.35}, u:1},
   {id:'champion', t:'arme', r:'L', n:'Épée du Champion', d:'+16 attaque, +10 % critique', a:p=>{p.atk+=16;p.crit+=.10}, u:1},
   {id:'boisb', t:'armure', r:'C', n:'Bouclier en bois', d:'+2 défense', a:p=>{p.def+=2}},
@@ -279,6 +283,9 @@ const AUGS = [
   {id:'plastron', t:'armure', r:'R', n:'Plastron de bronze', d:'+4 défense', a:p=>{p.def+=4}},
   {id:'pointes', t:'armure', r:'R', n:'Bouclier à pointes', d:'Renvoie 5 dégâts à chaque coup reçu', a:p=>{p.thorns+=5}},
   {id:'manica', t:'armure', r:'R', n:'Manica', d:'+8 % esquive, +10 PV max', a:p=>{p.dodge+=.08;p.maxHp+=10;p.hp+=10}},
+  {id:'cuir', t:'armure', r:'C', n:'Tunique de cuir', d:'+1 défense, +12 PV max', a:p=>{p.def+=1;p.maxHp+=12;p.hp+=12}},
+  {id:'scutum', t:'armure', r:'R', n:'Scutum', d:'+1 défense. 25 % de chance de bloquer la moitié d\'un coup', a:p=>{p.def+=1;p.block=Math.min(.6,p.block+.25)}},
+  {id:'galerus', t:'armure', r:'R', n:'Galerus', d:'+4 % esquive. Après une esquive : riposte immédiate (50 %)', a:p=>{p.dodge+=.04;p.riposte=Math.min(1,p.riposte+.5)}},
   {id:'lion', t:'armure', r:'L', n:'Peau du lion de Némée', d:'+70 PV max, +2 PV/s', a:p=>{p.maxHp+=70;p.hp+=70;p.regen+=2}, u:1},
   {id:'egide', t:'armure', r:'L', n:'Égide', d:'+7 défense, +6 % esquive', a:p=>{p.def+=7;p.dodge+=.06}, u:1},
   {id:'souffle', t:'aptitude', r:'C', n:'Second souffle', d:'+1 PV/s pendant le combat', a:p=>{p.regen+=1}},
@@ -288,6 +295,10 @@ const AUGS = [
   {id:'frenesie', t:'aptitude', r:'R', n:'Frénésie', d:'+25 % vitesse d\'attaque', a:p=>{p.spd*=1.25}},
   {id:'brutal', t:'aptitude', r:'R', n:'Coups brutaux', d:'Critiques +60 % de dégâts', a:p=>{p.critMult+=.6}},
   {id:'foule', t:'aptitude', r:'R', n:'Ferveur de la foule', d:'+20 % de soin après chaque victoire', a:p=>{p.postHeal+=.2}},
+  {id:'mithri', t:'aptitude', r:'C', n:'Mithridatisation', d:'Immunisé au poison, +10 PV max', a:p=>{p.antidote=1;p.maxHp+=10;p.hp+=10}},
+  {id:'adren', t:'aptitude', r:'R', n:'Adrénaline', d:'Sous 40 % PV : +50 % vitesse d\'attaque', a:p=>{p.adren+=.5}},
+  {id:'mars', t:'aptitude', r:'L', n:'Furie de Mars', d:'Chaque coup porté ajoute +1 attaque jusqu\'à la fin du combat (max +20)', a:p=>{p.mars+=1}, u:1},
+  {id:'fortuna', t:'aptitude', r:'L', n:'Faveur de Fortuna', d:'+12 % critique, +10 % esquive', a:p=>{p.crit+=.12;p.dodge+=.10}, u:1},
   {id:'rempart', t:'aptitude', r:'L', n:'Dernier rempart', d:'1 fois par combat : survit à un coup fatal et récupère 30 % PV', a:p=>{p.undying=1}, u:1},
   {id:'berserk', t:'aptitude', r:'L', n:'Berserker', d:'Jusqu\'à +60 % de dégâts selon les PV manquants', a:p=>{p.berserk+=.6}, u:1},
   {id:'exec', t:'aptitude', r:'L', n:'Exécution', d:'Dégâts ×2 contre un ennemi sous 25 % PV', a:p=>{p.execute=1}, u:1}
@@ -304,7 +315,8 @@ const isBoss = n => (n-1)%PER_ACT === PER_ACT-1;
 
 function baseFighter(){
   return {maxHp:100,hp:100,atk:10,def:0,spd:1,crit:.05,critMult:1.6,dodge:0,lifesteal:0,thorns:0,regen:0,
-    poison:0,slow:0,doubleHit:0,berserk:0,execute:0,undying:0,dr:0,postHeal:.3,firstCrit:0,glory:0,augs:[]};
+    poison:0,slow:0,doubleHit:0,berserk:0,execute:0,undying:0,dr:0,postHeal:.3,firstCrit:0,glory:0,
+    pen:0,bleed:0,pilum:0,riposte:0,block:0,adren:0,antidote:0,mars:0,augs:[]};
 }
 function shuffle(a, rnd=Math.random){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
@@ -313,7 +325,9 @@ function makePlayer(ch){
   p.hp = p.maxHp; p.name = ch.name; p.cid = ch.id; p.baseLook = ch.look; p.side='a';
   return p;
 }
-function scaleOf(n){ const k=n-1; return 1 + 0.095*k + 0.0032*k*k; }
+// réglages d'équilibrage (testés au simulateur)
+const TUNE = {eHp:60, eAtk:7.5, eAug:0.55, eliteK:1.15, bHp0:0.95, bHpA:0.09, bAtk0:0.82, bAtkA:0.06, late:0.28, early:0.25};
+function scaleOf(n){ const k=n-1; return (1 + 0.095*k + 0.0032*k*k) * (1 + TUNE.late*(k/(TOTAL-1))**2) * (1 - TUNE.early*Math.max(0, 1-k/12)); }
 
 function makeEnemy(n, bossOrder, rnd=Math.random){
   const s = scaleOf(n), a = actOf(n);
@@ -322,8 +336,8 @@ function makeEnemy(n, bossOrder, rnd=Math.random){
     const ch = CHARS.find(c=>c.id===bossOrder[a]);
     e = Object.assign(baseFighter(), ch.stats);
     e.cid = ch.id; e.baseLook = ch.look; e.boss = 1;
-    e.maxHp = Math.round(ch.stats.maxHp * 0.62 * s * (1.3 + 0.09*a));
-    e.atk = ch.stats.atk * 0.62 * s * (0.95 + 0.04*a);
+    e.maxHp = Math.round(ch.stats.maxHp * 0.62 * s * (TUNE.bHp0 + TUNE.bHpA*a));
+    e.atk = ch.stats.atk * 0.62 * s * (TUNE.bAtk0 + TUNE.bAtkA*a);
     e.def = (ch.stats.def||0) + Math.floor(n*0.18) + 1;
     // les boss ont eux aussi gagné quelques augments
     const nb = a + 1;
@@ -337,7 +351,7 @@ function makeEnemy(n, bossOrder, rnd=Math.random){
     } else e.name = ch.name;
   } else {
     e = baseFighter();
-    e.maxHp = Math.round(55*s); e.atk = 6*s; e.def = Math.floor(n*0.18); e.spd = 0.85 + rnd()*0.3;
+    e.maxHp = Math.round(TUNE.eHp*s); e.atk = TUNE.eAtk*s; e.def = Math.floor(n*0.18); e.spd = 0.85 + rnd()*0.3;
     e.crit = 0.05 + n*0.002;
     const pos = (n-1)%PER_ACT;
     if(pos>=3 && rnd()<0.3){
@@ -347,6 +361,14 @@ function makeEnemy(n, bossOrder, rnd=Math.random){
       e.name = ENEMY_NAMES[Math.floor(rnd()*ENEMY_NAMES.length)];
       e.baseLook = randomLook(n, rnd);
     }
+    // les gladiateurs adverses s'équipent eux aussi au fil des actes ; le 5e combat de l'acte est un élite
+    const elite = pos === PER_ACT-2;
+    const nb = Math.floor(a*TUNE.eAug + (elite?1:0) + rnd()*0.999);
+    for(let i=0;i<nb;i++){
+      const pool = AUGS.filter(g=>g.r!=='L' && g.id!=='foule' && !e.augs.includes(g.id));
+      applyAug(e, pool[Math.floor(rnd()*pool.length)]);
+    }
+    if(elite){ e.elite = 1; e.maxHp = Math.round(e.maxHp*TUNE.eliteK); e.atk *= TUNE.eliteK; }
   }
   e.side='b'; e.hp = e.maxHp;
   return e;
@@ -369,7 +391,7 @@ function randomLook(n, rnd){
   };
 }
 
-function resetRuntime(f){ f.cd = 0.4 + Math.random()*0.3; f.pst = 0; f.ptick = 0; f.usedUndying = 0; f.enraged = 0; f.anim=0; f.flash=0; f.didFirst=0; }
+function resetRuntime(f){ f.cd = 0.4 + Math.random()*0.3; f.pst = 0; f.ptick = 0; f.usedUndying = 0; f.enraged = 0; f.anim=0; f.flash=0; f.didFirst=0; f.bst=0; f.btick=0; f.stack=0; f.pilumDone=0; }
 function newFight(p,e){ resetRuntime(p); resetRuntime(e); return {a:p,b:e,t:0,events:[],over:false,winner:null,lionT:0}; }
 
 function hurt(f, dmg, st, kind){
@@ -387,21 +409,32 @@ function strike(att, tgt, st, rnd){
   strikeInner(att, tgt, st, rnd);
   for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1;
 }
-function strikeInner(att, tgt, st, rnd){
-  if(rnd() < Math.min(0.6, tgt.dodge)){ st.events.push({side:tgt.side, txt:'Esquive', kind:'miss'}); return; }
-  let d = att.atk*(0.9 + rnd()*0.2);
+function strikeInner(att, tgt, st, rnd, mult=1){
+  if(rnd() < Math.min(0.6, tgt.dodge)){
+    st.events.push({side:tgt.side, txt:'Esquive', kind:'miss'});
+    if(tgt.riposte && !st.inRiposte && tgt.hp>0 && rnd() < tgt.riposte){
+      st.inRiposte = 1; st.events.push({side:tgt.side, kind:'swing'}); st.events.push({side:att.side, txt:'Riposte', kind:'special'});
+      strikeInner(tgt, att, st, rnd); st.inRiposte = 0;
+    }
+    return;
+  }
+  let d = att.atk*(0.9 + rnd()*0.2) * mult;
+  if(att.mars) d += Math.min(20, att.stack);
   if(att.berserk) d *= 1 + att.berserk*(1 - att.hp/att.maxHp);
   const crit = rnd() < att.crit || (att.firstCrit && !att.didFirst);
   att.didFirst = 1;
   if(crit) d *= att.critMult;
   if(att.execute && tgt.hp < tgt.maxHp*0.25) d *= 2;
-  d = Math.max(1, d - tgt.def) * (1 - tgt.dr);
+  d = Math.max(1, d - tgt.def*(1-att.pen)) * (1 - tgt.dr);
+  if(tgt.block && rnd() < tgt.block){ d *= 0.5; st.events.push({side:tgt.side, txt:'Bloqué', kind:'special'}); }
   hurt(tgt, d, st, crit?'crit':'hit');
   if(att.lifesteal) heal(att, d*att.lifesteal);
-  if(att.poison) tgt.pst = Math.min(tgt.pst + att.poison, att.poison*6);
+  if(att.mars) att.stack += att.mars;
+  if(att.bleed) tgt.bst += d*att.bleed;
+  if(att.poison && !tgt.antidote) tgt.pst = Math.min(tgt.pst + att.poison, att.poison*6);
   if(tgt.thorns && tgt.hp>0) hurt(att, tgt.thorns, st, 'thorns');
 }
-function effSpd(f, o){ return f.spd * (1 - Math.min(0.5, o.slow)) * (f.enraged?1.45:1); }
+function effSpd(f, o){ return f.spd * (1 - Math.min(0.5, o.slow)) * (f.enraged?1.45:1) * (f.adren && f.hp < f.maxHp*0.4 ? 1+f.adren : 1); }
 function step(st, dt, rnd=Math.random){
   if(st.over) return;
   st.t += dt;
@@ -409,6 +442,7 @@ function step(st, dt, rnd=Math.random){
   for(const [f] of pair){
     if(f.regen) heal(f, f.regen*dt);
     if(f.pst>0){ f.ptick += dt; if(f.ptick>=1){ f.ptick-=1; hurt(f, f.pst, st, 'poison'); f.pst = Math.max(0, f.pst-1); } }
+    if(f.bst>0){ f.btick += dt; if(f.btick>=1){ f.btick-=1; const b = Math.max(1, f.bst/3); f.bst = Math.max(0, f.bst-b); hurt(f, b, st, 'bleed'); } }
     if(f.anim>0) f.anim -= dt;
     if(f.flash>0) f.flash -= dt;
   }
@@ -422,6 +456,11 @@ function step(st, dt, rnd=Math.random){
   }
   for(const [f,o] of pair){
     if(st.a.hp<=0 || st.b.hp<=0) break;
+    if(f.pilum && !f.pilumDone && st.t >= (f.side==='a'?0.25:0.45)){
+      f.pilumDone = 1; st.events.push({side:f.side, kind:'swing'}); st.events.push({side:f.side, txt:'Pilum !', kind:'special', log:`${f.name} ouvre le combat d'un lancer de pilum !`});
+      const n0 = st.events.length; strikeInner(f, o, st, rnd, 1 + 3*f.pilum); for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1;
+      continue;
+    }
     f.cd -= dt * effSpd(f,o);
     if(f.cd<=0){
       f.cd += 1; f.anim = 0.22; st.events.push({side:f.side, kind:'swing'});
@@ -1112,6 +1151,26 @@ const ICON_DEF = {
 '...oooooo...','..oWWWWWWo..','.oWWWWWWWWo.','.oWWWWWWWwo.','.oWRoWWRowo.','.oWooWWoowo.','.oWWWoWWWwo.','..oWWWWWwo..','...oWWWWo...','...oWoWowo..','...oooooo...','............']},
   axe:{p:{S:'#c8ccd4',W:'#ffffff',B:'#7a4a22'}, g:[
 '............','...oooo.....','..oSSSSo....','.oSWSSSSo...','.oSWSSSSo...','.oSSSSoBo...','..oSSoBo....','...ooBo.....','....oBo.....','...oBo......','..oBo.......','..oo........']},
+  fist:{p:{S:'#e0b48a',B:'#8a5a2a'}, g:[
+'............','...oooooo...','..oSoSoSoo..','.oSSoSoSoSo.','.oSSSSSSSSo.','.oBBBBBBBBo.','.oSSSSSSSSo.','.oBBBBBBBBo.','..oSSSSSSo..','..oBBBBBBo..','..oBBBBBBo..','..oooooooo..']},
+  sica:{p:{W:'#e8eef2',B:'#7a4a22'}, g:[
+'............','.......oo...','......oWWo..','.......oWWo.','........oWo.','........oWo.','.......oWWo.','...o..oWWo..','...oooWWo...','..oBoooo....','.oBo........','.oo.........']},
+  scissor:{p:{W:'#e8eef2',S:'#8a8a94'}, g:[
+'............','..oooooo....','.oWWWWWWo...','oWWooooWWo..','oWo....oWo..','.o.....oWo..','......oSSo..','.....oSSo...','....oSSo....','...oSSo.....','..oSSo......','..ooo.......']},
+  pilum:{p:{W:'#e8eef2',B:'#8a5a2a'}, g:[
+'..........oo','.........oWo','........oWWo','.......oWWo.','......oBoo..','.....oBo....','....oBo.....','...oBo......','..oBo.......','.oBo........','oBo.........','oo..........']},
+  tunic:{p:{L:'#8a5a2a',l:'#6a4220'}, g:[
+'............','..oo....oo..','.oLLoooolLo.','oLLLLLLLLLLo','oLLoLLLLoLLo','.ooLLLLLLoo.','..oLLllLLo..','..oLLLLLLo..','..oLLllLLo..','..oLLLLLLo..','..oooooooo..','............']},
+  scutum:{p:{R:'#b83a2a',G:'#e8b04a'}, g:[
+'.oooooooooo.','.oRRRRRRRRo.','.oRGRRRRGRo.','.oRRRRRRRRo.','.oRRRGGRRRo.','.oGGGGGGGGo.','.oRRRGGRRRo.','.oRRRRRRRRo.','.oRGRRRRGRo.','.oRRRRRRRRo.','.oRRRRRRRRo.','.oooooooooo.']},
+  galerus:{p:{G:'#d89a3a',g:'#ffe0a0'}, g:[
+'............','............','....oooo....','..ooGGGGoo..','.oGGgGGGGGo.','oGGgGGGGGGGo','oGgGGooGGGGo','oGGGo..oGGGo','oGGo....oGGo','.oo......oo.','............','............']},
+  flask:{p:{W:'#cfe8f0',G:'#5ac83a',g:'#c8ffa0'}, g:[
+'....oooo....','....oWWo....','.....oo.....','....oWWo....','...oWWWWo...','..oWWWWWWo..','.oGGGGGGGGo.','.oGgGGGGGGo.','.oGgGGGGGGo.','.oGGGGGGGGo.','..oGGGGGGo..','...oooooo...']},
+  helm:{p:{R:'#d82a1a',r:'#ff8a6a',S:'#d8a040',W:'#fff0c0'}, g:[
+'...RRRRRR...','..RRrRRRRR..','....oooo....','..ooSSSSoo..','.oSSSSSSSSo.','.oSWSSSSSSo.','.oSWSoooSSo.','.oSSo..oSSo.','.oSSo..oSSo.','.oSo....oSo.','..o......o..','............']},
+  wheel:{p:{G:'#e8b04a',W:'#fff6d0'}, g:[
+'...oooooo...','..oGGGGGGo..','.oGo.oo.oGo.','oGo.oGGo.oGo','oGooGGGGooGo','oGGGGWWGGGGo','oGGGGWWGGGGo','oGooGGGGooGo','oGo.oGGo.oGo','.oGo.oo.oGo.','..oGGGGGGo..','...oooooo...']},
 };
 const ICO_CACHE = {};
 function ic(name, over){
@@ -1125,13 +1184,13 @@ function ic(name, over){
 }
 function icImg(name, cls='', over){ return `<img class="pxi ${cls}" src="${ic(name,over)}" alt="">`; }
 const POISON = {R:'#6ac83a', r:'#3a8a1a', w:'#d0ffa8'};
-const AUG_ICON = {souffle:'heart', rage:'flame', agile:'wing', sang:'drop', frenesie:'bolt', brutal:'burst', foule:'laurel', rempart:'tower', berserk:'skull', exec:'axe'};
+const AUG_ICON = {caestus:'fist', sica:'sica', scissor:'scissor', pilum:'pilum', cuir:'tunic', scutum:'scutum', galerus:'galerus', mithri:'flask', adren:'bolt', mars:'helm', fortuna:'wheel', souffle:'heart', rage:'flame', agile:'wing', sang:'drop', frenesie:'bolt', brutal:'burst', foule:'laurel', rempart:'tower', berserk:'skull', exec:'axe'};
 const AUG_IMG = {boisb:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', casque:'casque', plastron:'plastron', jamb:'jambieres', manica:'manica', lion:'peau-lion', filet:'filet'};
 function augFile(g){ return AUG_IMG[g.id] || WEAPON_OF[g.id] || null; }
 function augArt(g, small){
   const f = augFile(g);
   if(f) return `<img class="itm" src="assets/items/${f}.png" alt="">`;
-  return icImg(AUG_ICON[g.id] || 'burst', small ? '' : 'big');
+  return icImg(AUG_ICON[g.id] || 'burst', small ? '' : 'big', g.id==='adren' ? {Y:'#ff5a3a'} : undefined);
 }
 function fillIcons(){ document.querySelectorAll('[data-ic]').forEach(el=>{ el.src = ic(el.dataset.ic); }); document.documentElement.style.setProperty('--skull', `url(${ic('skull')})`); }
 
@@ -1393,7 +1452,7 @@ function draw(){
 function spawnFloat(ev){
   if(ev.kind==='none' || !ev.txt) return;
   const p = POS[ev.side];
-  const col = {hit:'#fff', crit:'#ffcf3a', miss:'#9ad', thorns:'#ff9a6a', poison:'#9be36b', special:'#d9a6ff'}[ev.kind] || '#fff';
+  const col = {hit:'#fff', crit:'#ffcf3a', miss:'#9ad', thorns:'#ff9a6a', poison:'#9be36b', bleed:'#ff5a4a', special:'#d9a6ff'}[ev.kind] || '#fff';
   floats.push({x:p.x + (Math.random()*30-15), y:p.y-165, txt:ev.txt, col, size: ev.kind==='crit'?26: ev.kind==='special'?20:18, life:1});
 }
 
@@ -1407,7 +1466,7 @@ function loop(ts){
   if(!ST.over){ let rem = dt; while(rem>0){ const s=Math.min(0.02,rem); step(ST,s); rem-=s; } }
   const handle = (ev)=>{
     spawnFloat(ev); if(ev.log) addLog(ev.log);
-    if(['hit','crit','thorns','poison'].includes(ev.kind)) VIS[ev.side].flash = 0.18;
+    if(['hit','crit','thorns','poison','bleed'].includes(ev.kind)) VIS[ev.side].flash = 0.18;
     const v = VIS[ev.side], other = ev.side==='a'?'b':'a';
     if(ev.kind==='swing') v.atk = ATK_T;
     if(ev.kind==='hit' || ev.kind==='crit'){
@@ -1420,6 +1479,7 @@ function loop(ts){
     }
     if(ev.kind==='thorns') burst(ev.side, 'spark', 4);
     if(ev.kind==='poison') burst(ev.side, 'poison', 3);
+    if(ev.kind==='bleed') burst(ev.side, 'blood', 3);
     if(ev.kind==='miss'){ v.dodge = DODGE_T; burst(ev.side, 'sand', 6); }
   };
   for(const ev of ST.events){
@@ -1490,13 +1550,16 @@ function showReward(){
   });
   show('s-reward');
 }
-const STAT_IC = [['heart'],['sword'],['shield'],['bolt'],['flame'],['burst'],['wing'],['drop'],['heart'],['shield'],['drop',POISON],['wing',{W:'#c8c8d0',B:'#8a8a94'}],['sword'],['laurel']].map(([n,o])=>icImg(n,'',o));
 function statsHTML(p){
   const pct = v=>Math.round(v*100)+' %';
-  return [['PV', `${Math.ceil(p.hp)} / ${p.maxHp}`],['Attaque', p.atk.toFixed(1)],['Défense', p.def],['Vitesse', p.spd.toFixed(2)+'/s'],
-    ['Critique', pct(p.crit)],['Dégâts crit.', '×'+p.critMult.toFixed(1)],['Esquive', pct(Math.min(.6,p.dodge))],['Vol de vie', pct(p.lifesteal)],
-    ['Régén.', p.regen+' PV/s'],['Épines', p.thorns],['Poison', p.poison],['Ralentit', pct(p.slow)],
-    ['Double coup', pct(p.doubleHit)],['Soin post-combat', pct(p.postHeal)]].map(([k,v],i)=>`<div>${STAT_IC[i]}${k}<b>${v}</b></div>`).join('');
+  const rows = [['heart','PV', `${Math.ceil(p.hp)} / ${p.maxHp}`],['sword','Attaque', p.atk.toFixed(1)],['shield','Défense', p.def],['bolt','Vitesse', p.spd.toFixed(2)+'/s'],
+    ['flame','Critique', pct(p.crit)],['burst','Dégâts crit.', '×'+p.critMult.toFixed(1)],['wing','Esquive', pct(Math.min(.6,p.dodge))],['drop','Vol de vie', pct(p.lifesteal)],
+    ['heart','Régén.', p.regen+' PV/s'],['shield','Épines', p.thorns],['drop','Poison', p.poison, POISON],['wing','Ralentit', pct(p.slow), {W:'#c8c8d0',B:'#8a8a94'}],
+    ['sword','Double coup', pct(p.doubleHit)],['laurel','Soin post-combat', pct(p.postHeal)]];
+  const extra = [['scissor','Perce-armure', p.pen, pct(p.pen)],['sica','Saignement', p.bleed, pct(p.bleed)],['scutum','Blocage', p.block, pct(p.block)],
+    ['galerus','Riposte', p.riposte, pct(p.riposte)],['pilum','Pilum', p.pilum, '×'+(1+3*p.pilum)],['helm','Furie de Mars', p.mars, '+'+p.mars+'/coup'],['bolt','Adrénaline', p.adren, '+'+pct(p.adren), {Y:'#ff5a3a'}]];
+  for(const [ic_,k,v,txt,o] of extra) if(v) rows.push([ic_,k,txt,o]);
+  return rows.map(([n,k,v,o])=>`<div>${icImg(n,'',o)}${k}<b>${v}</b></div>`).join('');
 }
 function endRun(win){
   $('endTitle').textContent = win ? 'LIBRE !' : 'Mort dans l\'arène';
