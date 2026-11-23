@@ -177,6 +177,16 @@ Pour l'interface, `augArt(g)` montre l'image `g.f`, sinon l'icône pixel `g.ic` 
 
 `ARENA_IMG[acte]` charge `assets/arenes/acte{1..7}.webp`, dessinée sur 600×330 avec un léger voile sombre. Tant qu'elle n'est pas chargée, `bakeArena` génère le décor pixel art de secours défini dans `ARENAS[acte]` (ciel, gradins, foule et torches animées). Les combattants sont posés à `POS.a = (185, 285)` et `POS.b = (415, 285)` ; les décors doivent garder un sol lisible à cette hauteur.
 
+## Son (`SFX`)
+
+Tout est synthétisé avec la Web Audio API dans le module `SFX` (section UI, juste avant `/* --- arène --- */`) : **aucun fichier son**, n'en pas ajouter. Le contexte audio est créé au premier clic ou appui de touche (règle d'autoplay des navigateurs). Chaîne : sons → `master` (volume `VOL` = 0,3) → compresseur → sortie. Joueur à gauche, adversaire à droite (`StereoPanner`).
+
+- `hit(side, big)` : claquement de bruit aigu + partiels inharmoniques (métal) + petit choc grave ; `crit(side)` : métal plus grave et plus long, gros choc, grondement, puis `cheer` ; `whoosh(side)` : souffle filtré balayé (esquive).
+- Foule : `ambience(niveau)`, bruit brun filtré en boucle avec ondulation lente, piloté chaque image par `crowd` dans `loop` et coupé hors de l'écran de combat (`show`) ; `cheer(force)` : « aaah » collectif (formants) et sifflets, sur les critiques et le coup final (`finalBlow`).
+- Musique : `fanfare()` (cuivres + timbales) quand l'Empereur entre (`prepareFight`), `victory()` quand « VICTOIRE ! » apparaît, `defeat()` au début de la séquence de défaite.
+- `throttle` limite chaque son (vitesse ×4, double coup) pour éviter la bouillie et la saturation. Pics mesurés en sortie : critique ≈ 0,42, fanfare ≈ 0,35, coup ≈ 0,2, foule ≈ 0,06. Garder tout nouveau son sous ~0,5.
+- Bouton `.sndToggle` (écran de départ et barre du combat) : `SFX.toggle()` puis `renderSoundBtns()` ; l'état est mémorisé dans `localStorage` (`monkeyArena.son`, lecture et écriture protégées par `try/catch`).
+
 ## Ajouter de nouveaux éléments
 
 ### Un objet d'équipement

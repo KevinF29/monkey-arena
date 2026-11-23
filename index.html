@@ -170,6 +170,8 @@ h2{font-size:22px}
 .sec{font-family:Cinzel,Georgia,serif;font-size:15px;color:var(--gold);margin-top:4px}
 .endtitle{font-size:34px}
 .note{font-size:12px;color:var(--mute);margin-top:14px;text-align:center;line-height:1.5}
+.sndRow{display:flex;justify-content:flex-end;margin-bottom:-4px}
+.sndToggle .pxi{width:16px;height:16px;vertical-align:-3px}
 
 /* inventaire */
 .inv{margin-top:12px;padding:10px;background:linear-gradient(#30251b,#251c15);border:2px solid var(--ink);border-radius:6px;box-shadow:inset 0 0 0 2px #4e3c2a}
@@ -235,6 +237,7 @@ h2{font-size:22px}
 <div id="app">
 
   <section id="s-start" class="screen on">
+    <div class="sndRow"><button class="btn ghost small sndToggle" aria-pressed="true" title="Activer / couper le son"></button></div>
     <h1><img class="pxi lg" data-ic="laurel" alt="">Monkey Arena<img class="pxi lg flip" data-ic="laurel" alt=""></h1>
     <div class="sub">Choisis ton gladiateur. Les 7 autres seront tes boss…<br>et l'un d'eux sera couronné Empereur.</div>
     <div class="grid8" id="charGrid"></div>
@@ -260,6 +263,7 @@ h2{font-size:22px}
       <div style="display:flex;gap:6px">
         <button class="btn ghost small" id="btnStats">Stats</button>
         <button class="btn ghost small" id="btnSpeed">×1</button>
+        <button class="btn ghost small sndToggle" aria-pressed="true" title="Activer / couper le son"></button>
       </div>
     </div>
     <div class="pips" id="pips"></div>
@@ -1439,7 +1443,7 @@ function drawBeast(c, x, y, dir, name, st={}){
 const $ = id => document.getElementById(id);
 let selChar = CHARS[0], P=null, N=1, ST=null, BOSSES=[], speed=1, running=false, floats=[], lastLog=[];
 
-function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); window.scrollTo(0,0); }
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); window.scrollTo(0,0); SFX.ambience(id==='s-fight' ? 0.1 : 0); }
 
 function paintFig(canvas, f, opts={}){
   const c = canvas.getContext('2d'); c.clearRect(0,0,canvas.width,canvas.height);
@@ -1497,6 +1501,7 @@ function prepareFight(){
   addLog(isBoss(N) ? `⚠️ ${e.name} entre dans l'arène !` : `Combat ${pos}/5 de l'acte — face à : ${e.name}.`);
   $('preFight').style.display='flex';
   $('btnFight').textContent = e.emperor ? 'Affronter l\'Empereur !' : isBoss(N) ? `Affronter ${e.name} !` : 'Combattre !';
+  if(e.emperor) SFX.fanfare();
   renderInv($('inv'), P); updateBars(); draw();
   show('s-fight');
 }
@@ -1520,6 +1525,10 @@ function updateBars(){
 }
 /* --- icônes pixel art (12×12) --- */
 const ICON_DEF = {
+  sound:{p:{W:'#e8e0d0',Y:'#ffd23a'}, g:[
+'............','.....o......','....oWo...Y.','...oWWo.Y..Y','oooWWWo..Y.Y','oWWWWWo..Y.Y','oWWWWWo..Y.Y','oooWWWo..Y.Y','...oWWo.Y..Y','....oWo...Y.','.....o......','............']},
+  mute:{p:{W:'#a8a094',R:'#e0533d'}, g:[
+'............','.....o......','....oWo.....','...oWWo.....','oooWWWoR...R','oWWWWWo.R.R.','oWWWWWo..R..','oooWWWo.R.R.','...oWWoR...R','....oWo.....','.....o......','............']},
   heart:{p:{R:'#d83a2a',r:'#9a2218',w:'#ffd0c0'}, g:[
 '............','..oo...oo...','.oRRo.oRRo..','oRwRRoRRRRo.','oRwRRRRRRRo.','oRRRRRRRRro.','.oRRRRRRro..','..oRRRRro...','...oRRro....','....oro.....','.....o......','............']},
   sword:{p:{W:'#e8eef2',B:'#7a4a22',G:'#e8b04a'}, g:[
@@ -1582,6 +1591,197 @@ function augArt(g, small){
   return icImg(g.ic || 'burst', small ? '' : 'big', g.ico);
 }
 function fillIcons(){ document.querySelectorAll('[data-ic]').forEach(el=>{ el.src = ic(el.dataset.ic); }); document.documentElement.style.setProperty('--skull', `url(${ic('skull')})`); }
+
+/* ============ SON (Web Audio, tout est synthétisé : aucun fichier) ============ */
+const SFX = (()=>{
+  const KEY = 'monkeyArena.son', VOL = 0.3;            // volume général par défaut, raisonnable
+  let on = true;
+  try { on = localStorage.getItem(KEY) !== '0'; } catch(e) {}
+  let ac = null, master = null, noiseBuf = null, brownBuf = null, amb = null;
+  const last = {};
+  const ok = () => on && ac && ac.state === 'running';
+  const now = () => ac.currentTime;
+  // évite qu'une rafale (vitesse ×4, double coup) sature : un même son au plus toutes les `gap` secondes
+  const throttle = (k, gap) => { const t = now(); if(last[k] && t - last[k] < gap) return false; last[k] = t; return true; };
+
+  function init(){
+    if(ac) return true;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return false;
+    ac = new AC();
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.2;
+    comp.connect(ac.destination);
+    master = ac.createGain(); master.gain.value = on ? VOL : 0; master.connect(comp);
+    const n = ac.sampleRate*2;
+    noiseBuf = ac.createBuffer(1, n, ac.sampleRate);
+    brownBuf = ac.createBuffer(1, n*2, ac.sampleRate);
+    const w = noiseBuf.getChannelData(0), b = brownBuf.getChannelData(0);
+    for(let i=0;i<n;i++) w[i] = Math.random()*2 - 1;
+    let lastB = 0;
+    for(let i=0;i<n*2;i++){ lastB = (lastB + 0.02*(Math.random()*2 - 1))/1.02; b[i] = lastB*3.5; }
+    return true;
+  }
+  // le navigateur n'autorise le son qu'après un geste : on démarre au premier clic / touche
+  function unlock(){
+    if(!on || !init()) return;
+    if(ac.state === 'suspended') ac.resume();
+    startAmbience();
+  }
+  ['pointerdown','keydown'].forEach(t => window.addEventListener(t, unlock, {passive:true}));
+
+  // --- briques ---
+  function out(side, vol){
+    const g = ac.createGain(); g.gain.value = vol;
+    if(side && ac.createStereoPanner){ const p = ac.createStereoPanner(); p.pan.value = side==='a' ? -0.35 : 0.35; g.connect(p).connect(master); }
+    else g.connect(master);
+    return g;
+  }
+  function env(param, t, a, peak, d){
+    param.setValueAtTime(0.0001, t); param.exponentialRampToValueAtTime(peak, t + a); param.exponentialRampToValueAtTime(0.0001, t + a + d);
+  }
+  function noise(t, dur, buf=noiseBuf){
+    const s = ac.createBufferSource(); s.buffer = buf; s.loop = true;
+    s.start(t, Math.random()*(buf.duration - 0.5)); s.stop(t + dur); return s;
+  }
+  function filt(type, f, q=1){ const b = ac.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; return b; }
+  function osc(type, f, t, dur){ const o = ac.createOscillator(); o.type = type; o.frequency.value = f; o.start(t); o.stop(t + dur); return o; }
+
+  // métal : claquement de bruit aigu + partiels inharmoniques qui sonnent comme une lame
+  function clang(t, dest, strength, base){
+    const n = noise(t, 0.09), hp = filt('highpass', 2600), g = ac.createGain();
+    env(g.gain, t, 0.002, 0.5*strength, 0.07); n.connect(hp).connect(g).connect(dest);
+    for(const [r, a, d] of [[1,0.3,0.32],[1.47,0.22,0.26],[2.09,0.17,0.2],[2.76,0.12,0.16],[3.52,0.08,0.11],[4.4,0.05,0.08]]){
+      const o = osc('sine', base*r*(1 + (Math.random() - 0.5)*0.01), t, d*1.8 + 0.05), og = ac.createGain();
+      env(og.gain, t, 0.001, a*strength, d*(0.7 + 0.5*strength)); o.connect(og).connect(dest);
+    }
+  }
+  function thump(t, dest, f0, f1, vol, dur){
+    const o = osc('sine', f0, t, dur + 0.05), g = ac.createGain();
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur*0.8);
+    env(g.gain, t, 0.004, vol, dur); o.connect(g).connect(dest);
+  }
+
+  // --- foule : brouhaha continu (bruit brun filtré, ondulation lente) dont le niveau suit l'excitation ---
+  function startAmbience(){
+    if(amb || !ac) return;
+    const src = ac.createBufferSource(); src.buffer = brownBuf; src.loop = true;
+    const lp = filt('lowpass', 650, 0.5), voice = filt('bandpass', 420, 0.9);
+    const mod = ac.createGain(); mod.gain.value = 1;
+    const lfo = ac.createOscillator(), lfoG = ac.createGain(); lfo.frequency.value = 0.23; lfoG.gain.value = 0.25; lfo.connect(lfoG).connect(mod.gain); lfo.start();
+    const level = ac.createGain(); level.gain.value = 0;
+    src.connect(lp).connect(mod); src.connect(voice).connect(mod); mod.connect(level).connect(master);
+    src.start();
+    amb = {level};
+  }
+  let ambTarget = 0;
+  function ambience(x){
+    const v = Math.max(0, x);
+    if(!amb || Math.abs(v - ambTarget) < 0.004) return;
+    ambTarget = v; amb.level.gain.setTargetAtTime(v, now(), 0.35);
+  }
+
+  // acclamation : bruit filtré sur les formants d'un « aaah » collectif, gonfle puis retombe, avec quelques sifflets
+  function cheer(strength=1){
+    if(!ok() || !throttle('cheer', 0.5)) return;
+    const t = now(), dur = 1.6 + 0.8*strength, o = out(null, 0.42*strength);
+    const sw = ac.createGain(); sw.gain.setValueAtTime(0.0001, t); sw.gain.exponentialRampToValueAtTime(1, t + 0.22);
+    sw.gain.setValueAtTime(1, t + 0.5); sw.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    const jit = ac.createGain(), lfo = osc('sine', 6.5, t, dur), lg = ac.createGain(); lg.gain.value = 0.18; lfo.connect(lg).connect(jit.gain);
+    sw.connect(jit).connect(o);
+    for(const [f, q, a] of [[780,3,1],[1180,4,0.7],[2700,5,0.35],[320,1.2,0.5]]){
+      const n = noise(t, dur), b = filt('bandpass', f, q), g = ac.createGain(); g.gain.value = a;
+      b.frequency.setValueAtTime(f*0.9, t); b.frequency.linearRampToValueAtTime(f*1.08, t + 0.4);
+      n.connect(b).connect(g).connect(sw);
+    }
+    for(let i=0;i<Math.round(2*strength);i++){
+      const ts = t + 0.15 + Math.random()*0.6, f = 2100 + Math.random()*900, w = osc('sine', f, ts, 0.5), g = ac.createGain();
+      w.frequency.setValueAtTime(f, ts); w.frequency.linearRampToValueAtTime(f*(Math.random() < 0.5 ? 1.25 : 0.8), ts + 0.35);
+      env(g.gain, ts, 0.03, 0.05, 0.35); w.connect(g).connect(o);
+    }
+  }
+
+  // cuivres : deux dents de scie désaccordées, filtre qui s'ouvre à l'attaque
+  function brass(t, f, dur, vol, dest, bright=2600){
+    const g = ac.createGain(), lp = filt('lowpass', 500, 1.2);
+    lp.frequency.setValueAtTime(500, t); lp.frequency.exponentialRampToValueAtTime(bright, t + 0.05); lp.frequency.exponentialRampToValueAtTime(bright*0.55, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.035);
+    g.gain.setValueAtTime(vol*0.85, t + Math.max(0.05, dur - 0.08)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.12);
+    for(const det of [-5, 5]){ const o = osc('sawtooth', f, t, dur + 0.15); o.detune.value = det; o.connect(lp); }
+    lp.connect(g).connect(dest);
+  }
+  function pluck(t, f, dur, vol, dest){
+    const o = osc('triangle', f, t, dur + 0.05), o2 = osc('square', f*2, t, dur*0.5), g = ac.createGain(), g2 = ac.createGain();
+    env(g.gain, t, 0.005, vol, dur); env(g2.gain, t, 0.003, vol*0.12, dur*0.4);
+    o.connect(g).connect(dest); o2.connect(g2).connect(dest);
+  }
+  const NOTE = n => 440*Math.pow(2, (n - 69)/12);   // numéro MIDI → Hz
+
+  return {
+    get on(){ return on; },
+    toggle(){
+      on = !on;
+      try { localStorage.setItem(KEY, on ? '1' : '0'); } catch(e) {}
+      if(on){ unlock(); }
+      if(master) master.gain.setTargetAtTime(on ? VOL : 0, now(), 0.05);
+      return on;
+    },
+    ambience,
+    cheer,
+    hit(side, big){
+      if(!ok() || !throttle('hit'+side, 0.035)) return;
+      const t = now(), o = out(side, big ? 0.6 : 0.48);
+      clang(t, o, big ? 1.1 : 0.9, 950 + Math.random()*450);
+      thump(t, o, 160, 70, big ? 0.35 : 0.2, 0.12);
+    },
+    crit(side){
+      if(!ok() || !throttle('crit'+side, 0.06)) return;
+      const t = now(), o = out(side, 0.7);
+      clang(t, o, 1.4, 700 + Math.random()*250);
+      thump(t, o, 130, 38, 0.9, 0.32);
+      const n = noise(t, 0.3), lp = filt('lowpass', 420), g = ac.createGain();
+      env(g.gain, t, 0.004, 0.55, 0.25); n.connect(lp).connect(g).connect(o);
+      cheer(0.8);
+    },
+    whoosh(side){
+      if(!ok() || !throttle('whoosh'+side, 0.06)) return;
+      const t = now(), o = out(side, 1), n = noise(t, 0.4), b = filt('bandpass', 500, 1.1), g = ac.createGain();
+      b.frequency.setValueAtTime(450, t); b.frequency.exponentialRampToValueAtTime(2300, t + 0.11); b.frequency.exponentialRampToValueAtTime(650, t + 0.32);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(1.6, t + 0.07); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
+      n.connect(b).connect(g).connect(o);
+    },
+    finalBlow(){ cheer(1.5); },
+    // fanfare impériale : appel de trois notes, puis montée sur un accord tenu, timbales
+    fanfare(){
+      if(!ok()) return;
+      const t = now() + 0.05, o = out(null, 0.5);
+      const seq = [[67,0,0.11],[67,0.13,0.11],[67,0.26,0.11],[72,0.39,0.42],[67,0.84,0.18],[72,1.04,0.18],[76,1.24,0.18],[79,1.44,1.0]];
+      for(const [n, at, d] of seq) brass(t + at, NOTE(n), d, 0.3, o);
+      for(const n of [64, 67, 72]) brass(t + 1.44, NOTE(n), 1.0, 0.18, o, 1800);
+      for(const at of [0.39, 1.44, 1.62]) thump(t + at, o, 105, 55, 0.8, 0.45);
+    },
+    victory(){
+      if(!ok()) return;
+      const t = now() + 0.02, o = out(null, 0.45);
+      [72, 76, 79, 84].forEach((n, i) => pluck(t + i*0.09, NOTE(n), 0.35, 0.35, o));
+      for(const n of [60, 64, 67, 72]) brass(t + 0.38, NOTE(n), 0.7, 0.14, o, 3200);
+      pluck(t + 0.38, NOTE(88), 0.8, 0.18, o);
+    },
+    defeat(){
+      if(!ok()) return;
+      const t = now() + 0.05, o = out(null, 0.42);
+      [[67,0,0.32],[65,0.34,0.32],[63,0.68,0.32],[62,1.02,1.1]].forEach(([n, at, d]) => brass(t + at, NOTE(n - 12), d, 0.26, o, 900));
+      thump(t + 1.02, o, 80, 40, 0.7, 0.6);
+    }
+  };
+})();
+function renderSoundBtns(){
+  document.querySelectorAll('.sndToggle').forEach(b=>{
+    b.innerHTML = `${icImg(SFX.on ? 'sound' : 'mute')} ${SFX.on ? 'Son' : 'Muet'}`;
+    b.setAttribute('aria-pressed', SFX.on ? 'true' : 'false');
+  });
+}
+document.querySelectorAll('.sndToggle').forEach(b => b.onclick = ()=>{ SFX.toggle(); renderSoundBtns(); });
 
 /* --- arène --- */
 // le canevas est en double résolution ; tout le dessin reste en coordonnées 600 × 330
@@ -1975,15 +2175,16 @@ function loop(ts){
     if(ev.kind==='hit' || ev.kind==='crit'){
       const f = ST[ev.side], big = (+ev.txt.replace('!','')||0) > f.maxHp*0.12;
       v.hit = HIT_T; v.kb = ev.kind==='crit' ? 1.8 : big ? 1.3 : 1;
+      if(ev.kind==='hit') SFX.hit(ev.side, big);
       burst(ev.side, 'spark', 6); burst(ev.side, 'sand', 4);
-      if(ev.kind==='crit'){ burst(ev.side, 'blood', 8); freeze = 0.09; shake = Math.max(shake, 8); crowd = 1.3; }
+      if(ev.kind==='crit'){ burst(ev.side, 'blood', 8); freeze = 0.09; shake = Math.max(shake, 8); crowd = 1.3; SFX.crit(ev.side); }
       else if(big){ freeze = Math.max(freeze, 0.05); shake = Math.max(shake, 4); }
       else { shake = Math.max(shake, 1.5); freeze = Math.max(freeze, 0.03); }
     }
     if(ev.kind==='thorns') burst(ev.side, 'spark', 4);
     if(ev.kind==='poison') burst(ev.side, 'poison', 3);
     if(ev.kind==='bleed') burst(ev.side, 'blood', 3);
-    if(ev.kind==='miss'){ v.dodge = DODGE_T; burst(ev.side, 'sand', 6); }
+    if(ev.kind==='miss'){ v.dodge = DODGE_T; burst(ev.side, 'sand', 6); SFX.whoosh(ev.side); }
     if(ev.big){ burst(ev.side, 'spark', 14); shake = Math.max(shake, 6); crowd = 1.3; freeze = Math.max(freeze, 0.12); }
   };
   for(const ev of ST.events){
@@ -1999,6 +2200,7 @@ function loop(ts){
   for(const f of floats){ f.y -= 40*dtReal; f.life -= dtReal; }
   floats = floats.filter(f=>f.life>0);
   crowd = Math.max(0.3, crowd - dtReal*0.8);
+  SFX.ambience(0.07 + 0.08*Math.min(1.6, crowd));   // la foule gronde plus fort quand elle s'excite
   shake *= Math.pow(0.0005, dtReal);
   lastDrawDt = freeze > 0 ? 0 : dtReal*Math.max(timeScale,0.3);
   if(ST.over && PEND.length===0){
@@ -2009,11 +2211,13 @@ function loop(ts){
       burst(loser, 'blood', 14); burst(loser, 'sand', 12);
       zoom = won ? {x:W/2, y:H/2, z:1, center:1} : {x:lerp(W/2, POS[loser].x, 0.35), y:POS[loser].y-70, z:1};
       VIS[ST.winner].atk = 0;
+      SFX.finalBlow(); if(!won) SFX.defeat();
     }
     endT -= dtReal;
     if(won){
       // ralenti pendant la chute, puis zoom sur le gagnant, rayon, pétales et titre
       vicE += dtReal;
+      if(vicE >= 0.85 && vicE - dtReal < 0.85) SFX.victory();   // jingle quand le titre apparaît
       VIS[loser].die += dtReal * (vicE < 0.9 ? 0.45 : 1.4);
       if(vicE > 0.9) timeScale = Math.min(1, timeScale + dtReal*2);
       if(vicE > 0.7) VIS[ST.winner].win = 1;
@@ -2179,6 +2383,7 @@ $('btnSpeed').onclick = ()=>{ speed = speed===1?2:speed===2?4:1; $('btnSpeed').t
 $('btnStats').onclick = ()=>{ $('statsGrid').innerHTML = statsHTML(P); renderInv($('inv2'), P); show('s-stats'); };
 $('btnBack').onclick = ()=>show('s-fight');
 fillIcons();
+renderSoundBtns();
 renderChars();
 loadSprites(()=>{ if($('s-start').classList.contains('on')) renderChars(); });
 loadItems(()=>{ if($('s-start').classList.contains('on')) renderChars(); });
