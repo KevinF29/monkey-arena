@@ -951,6 +951,19 @@ function wear(c, f, flash){
   if(r.flip){ c.save(); c.translate(x + w/2, 0); c.scale(-1, 1); c.drawImage(flash ? it.w : it.n, -w/2, y, w, h); c.restore(); }
   else c.drawImage(flash ? it.w : it.n, x, y, w, h);
 }
+// comme wear(), mais la partie haute (cutFrac de la hauteur, ex. la crête d'un casque) se cisaille autour de la ligne de coupe
+function wearFlex(c, f, flash, cutFrac, skew){
+  const it = IMG[f], r = WEAR[f]; if(!it) return;
+  const iw = it.n.width, ih = it.n.height, src = flash ? it.w : it.n;
+  let w, h;
+  if(r.w){ w = r.w; h = w*ih/iw; } else { h = r.h; w = h*iw/ih; }
+  const x = r.cx!==undefined ? r.cx - w/2 : r.x, y = r.cy!==undefined ? r.cy - h/2 : r.y;
+  const cy = Math.round(ih*cutFrac), yc = y + h*cutFrac;
+  c.drawImage(src, 0, cy-1, iw, ih-cy+1, x, yc - h/ih, w, h - yc + y + h/ih);
+  c.save(); c.transform(1, 0, skew, 1, -skew*yc, 0);
+  c.drawImage(src, 0, 0, iw, cy, x, y, w, yc - y);
+  c.restore();
+}
 function drawWeaponImg(c, type, flash){
   const d = WEAPON_IMG[type] || WEAPON_IMG.gladius, it = IMG[d.f];
   if(!it) return false;
@@ -1094,6 +1107,7 @@ const PART_POLY = {
 // pivots en coordonnées relatives (origine entre les pieds)
 const PIV = {head:[5,-346], armB:[-55,-298], armF:[48,-290], legB:[-30,-142], legF:[25,-142]};
 // potes (nouveaux sprites, proportions réalistes) : comme les adversaires, mais jambes sous l'ourlet de la tunique
+// skirt = bande du torse qui flotte (pan de tunique, pixels de l'image) ; hairCut = au-dessus, cheveux / crête qui suivent en retard
 const RIG_PERSO = {
   poly:{ head:[[0,0],[204,0],[204,122],[0,122]],
          armB:[[0,122],[62,122],[66,200],[64,315],[0,315]],
@@ -1101,7 +1115,7 @@ const RIG_PERSO = {
          legB:[[0,338],[102,338],[102,490],[0,490]],
          legF:[[102,338],[204,338],[204,490],[102,490]] },
   piv:{head:[0,-366], armB:[-60,-350], armF:[62,-350], legB:[-25,-150], legF:[25,-150]},
-  hand:[78,-196], probe:[100,190], fill:[[56,126],[72,126],[72,300],[56,300]], skin:[150,170,40,90],
+  hand:[78,-196], probe:[100,190], fill:[[56,126],[72,126],[72,300],[56,300]], skin:[150,170,40,90], skirt:[268,342], hairCut:46,
   fist:true   // poings fermés dessinés : l'arme passe dans le trou du poing, pas de poing ajouté
 };
 // centre du trou de chaque poing, en pixels du sprite (f = main de l'arme, b = main du bouclier)
@@ -1134,7 +1148,7 @@ const RIG_ENEMY = {
          legB:[[0,300],[102,300],[102,490],[0,490]],
          legF:[[102,300],[204,300],[204,490],[102,490]] },
   piv:{head:[0,-366], armB:[-60,-350], armF:[62,-348], legB:[-25,-183], legF:[25,-183]},
-  hand:[80,-203], probe:[100,220], fill:[[58,128],[74,128],[74,300],[58,300]], skin:[150,170,40,90],
+  hand:[80,-203], probe:[100,220], fill:[[58,128],[74,128],[74,300],[58,300]], skin:[150,170,40,90], skirt:[262,306], hairCut:48,
   fist:true
 };
 function buildParts(img, rig=RIG_PERSO){
@@ -1180,6 +1194,19 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   const PT = flash ? S.wparts : S.parts;
   const at = (piv, rot, fn)=>{ c.save(); c.translate(piv[0],piv[1]); c.rotate(rot); c.translate(-piv[0],-piv[1]); fn(); c.restore(); };
   const img = cv2 => c.drawImage(cv2, -SPR_AX, -SPR_AY);
+  // mouvement secondaire : sec > 0 quand le corps part en arrière (le tissu traîne vers l'avant), < 0 quand il fonce
+  const sec = (st.sec||0) + Math.sin((st.t||0)*2.3)*0.025;
+  const IW = PT.torso.width;
+  // bande [y0,y1) de l'image, cisaillée autour de la ligne pivotY (en pixels de l'image)
+  const slice = (cv2, y0, y1, skew, pivotY) => {
+    if(y1 <= y0) return;
+    c.save(); c.transform(1, 0, skew, 1, -skew*(pivotY - SPR_AY), 0);
+    c.drawImage(cv2, 0, y0, IW, y1-y0, -SPR_AX, y0-SPR_AY, IW, y1-y0);
+    c.restore();
+  };
+  const [sk0, sk1] = S.rig.skirt, hc = S.rig.hairCut;
+  const torso = ()=>{ slice(PT.torso, 0, sk0+1, 0, 0); slice(PT.torso, sk0, sk1, sec*0.9, sk0); slice(PT.torso, sk1, PT.torso.height, 0, 0); };
+  const head = ()=>{ slice(PT.head, 0, hc+1, -sec*0.55, hc); slice(PT.head, hc, PT.head.height, 0, 0); };
   c.save();
   c.translate(x + dir*P.x, y + P.y);
   c.scale(dir*k*P.sx, k*P.sy);
@@ -1205,7 +1232,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   at(PIV.legB, P.legB, ()=>{ img(PT.legB); greave(-1); });
   at(PIV.legF, P.legF, ()=>{ img(PT.legF); greave(1); });
   // torse
-  img(PT.torso);
+  torso();
   if(L.chest) wear(c,'plastron',flash);
   else if(L.cuir) wear(c,'tunique-cuir',flash);
   if(L.skull) wear(c,'crane',flash);
@@ -1214,9 +1241,9 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // tête
   at(PIV.head, P.head, ()=>{
     if(L.emperor) wear(c,'laurier-dos',flash);   // l'arrière de la couronne passe derrière le crâne
-    img(PT.head);
+    head();
     if(L.lion){ c.save(); c.beginPath(); c.rect(-300,-620,600,250); c.rect(-15,-372,200,120); c.clip(); wear(c,'peau-lion',flash); c.restore(); }
-    else if(L.helmet) wear(c,'casque',flash);
+    else if(L.helmet) wearFlex(c,'casque',flash,0.42,-sec*0.7);
     if(L.emperor) wear(c,'laurier',flash);
     c.imageSmoothingEnabled = false; blitPix(c, G.head, GEAR_BOX, flash); c.imageSmoothingEnabled = true;
   });
@@ -1233,15 +1260,32 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
     if(shImg) inHand(()=>wear(c,shImg,flash));
     else if(!FI && L.chope) wear(c,'chope',flash);
   });
-  // traînée de l'arme
+  // smear de l'arme : la lame balayée entre l'angle de départ et l'angle actuel, plus dense près du bord d'attaque
   if(P.trail && !flash){
-    const [a0,a1] = P.trail, R = 120 + 230;
+    const [a0, a1] = P.trail, alpha = P.trailA ?? 1;
+    const d = WEAPON_IMG[L.weapon||'gladius'] || WEAPON_IMG.gladius, it = IMG[d.f];
+    const iw = it ? it.n.width : 300, ih = it ? it.n.height : 300;
+    let tip;
+    if(d.len){ const sc = d.len/Math.hypot(iw, ih); tip = [(1-d.t)*iw*sc, -(1-d.t)*ih*sc]; }
+    else { const sc = d.w/iw; tip = [(1-d.gx)*iw*sc, -d.gy*ih*sc]; }
+    const rot = ([x,y], a) => [x*Math.cos(a) - y*Math.sin(a), x*Math.sin(a) + y*Math.cos(a)];
+    const hand = [HD[0]-PIV.armF[0], HD[1]-PIV.armF[1]], wt = rot(tip, P.wpn);
+    // point de la lame (fraction f entre la main et la pointe) quand le bras est à l'angle a
+    const at = (a, f) => rot([hand[0] + wt[0]*f, hand[1] + wt[1]*f], a);
     c.save(); c.translate(PIV.armF[0], PIV.armF[1]);
-    const n = 10;
+    const n = 16;
     for(let i=0;i<n;i++){
-      const ta = a0 + (a1-a0)*i/n, tb = a0 + (a1-a0)*(i+1)/n;
-      c.strokeStyle = `rgba(255,248,220,${0.05 + 0.5*i/n})`; c.lineWidth = 10 + 40*i/n;
-      c.beginPath(); c.moveTo(-Math.sin(ta)*R, Math.cos(ta)*R); c.lineTo(-Math.sin(tb)*R, Math.cos(tb)*R); c.stroke();
+      const k = (i+1)/n, ta = a0 + (a1-a0)*i/n, tb = a0 + (a1-a0)*(i+1)/n, f0 = 0.25 + 0.3*(1-k);
+      c.fillStyle = `rgba(255,246,222,${alpha*(0.03 + 0.5*k*k)})`;
+      c.beginPath(); c.moveTo(...at(ta, f0)); c.lineTo(...at(ta, 1.04)); c.lineTo(...at(tb, 1.06)); c.lineTo(...at(tb, f0)); c.closePath(); c.fill();
+    }
+    // traits de vitesse le long de la fin du balayage
+    c.strokeStyle = `rgba(255,255,255,${0.6*alpha})`; c.lineCap = 'round';
+    const s0 = a1 - (a1-a0)*0.55;
+    for(const [f, w] of [[1.02, 7], [0.8, 4], [0.6, 3]]){
+      c.lineWidth = w; c.beginPath();
+      for(let i=0;i<=8;i++){ const [x,y] = at(s0 + (a1-s0)*i/8, f); i ? c.lineTo(x,y) : c.moveTo(x,y); }
+      c.stroke();
     }
     c.restore();
   }
@@ -1283,7 +1327,10 @@ function getFist(PT){
 }
 
 /* --- poses --- */
-const ATK_T = 0.38, HIT_T = 0.28, DODGE_T = 0.34, DIE_T = 0.8;
+const ATK_T = 0.46, HIT_T = 0.3, DODGE_T = 0.34, DIE_T = 0.8;
+// phases de l'attaque (fraction de ATK_T) : anticipation, temps d'arrêt, frappe éclair, dépassement + rebond, retour
+const A_WIND = 0.34, A_HOLD = 0.5, A_HIT = 0.6, A_OVER = 0.76;
+const easeOut = q => 1 - (1-q)*(1-q), easeIn = q => q*q*q;
 const ease = q => q<0.5 ? 2*q*q : 1-Math.pow(-2*q+2,2)/2;
 const lerp = (a,b,q) => a+(b-a)*q;
 function poseIdle(t){
@@ -1299,28 +1346,52 @@ function poseOf(v, t){
   }
   if(v.win){
     const b = Math.abs(Math.sin(t*5));
-    P.y = -b*10; P.armF = 3.0 + Math.sin(t*6)*0.12; P.wpn = 2.5; P.armB = -0.5; P.head = -0.15;
+    // bras tendu en diagonale devant le visage, arme pointée vers le ciel
+    P.y = -b*10; P.armF = 3.95 + Math.sin(t*6)*0.08; P.wpn = 1.55; P.armB = -0.6; P.head = -0.18;
     return P;
   }
   if(v.atk > 0){
-    const p = 1 - v.atk/ATK_T;
-    if(p < 0.35){ const q = ease(p/0.35);
-      P.armF = lerp(P.armF, 2.3, q); P.wpn = -4.18*q; P.rot = -0.08*q; P.x = -8*q; P.armB = -0.2*q; P.head = -0.06*q; }
-    else if(p < 0.6){ const q = ease((p-0.35)/0.25);
-      P.armF = lerp(2.3, 4.9, q); P.wpn = -4.18; P.rot = lerp(-0.08, 0.14, q); P.x = lerp(-8, 44, q);
-      P.legF = 0.4*q; P.legB = -0.3*q; P.armB = lerp(-0.2, 0.3, q); P.head = 0.08*q; P.trail = [2.3, lerp(2.3,4.9,q)]; }
-    else { const q = ease((p-0.6)/0.4);
-      P.armF = lerp(4.9, Math.PI*2 + P.armF, q); P.wpn = 2.1*(1-q); P.rot = 0.14*(1-q); P.x = 44*(1-q);
-      P.legF = 0.4*(1-q); P.legB = -0.3*(1-q); P.armB = 0.3*(1-q);
-      if(q < 0.35) P.trail = [lerp(2.3,4.9,q/0.35*0.9), 4.9]; }
+    const p = 1 - v.atk/ATK_T, idleArm = P.armF;
+    const UP = 2.6, HIT = 4.95, OVER = 5.5;
+    if(p < A_HOLD){
+      // anticipation : on arme loin derrière, le corps se tasse et recule ; puis temps d'arrêt qui tremble
+      const q = easeOut(Math.min(1, p/A_WIND)), hold = p > A_WIND ? (p - A_WIND)/(A_HOLD - A_WIND) : 0;
+      const shiver = hold ? Math.sin(hold*Math.PI*7)*0.018 : 0;
+      P.armF = lerp(idleArm, UP + 0.1*hold, q) + shiver; P.wpn = -4.3*q; P.rot = -0.14*q - 0.02*hold; P.x = -16*q - 3*hold;
+      P.armB = -0.35*q; P.head = -0.12*q; P.legF = -0.14*q; P.legB = 0.12*q;
+      P.sx *= 1 + 0.05*q; P.sy *= 1 - 0.06*q - 0.015*hold;
+    } else if(p < A_HIT){
+      // frappe éclair, étirée dans le sens du mouvement, smear de l'arme
+      const q = easeIn((p - A_HOLD)/(A_HIT - A_HOLD));
+      P.armF = lerp(UP + 0.1, OVER, q); P.wpn = -4.3; P.rot = lerp(-0.16, 0.2, q); P.x = lerp(-19, 54, q);
+      P.legF = lerp(-0.14, 0.5, q); P.legB = lerp(0.12, -0.38, q); P.armB = lerp(-0.35, 0.4, q); P.head = lerp(-0.12, 0.12, q);
+      P.sx *= 1 + 0.1*q; P.sy *= 1 - 0.05*q;
+      P.trail = [UP, P.armF]; P.trailA = 1;
+    } else if(p < A_OVER){
+      // dépassement puis rebond amorti, compression à l'impact
+      const q = (p - A_HIT)/(A_OVER - A_HIT), b = Math.cos(q*Math.PI*1.5)*(1 - q);
+      P.armF = HIT + (OVER - HIT)*b; P.wpn = -4.3; P.rot = 0.13 + 0.07*b; P.x = 44 + 10*b;
+      P.legF = 0.45; P.legB = -0.34; P.armB = 0.35; P.head = 0.1 - 0.06*b;
+      const imp = Math.max(0, 1 - q*3);
+      P.sx *= 1 - 0.07*imp; P.sy *= 1 + 0.05*imp;
+      P.trail = [lerp(UP, HIT, q*0.8), P.armF]; P.trailA = 1 - q;
+    } else {
+      const q = ease((p - A_OVER)/(1 - A_OVER));
+      P.armF = lerp(HIT, Math.PI*2 + idleArm, q); P.wpn = 2.0*(1 - q); P.rot = 0.13*(1 - q); P.x = 44*(1 - q);
+      P.legF = 0.45*(1 - q); P.legB = -0.34*(1 - q); P.armB = 0.35*(1 - q); P.head = 0.1*(1 - q);
+    }
   }
   if(v.dodge > 0){
     const q = Math.sin((1 - v.dodge/DODGE_T)*Math.PI);
     P.x += -46*q; P.y += -16*q; P.rot += -0.28*q; P.legF += -0.35*q; P.legB += 0.25*q; P.armB += -0.4*q; P.head += -0.15*q;
   }
   if(v.hit > 0){
-    const q = v.hit/HIT_T, s = Math.sin((1-q)*Math.PI);
-    P.x += -16*v.kb*q; P.rot += -0.16*s; P.head += -0.3*s; P.sx *= 1 + 0.07*s; P.sy *= 1 - 0.06*s;
+    // compression immédiate à l'impact, puis détente qui étire légèrement
+    const q = 1 - v.hit/HIT_T, s = Math.sin(q*Math.PI);
+    const comp = q < 0.15 ? 1 : Math.max(0, 1 - (q - 0.15)/0.25);
+    const reb = q > 0.3 && q < 0.8 ? Math.sin((q - 0.3)/0.5*Math.PI) : 0;
+    P.x += -18*v.kb*(1 - q); P.rot += -0.18*s*v.kb; P.head += -0.32*s;
+    P.sx *= 1 + 0.16*comp - 0.05*reb; P.sy *= 1 - 0.15*comp + 0.06*reb;
     P.armF += 0.35*s; P.armB += -0.45*s;
   }
   return P;
@@ -1415,7 +1486,7 @@ function showIntro(){
 function prepareFight(){
   const e = makeEnemy(N, BOSSES);
   ST = newFight(P, e); floats = []; lastLog = [];
-  VIS = {a:newVis(), b:newVis()}; PEND = []; parts = []; shake = 0; freeze = 0; timeScale = 1; zoom = null; endT = 0;
+  VIS = {a:newVis(), b:newVis()}; PEND = []; parts = []; shake = 0; freeze = 0; timeScale = 1; zoom = null; endT = 0; vicE = 0; petals = [];
   lookA = computeLook(ST.a); lookB = ST.b.beast ? null : computeLook(ST.b);
   const a = actOf(N);
   $('actLabel').textContent = `Acte ${ROMAN[a]} — ${ACT_NAMES[a]}`;
@@ -1721,11 +1792,22 @@ function drawArena(){
   }
 }
 let PEND = [];
-const IMPACT = ATK_T*0.5;
+const IMPACT = ATK_T*A_HIT;   // dégâts appliqués quand l'arme arrive au bout de la frappe
 function pendDmg(side){ let d=0; for(const p of PEND){ const e=p.ev; if(e.side===side && (e.kind==='hit'||e.kind==='crit'||e.kind==='thorns')) d += +String(e.txt).replace('!','')||0; } return d; }
 function shownHp(side){ const f=ST[side]; return Math.max(0, Math.min(f.maxHp, f.hp + pendDmg(side))); }
 let VIS = {a:null, b:null}, parts = [], shake = 0, freeze = 0, timeScale = 1, zoom = null, endT = 0;
-const newVis = ()=>({atk:0, hit:0, dodge:0, kb:1, die:0, win:0, flash:0});
+// mise en scène de la victoire : temps écoulé depuis la fin, pétales lancés par la foule
+let vicE = 0, petals = [];
+const newVis = ()=>({atk:0, hit:0, dodge:0, kb:1, die:0, win:0, flash:0, sec:0, secV:0, px:0, pr:0});
+// ressort du mouvement secondaire (tunique, cheveux, crête) : traîne derrière la vitesse du corps
+function stepSecondary(v, P, dt){
+  if(!(dt > 0)) return;
+  const vx = (P.x - v.px)/dt, vr = (P.rot - v.pr)/dt; v.px = P.x; v.pr = P.rot;
+  const target = Math.max(-0.6, Math.min(0.6, -vx*0.0024 - vr*0.05));
+  const k = 420, damp = 13, n = Math.ceil(dt/0.004), h = dt/n;
+  for(let i=0;i<n;i++){ v.secV += ((target - v.sec)*k - v.secV*damp)*h; v.sec += v.secV*h; }
+  v.sec = Math.max(-0.7, Math.min(0.7, v.sec));
+}
 // halo des effets de coup spécial actifs
 function drawBuffAura(f, p){
   const c = f.rageT>0 ? '255,60,40' : f.stoneT>0 ? '200,200,215' : f.cheerT>0 ? '255,210,80' : f.beerT>0 ? '255,170,40' : f.danceN>0 ? '120,220,255' : f.medT>0 ? '140,170,255' : null;
@@ -1754,7 +1836,9 @@ function drawFighter(f, side){
     else drawGlad(ctx, p.x + dir*off, p.y, dir, side==='a'?lookA:lookB, st);
     return;
   }
-  drawGlad(ctx, p.x, p.y, dir, side==='a'?lookA:lookB, {flash:v.flash, scale, t, pose: poseOf(v, t)});
+  const pose = poseOf(v, t);
+  stepSecondary(v, pose, lastDrawDt);
+  drawGlad(ctx, p.x, p.y, dir, side==='a'?lookA:lookB, {flash:v.flash, scale, t, pose, sec:v.sec});
 }
 function burst(side, kind, n){
   const p = POS[side], dir = side==='a'?1:-1;
@@ -1778,8 +1862,10 @@ function draw(){
   ctx.setTransform(RES,0,0,RES,0,0);
   ctx.save();
   if(shake > 0.3){ ctx.translate((Math.random()*2-1)*shake, (Math.random()*2-1)*shake); }
-  if(zoom){ ctx.translate(zoom.x, zoom.y); ctx.scale(zoom.z, zoom.z); ctx.translate(-zoom.x, -zoom.y); }
+  if(zoom && zoom.center){ ctx.translate(W/2, H/2); ctx.scale(zoom.z, zoom.z); ctx.translate(-zoom.x, -zoom.y); }
+  else if(zoom){ ctx.translate(zoom.x, zoom.y); ctx.scale(zoom.z, zoom.z); ctx.translate(-zoom.x, -zoom.y); }
   drawArena();
+  if(vicE > 0) drawVictoryRay();
   // celui qui attaque passe devant
   const order = (VIS.b && VIS.b.atk>0) ? ['a','b'] : ['b','a'];
   for(const sd of order) drawFighter(ST[sd], sd);
@@ -1794,8 +1880,78 @@ function draw(){
   }
   ctx.globalAlpha=1;
   ctx.restore();
+  if(vicE > 0) drawVictoryOverlay(lastDrawDt);
   if(ST.b.enraged){ ctx.fillStyle='rgba(120,0,160,.12)'; ctx.fillRect(0,0,W,H); }
 }
+/* --- victoire : rayon de lumière sur le gagnant, pétales de roses, titre --- */
+function drawVictoryRay(){
+  if(!ST.winner) return;
+  const p = POS[ST.winner], a = Math.min(1, Math.max(0, (vicE - 0.35)/0.6)) * (0.85 + 0.15*Math.sin(perfT*3));
+  if(a <= 0) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createLinearGradient(0, -20, 0, p.y + 10);
+  g.addColorStop(0, `rgba(255,236,170,${0.05*a})`); g.addColorStop(0.55, `rgba(255,228,150,${0.32*a})`); g.addColorStop(1, `rgba(255,240,190,${0.5*a})`);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(p.x - 26, -20); ctx.lineTo(p.x + 34, -20); ctx.lineTo(p.x + 78, p.y + 8); ctx.lineTo(p.x - 74, p.y + 8); ctx.closePath(); ctx.fill();
+  // poussière qui danse dans le rayon
+  for(let i=0;i<14;i++){
+    const ph = i*1.7, yy = (p.y + 10) - ((perfT*18 + i*29) % (p.y + 10)), xx = p.x + Math.sin(perfT*0.9 + ph)*(16 + 40*yy/p.y);
+    ctx.fillStyle = `rgba(255,250,220,${0.5*a})`; ctx.fillRect(Math.round(xx), Math.round(yy), 2, 2);
+  }
+  const gl = ctx.createRadialGradient(p.x, p.y, 4, p.x, p.y, 90);
+  gl.addColorStop(0, `rgba(255,230,150,${0.45*a})`); gl.addColorStop(1, 'rgba(255,230,150,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.ellipse(p.x, p.y, 90, 22, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+const PETAL_COLS = [['#d81b3a','#9a0f26'],['#ff4a6a','#c22a48'],['#ffc0cb','#e88aa0'],['#f0f0e8','#c8c0b4']];
+function spawnPetal(){
+  const side = Math.random();
+  const x = side < 0.7 ? Math.random()*W : (side < 0.85 ? -10 : W + 10), y = side < 0.7 ? -10 - Math.random()*30 : 20 + Math.random()*90;
+  const toward = side < 0.7 ? (Math.random()*2 - 1)*20 : (side < 0.85 ? 1 : -1)*(70 + Math.random()*60);
+  const [c1, c2] = PETAL_COLS[Math.random() < 0.75 ? Math.floor(Math.random()*2) : 2 + Math.floor(Math.random()*2)];
+  petals.push({x, y, vx:toward, vy:side < 0.7 ? 20 + Math.random()*25 : -60 - Math.random()*50, rot:Math.random()*6, vr:(Math.random()*2 - 1)*5,
+    ph:Math.random()*6, s:3 + Math.random()*2.5, c1, c2, life:4});
+}
+function drawVictoryOverlay(dt){
+  // pétales (en coordonnées écran, au-dessus du zoom)
+  for(const o of petals){
+    o.vy = Math.min(o.vy + 70*dt, 42); o.vx *= Math.pow(0.4, dt);
+    o.x += (o.vx + Math.sin(perfT*2.2 + o.ph)*22)*dt; o.y += o.vy*dt; o.rot += o.vr*dt; o.life -= dt;
+  }
+  petals = petals.filter(o => o.life > 0 && o.y < H + 12);
+  for(const o of petals){
+    ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot);
+    const flip = Math.cos(perfT*4 + o.ph);
+    ctx.scale(1, 0.35 + 0.65*Math.abs(flip));
+    ctx.fillStyle = flip > 0 ? o.c1 : o.c2;
+    ctx.beginPath(); ctx.ellipse(0, 0, o.s, o.s*0.62, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(-o.s*0.5, -o.s*0.25, o.s*0.5, 1);
+    ctx.restore();
+  }
+  // titre : apparition avec dépassement, puis légère respiration
+  const t = vicE - 0.85;
+  if(t <= 0) return;
+  const q = Math.min(1, t/0.35), pop = q < 1 ? easeOut(q)*1.25 - 0.25*Math.sin(q*Math.PI) : 1 + 0.025*Math.sin(perfT*4);
+  // le titre est composé à part (reflet limité aux lettres), puis posé sur l'arène
+  const T = VIC_TXT, x = T.getContext('2d');
+  x.setTransform(1,0,0,1,0,0); x.clearRect(0, 0, T.width, T.height);
+  x.setTransform(2,0,0,2,T.width/2,T.height/2);
+  x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '800 44px Cinzel, Georgia, serif';
+  x.shadowColor = 'rgba(255,190,60,.8)'; x.shadowBlur = 22;
+  x.lineWidth = 7; x.strokeStyle = '#2a1505'; x.strokeText('VICTOIRE !', 0, 0);
+  x.shadowBlur = 0;
+  const g = x.createLinearGradient(0, -22, 0, 22); g.addColorStop(0, '#fff6c8'); g.addColorStop(0.5, '#ffd34a'); g.addColorStop(1, '#c8821e');
+  x.fillStyle = g; x.fillText('VICTOIRE !', 0, 0);
+  const sx = ((perfT*160) % 520) - 260;
+  x.globalCompositeOperation = 'source-atop';
+  const sh = x.createLinearGradient(sx - 30, 0, sx + 30, 0); sh.addColorStop(0, 'rgba(255,255,255,0)'); sh.addColorStop(0.5, 'rgba(255,255,255,.7)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = sh; x.fillRect(-190, -45, 380, 90);
+  x.globalCompositeOperation = 'source-over';
+  ctx.save(); ctx.translate(W/2, 62); ctx.scale(pop, pop); ctx.globalAlpha = Math.min(1, t/0.15);
+  ctx.drawImage(T, -T.width/4, -T.height/4, T.width/2, T.height/2);
+  ctx.restore();
+}
+const VIC_TXT = document.createElement('canvas'); VIC_TXT.width = 760; VIC_TXT.height = 180;
 function spawnFloat(ev){
   if(ev.kind==='none' || !ev.txt) return;
   const p = POS[ev.side];
@@ -1822,7 +1978,7 @@ function loop(ts){
       burst(ev.side, 'spark', 6); burst(ev.side, 'sand', 4);
       if(ev.kind==='crit'){ burst(ev.side, 'blood', 8); freeze = 0.09; shake = Math.max(shake, 8); crowd = 1.3; }
       else if(big){ freeze = Math.max(freeze, 0.05); shake = Math.max(shake, 4); }
-      else shake = Math.max(shake, 1.5);
+      else { shake = Math.max(shake, 1.5); freeze = Math.max(freeze, 0.03); }
     }
     if(ev.kind==='thorns') burst(ev.side, 'spark', 4);
     if(ev.kind==='poison') burst(ev.side, 'poison', 3);
@@ -1846,26 +2002,42 @@ function loop(ts){
   shake *= Math.pow(0.0005, dtReal);
   lastDrawDt = freeze > 0 ? 0 : dtReal*Math.max(timeScale,0.3);
   if(ST.over && PEND.length===0){
-    const loser = ST.winner==='a' ? 'b' : 'a';
+    const loser = ST.winner==='a' ? 'b' : 'a', won = ST.winner==='a';
     if(!endT){
-      endT = 1.9; timeScale = 0.3; shake = 10; crowd = 1.6; freeze = 0.12;
+      endT = won ? 3.6 : 1.9; vicE = 0; petals = [];
+      timeScale = won ? 0.22 : 0.3; shake = 10; crowd = 1.6; freeze = 0.14;
       burst(loser, 'blood', 14); burst(loser, 'sand', 12);
-      zoom = {x:lerp(W/2, POS[loser].x, 0.35), y:POS[loser].y-70, z:1};
+      zoom = won ? {x:W/2, y:H/2, z:1, center:1} : {x:lerp(W/2, POS[loser].x, 0.35), y:POS[loser].y-70, z:1};
       VIS[ST.winner].atk = 0;
     }
     endT -= dtReal;
-    VIS[loser].die += dtReal * (endT > 1.3 ? 0.6 : 1.6);
-    if(endT < 1.3){ timeScale = 1; VIS[ST.winner].win = 1; }
-    zoom.z = 1 + 0.1*Math.min(1, (1.9-endT)/0.4) * (endT < 0.5 ? endT/0.5 : 1);
+    if(won){
+      // ralenti pendant la chute, puis zoom sur le gagnant, rayon, pétales et titre
+      vicE += dtReal;
+      VIS[loser].die += dtReal * (vicE < 0.9 ? 0.45 : 1.4);
+      if(vicE > 0.9) timeScale = Math.min(1, timeScale + dtReal*2);
+      if(vicE > 0.7) VIS[ST.winner].win = 1;
+      const q = ease(Math.min(1, Math.max(0, (vicE - 0.15)/1.1))), z = 1 + 0.4*q, p = POS[ST.winner];
+      const hw = W/2/z, hh = H/2/z;
+      zoom.z = z;
+      zoom.x = Math.max(hw, Math.min(W - hw, lerp(W/2, p.x, q)));
+      zoom.y = Math.max(hh, Math.min(H - hh, lerp(H/2, p.y - 105, q)));
+      if(vicE > 0.6){ const rate = vicE < 1.6 ? 70 : 28; let n = rate*dtReal; while(n > 0){ if(Math.random() < n) spawnPetal(); n -= 1; } }
+    } else {
+      VIS[loser].die += dtReal * (endT > 1.3 ? 0.6 : 1.6);
+      if(endT < 1.3){ timeScale = 1; VIS[ST.winner].win = 1; }
+      zoom.z = 1 + 0.1*Math.min(1, (1.9-endT)/0.4) * (endT < 0.5 ? endT/0.5 : 1);
+    }
     crowd = Math.max(crowd, 1.2);
     updateBars(); draw();
-    if(endT <= 0){ running = false; zoom = null; timeScale = 1; endFight(); return; }
+    if(endT <= 0){ running = false; zoom = null; timeScale = 1; vicE = 0; petals = []; endFight(); return; }
     requestAnimationFrame(loop);
     return;
   }
   updateBars(); draw();
   requestAnimationFrame(loop);
 }
+cv.addEventListener('click', ()=>{ if(running && ST && ST.over && endT > 0.25) endT = 0.25; });
 function startFight(){
   lookA = computeLook(ST.a); lookB = ST.b.beast ? null : computeLook(ST.b);
   $('preFight').style.display='none';
