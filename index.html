@@ -934,7 +934,7 @@ function drawGlad(c, x, y, dir, L, st={}){
 /* ============ SPRITES DES POTES ============ */
 // version des images : à augmenter quand une image est remplacée sous le même nom,
 // pour que les navigateurs ne ressortent pas l'ancienne de leur cache
-const ASSET_V = '?v=5';
+const ASSET_V = '?v=6';
 const SPR = {};
 const SPR_AX = 100, SPR_AY = 488, SPR_H = 478;   // ancre = entre les pieds
 function loadSprites(cb){
@@ -962,7 +962,7 @@ const ITEM_FILES = ['gladius','glaive','champion','dague','hache','trident','lan
 const IMG = {};
 // armes : longueur (unités du sprite) + point de prise (fraction pommeau → pointe)
 const WEAPON_IMG = {
-  gladius:{f:'gladius', len:190, t:.14}, glaive:{f:'glaive', len:280, t:.12}, champion:{f:'champion', len:300, t:.12},
+  gladius:{f:'gladius', len:190, t:.14},   // variante possible {f, v:1, h, g} : image verticale, h = hauteur, g = centre de la poignée depuis le bas glaive:{f:'glaive', len:280, t:.12}, champion:{f:'champion', len:300, t:.12},
   dague:{f:'dague', len:135, t:.17}, hache:{f:'hache', len:270, t:.12}, trident:{f:'trident', len:400, t:.27},
   lance:{f:'lance', len:400, t:.27}, fouet:{f:'fouet', w:250, gx:.12, gy:.74},
   sica:{f:'sica', len:220, t:.13}, scissor:{f:'scissor', len:230, t:.22}, pilum:{f:'pilum', len:420, t:.3}, cestes:{f:'cestes', len:175, t:.52}
@@ -1029,7 +1029,8 @@ function drawWeaponImg(c, type, flash){
   if(!it) return false;
   const iw = it.n.width, ih = it.n.height;
   let s, gx, gy;
-  if(d.len){ s = d.len/Math.hypot(iw,ih); gx = d.t*iw; gy = ih - d.t*ih; }
+  if(d.v){ s = d.h/ih; gx = iw/2; gy = ih*(1-d.g); }
+  else if(d.len){ s = d.len/Math.hypot(iw,ih); gx = d.t*iw; gy = ih - d.t*ih; }
   else { s = d.w/iw; gx = d.gx*iw; gy = d.gy*ih; }
   c.drawImage(flash ? it.w : it.n, -gx*s, -gy*s, iw*s, ih*s);
   return true;
@@ -1182,7 +1183,7 @@ const RIG_PERSO = {
 const FISTS = {
   darkkus:{f:[171,287], b:[51,289]}, fredhus:{f:[175,285], b:[50,287]}, sweevus:{f:[174,285], b:[47,285]},
   chelmacus:{f:[172,288], b:[52,291]}, dridricus:{f:[173,283], b:[37,283]}, kubenicus:{f:[171,287], b:[50,288]},
-  maximusrr:{f:[167,255], b:[43,257]}, beelgraalus:{f:[173,285], b:[48,289]},
+  maximusrr:{f:[175,283], b:[45,283]}, beelgraalus:{f:[173,285], b:[48,289]},
   // adversaires
   'e:bestiaire':{f:[177,259], b:[50,260]},
   'e:retiaire':{f:[178,272], b:[38,274]},
@@ -1247,6 +1248,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // décalage de la main arrière de ce perso par rapport à la référence de WEAR
   // poing dessiné autour d'un manche vertical : on redresse l'arme (images à 45°) pour qu'elle traverse le trou du poing
   const WOFF = FI ? -0.62 : 0;
+  const wvert = (WEAPON_IMG[L.weapon||'gladius']||{}).v ? Math.PI/4 : 0;
   const BD = FI ? [FI.b[0]-SPR_AX-FIST_B0[0], FI.b[1]-SPR_AY-FIST_B0[1]] : [0,0];
   // les adversaires dessinés portent déjà leur tenue : seuls l'arme, le bouclier et le filet s'ajoutent
   if(S.rig === RIG_ENEMY) L = Object.assign({}, L, {helmet:0, chest:0, cuir:0, greaves:0, manica:0, galerus:0, lion:0, emperor:0, chope:0});
@@ -1283,7 +1285,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // arme : les armes d'hast passent derrière le corps, la main reste devant
   const polearm = ['trident','lance','pilum'].includes(L.weapon);
   const weapon = ()=>{
-    c.save(); c.translate(HD[0],HD[1]); c.rotate(P.wpn + WOFF);
+    c.save(); c.translate(HD[0],HD[1]); c.rotate(P.wpn + WOFF + wvert);
     c.imageSmoothingEnabled = false; blitPix(c, G.weapon, WPN_BOX, flash); c.imageSmoothingEnabled = true;
     drawWeaponImg(c, L.weapon||'gladius', flash);
     c.restore();
@@ -1328,7 +1330,8 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
     const d = WEAPON_IMG[L.weapon||'gladius'] || WEAPON_IMG.gladius, it = IMG[d.f];
     const iw = it ? it.n.width : 300, ih = it ? it.n.height : 300;
     let tip;
-    if(d.len){ const sc = d.len/Math.hypot(iw, ih); tip = [(1-d.t)*iw*sc, -(1-d.t)*ih*sc]; }
+    if(d.v){ const sc = d.h/ih, L0 = ih*(1-d.g)*sc; tip = [L0*Math.SQRT1_2, -L0*Math.SQRT1_2]; }
+    else if(d.len){ const sc = d.len/Math.hypot(iw, ih); tip = [(1-d.t)*iw*sc, -(1-d.t)*ih*sc]; }
     else { const sc = d.w/iw; tip = [(1-d.gx)*iw*sc, -d.gy*ih*sc]; }
     const rot = ([x,y], a) => [x*Math.cos(a) - y*Math.sin(a), x*Math.sin(a) + y*Math.cos(a)];
     const hand = [HD[0]-PIV.armF[0], HD[1]-PIV.armF[1]], wt = rot(tip, P.wpn + WOFF);
