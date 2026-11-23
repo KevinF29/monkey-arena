@@ -723,7 +723,7 @@ function loadSprites(cb){
 
 
 /* --- objets dessinés (assets/items) --- */
-const ITEM_FILES = ['gladius','glaive','champion','dague','hache','trident','lance','fouet','bouclier-bois','bouclier-pointes','egide','casque','plastron','jambieres','manica','peau-lion','filet','laurier','echarpe','crane','sica','scissor','pilum','cestes','scutum','tunique-cuir','galerus','chope'];
+const ITEM_FILES = ['gladius','glaive','champion','dague','hache','trident','lance','fouet','bouclier-bois','bouclier-pointes','egide','casque','plastron','jambieres','manica','peau-lion','filet','laurier','echarpe','crane','sica','scissor','pilum','cestes','scutum','tunique-cuir','galerus','chope','laurier-dos'];
 const IMG = {};
 // armes : longueur (unités du sprite) + point de prise (fraction pommeau → pointe)
 const WEAPON_IMG = {
@@ -748,6 +748,7 @@ const WEAR = {
   casque:{x:-100, y:-532, w:188},
   'peau-lion':{x:-160, y:-530, w:268},
   laurier:{cx:6, cy:-442, w:150},
+  'laurier-dos':{cx:6, cy:-442, w:150},
   echarpe:{x:-74, y:-350, h:190},
   crane:{x:-4, y:-240, h:78}
 };
@@ -986,6 +987,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   c.imageSmoothingEnabled = false; blitPix(c, G.front, GEAR_BOX, flash); c.imageSmoothingEnabled = true;
   // tête
   at(PIV.head, P.head, ()=>{
+    if(L.emperor) wear(c,'laurier-dos',flash);   // l'arrière de la couronne passe derrière le crâne
     img(PT.head);
     if(L.lion){ c.save(); c.beginPath(); c.rect(-300,-620,600,280); c.rect(-15,-345,200,120); c.clip(); wear(c,'peau-lion',flash); c.restore(); }
     else if(L.helmet) wear(c,'casque',flash);
