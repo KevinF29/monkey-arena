@@ -121,6 +121,14 @@ h2{font-size:22px}
 .fbox.r .bar .fill{background:linear-gradient(#ff9a7a 0 30%,#e0453a 30% 75%,#a82a22 75%)}
 .fbox.low .bar .fill{background:linear-gradient(#ffb07a 0 30%,#e8742a 30% 75%,#b04a1a 75%);animation:blink .6s infinite}
 .bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(0,0,0,.35) calc(10% - 2px) 10%);pointer-events:none}
+/* jauge de coup spécial */
+.gauge{position:relative;height:6px;margin-top:3px;background:#1a130e;border:2px solid var(--ink);border-radius:2px;overflow:hidden}
+.gauge>div{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(#ffe08a,#e8a03a);width:0}
+.fbox.r .gauge>div{left:auto;right:0;background:linear-gradient(#e8b0ff,#9a5ad8)}
+.gauge.full>div{animation:blink .4s infinite;filter:brightness(1.3)}
+.gauge.none{visibility:hidden}
+.spec{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(90,60,20,.35)}
+.spec b{font-size:14px}
 .hpnum{font-size:11px;color:var(--mute);margin-top:3px;font-variant-numeric:tabular-nums}
 #cv{width:100%;display:block;border:3px solid var(--ink);border-radius:4px;background:#3a2a1c;box-shadow:0 0 0 2px #8a6a3a, 0 0 0 4px var(--ink), 0 8px 18px rgba(0,0,0,.5)}
 .controls{display:flex;gap:8px;margin-top:14px}
@@ -197,8 +205,8 @@ h2{font-size:22px}
     </div>
     <div class="pips" id="pips"></div>
     <div class="fighters">
-      <div class="fbox" id="pBox"><div class="fname" id="pN"></div><div class="bar"><div class="trail" id="pTr"></div><div class="fill" id="pBar"></div></div><div class="hpnum" id="pHp"></div></div>
-      <div class="fbox r" id="eBox"><div class="fname" id="eN"></div><div class="bar"><div class="trail" id="eTr"></div><div class="fill" id="eBar"></div></div><div class="hpnum" id="eHp"></div></div>
+      <div class="fbox" id="pBox"><div class="fname" id="pN"></div><div class="bar"><div class="trail" id="pTr"></div><div class="fill" id="pBar"></div></div><div class="gauge" id="pGa"><div></div></div><div class="hpnum" id="pHp"></div></div>
+      <div class="fbox r" id="eBox"><div class="fname" id="eN"></div><div class="bar"><div class="trail" id="eTr"></div><div class="fill" id="eBar"></div></div><div class="gauge" id="eGa"><div></div></div><div class="hpnum" id="eHp"></div></div>
     </div>
     <canvas id="cv" width="600" height="330"></canvas>
     <div class="log" id="log"></div>
@@ -237,32 +245,43 @@ const TYPES = {arme:{n:'Arme',ic:'🗡️',c:'#7a2f22'}, armure:{n:'Armure',ic:'
 
 // Les 8 gladiateurs (physique provisoire : à ajuster selon les vrais potes)
 const CHARS = [
-  {id:'darkkus', name:'DarkKus', title:"L'Ombre", desc:'Son premier coup de chaque combat est un critique garanti. 15 % de critique.',
-   stats:{maxHp:100, atk:10, def:1, spd:1.1, crit:.15, firstCrit:1},
+  {id:'darkkus', name:"DarkKus", title:"Le Berserker", desc:"Soif de combat : jusqu'à +60 % de dégâts selon les PV qui lui manquent. 8 % de vol de vie.",
+   stats:{maxHp:125, atk:13, def:2, spd:1.1, berserk:.6, lifesteal:.08},
    look:{sprite:'darkkus', skin:'#c99a6e', hair:'#151515', hairStyle:'long', beard:'courte', tunic:'#2a2a38', build:'fin', weapon:'dague'}},
-  {id:'fredhus', name:'Fredhus', title:'Le Roc', desc:'Une montagne de muscles : réduit les dégâts subis de 12 %.',
-   stats:{maxHp:150, atk:9, def:3, spd:.8, dr:.12},
+  {id:'fredhus', name:"Fredhus", title:"Le Roc rancunier", desc:"Rancune : chaque tranche de 10 % de PV perdus pendant le combat lui donne +12 % de dégâts, même s'il se soigne.",
+   stats:{maxHp:150, atk:9, def:3, spd:.8, grudge:1},
    look:{sprite:'fredhus', skin:'#e8c09a', hair:'#8a5a2a', hairStyle:'court', beard:'longue', tunic:'#9a3a2a', build:'costaud', weapon:'hache'}},
-  {id:'sweevus', name:'Sweevus', title:"L'Insaisissable", desc:'Vif comme l\'éclair : 15 % d\'esquive et attaque très vite.',
-   stats:{maxHp:95, atk:8, def:1, spd:1.3, dodge:.15},
+  {id:'sweevus', name:"Sweevus", title:"Le Cogneur", desc:"Tout ou rien : inflige +30 % de dégâts, mais en subit +10 %.",
+   stats:{maxHp:115, atk:15, def:0, spd:.9, dmgMul:.30, vuln:.10},
    look:{sprite:'sweevus', skin:'#f0caa0', hair:'#d8b040', hairStyle:'crete', beard:'none', tunic:'#2a7a9a', build:'fin', weapon:'gladius'}},
-  {id:'chelmacus', name:'Chelmacus', title:'Le Furieux', desc:'Plus il saigne, plus il frappe fort. 4 % de vol de vie.',
-   stats:{maxHp:115, atk:12, def:1, spd:1, lifesteal:.04, berserk:.3},
+  {id:'chelmacus', name:"Chelmacus", title:"La Force tranquille", desc:"Impassible : immunisé aux coups critiques, régénère 2,5 PV/s et gagne +2 défense à chaque boss vaincu.",
+   stats:{maxHp:135, atk:12, def:2, spd:1, critImmune:1, regen:2.5, calm:1},
    look:{sprite:'chelmacus', skin:'#d8a878', hair:'#5a2a1a', hairStyle:'chauve', beard:'longue', tunic:'#6a9a3a', build:'costaud', weapon:'glaive'}},
-  {id:'dridricus', name:'Dridricus', title:'Le Rétiaire', desc:'Son filet ralentit l\'adversaire de 15 %. Armé d\'un trident.',
-   stats:{maxHp:110, atk:9, def:2, spd:1, slow:.15},
-   look:{sprite:'dridricus', skin:'#b07a50', hair:'#2a1a10', hairStyle:'queue', beard:'moustache', tunic:'#3a5a9a', build:'normal', weapon:'trident', net:1}},
-  {id:'kubenicus', name:'Kubenicus', title:"L'Increvable", desc:'Régénère 3 PV/s et récupère 40 % de PV après chaque victoire.',
-   stats:{maxHp:120, atk:10, def:2, spd:.95, regen:3, postHeal:.4},
+  {id:'dridricus', name:"Dridricus", title:"Le Fêtard", desc:"Ivresse : ses coups font entre 50 % et 170 % de dégâts, et il titube (10 % d'esquive).",
+   stats:{maxHp:115, atk:10, def:1, spd:1, drunk:1, dodge:.10},
+   look:{sprite:'dridricus', skin:'#b07a50', hair:'#2a1a10', hairStyle:'queue', beard:'moustache', tunic:'#3a5a9a', build:'normal', weapon:'trident'}},
+  {id:'kubenicus', name:"Kubenicus", title:"Le Mur", desc:"Carapace : subit 12 % de dégâts en moins et renvoie 3 dégâts à chaque coup reçu.",
+   stats:{maxHp:150, atk:8, def:4, spd:.8, dr:.12, thorns:3},
    look:{sprite:'kubenicus', skin:'#e0b080', hair:'#3a2a1a', hairStyle:'court', beard:'none', glasses:1, tunic:'#8a6a2a', build:'normal', weapon:'gladius'}},
-  {id:'maximusrr', name:'MaximusRr', title:'Le Champion', desc:'Gloire : +2 attaque et +12 PV max à chaque boss vaincu.',
-   stats:{maxHp:110, atk:10, def:2, spd:1, glory:1},
+  {id:'maximusrr', name:"MaximusRr", title:"Le Champion", desc:"Polyvalent : choisit parmi 4 augments au lieu de 3. Gloire : +2 attaque et +12 PV max à chaque boss vaincu.",
+   stats:{maxHp:120, atk:11, def:2, spd:1, glory:1, choices:4},
    look:{sprite:'maximusrr', skin:'#e8b890', hair:'#6a4a2a', hairStyle:'court', beard:'courte', tunic:'#a02a2a', build:'normal', weapon:'gladius'}},
-  {id:'beelgraalus', name:"Beel'Graalus", title:'Le Maudit', desc:'Lames empoisonnées (+3 poison/s) et renvoie 4 dégâts à chaque coup reçu.',
-   stats:{maxHp:110, atk:9, def:1, spd:1, poison:3, thorns:4},
+  {id:'beelgraalus', name:"Beel'Graalus", title:"L'Insaisissable", desc:"Pieds légers : 15 % d'esquive, attaque très vite, et chaque esquive charge sa jauge.",
+   stats:{maxHp:90, atk:9, def:1, spd:1.3, dodge:.15, dodgeGauge:1},
    look:{sprite:'beelgraalus', skin:'#b8c8a0', hair:'#4a1a5a', hairStyle:'long', beard:'none', tunic:'#4a2a5a', build:'fin', weapon:'dague'}}
 ];
 
+// Coups spéciaux : la jauge se remplit en frappant (+12), en encaissant (+8) et avec le temps (+3/s)
+const SPECIALS = {
+  darkkus:{n:'Fureur aveugle', d:"Pendant 6 s : +60 % de vitesse, +30 % de dégâts et +25 % de vol de vie, mais plus aucune esquive."},
+  fredhus:{n:'Vengeance', d:"Rend d'un coup 40 % de tous les dégâts encaissés depuis le début du combat (au plus 30 % des PV max de l'adversaire)."},
+  sweevus:{n:'Coup de massue', d:"Un coup ×2,5 qui assomme l'adversaire 1,5 s."},
+  chelmacus:{n:'Le calme avant la tempête', d:"Se recueille 1,5 s sans frapper et récupère 30 % de PV, puis son coup suivant fait ×4."},
+  dridricus:{n:'Cul sec !', d:"Vide sa chope (+25 % de PV, +30 % de dégâts pendant 6 s), puis la lance à la tête de l'adversaire (×1,5)."},
+  kubenicus:{n:'Bouclier levé', d:"Pendant 3 s, subit 70 % de dégâts en moins, et récupère 10 % de PV."},
+  maximusrr:{n:'Pouce levé', d:"La foule l'acclame : +25 % de dégâts et +15 % de critique pendant 6 s."},
+  beelgraalus:{n:'Pas de danse', d:"Esquive à coup sûr les 2 prochains coups et riposte à chacun."}
+};
 const AUGS = [
   {id:'glaive', t:'arme', r:'C', n:'Glaive rouillé', d:'+4 attaque', a:p=>{p.atk+=4}},
   {id:'trident', t:'arme', r:'C', n:'Trident', d:'+3 attaque, +5 % critique', a:p=>{p.atk+=3;p.crit+=.05}},
@@ -316,17 +335,18 @@ const isBoss = n => (n-1)%PER_ACT === PER_ACT-1;
 function baseFighter(){
   return {maxHp:100,hp:100,atk:10,def:0,spd:1,crit:.05,critMult:1.6,dodge:0,lifesteal:0,thorns:0,regen:0,
     poison:0,slow:0,doubleHit:0,berserk:0,execute:0,undying:0,dr:0,postHeal:.3,firstCrit:0,glory:0,
-    pen:0,bleed:0,pilum:0,riposte:0,block:0,adren:0,antidote:0,mars:0,augs:[]};
+    pen:0,bleed:0,pilum:0,riposte:0,block:0,adren:0,antidote:0,mars:0,
+    dmgMul:0,vuln:0,critImmune:0,drunk:0,grudge:0,dodgeGauge:0,choices:3,augs:[]};
 }
 function shuffle(a, rnd=Math.random){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 function makePlayer(ch){
   const p = Object.assign(baseFighter(), ch.stats);
-  p.hp = p.maxHp; p.name = ch.name; p.cid = ch.id; p.baseLook = ch.look; p.side='a';
+  p.hp = p.maxHp; p.name = ch.name; p.cid = ch.id; p.baseLook = ch.look; p.side='a'; p.spId = ch.id;
   return p;
 }
 // réglages d'équilibrage (testés au simulateur)
-const TUNE = {eHp:60, eAtk:7.5, eAug:0.55, eliteK:1.15, bHp0:0.95, bHpA:0.09, bAtk0:0.82, bAtkA:0.06, late:0.28, early:0.25};
+const TUNE = {eHp:60, eAtk:7.5, eAug:0.55, eliteK:1.15, bHp0:0.95, bHpA:0.09, bAtk0:0.82, bAtkA:0.06, late:0.18, early:0.25};
 function scaleOf(n){ const k=n-1; return (1 + 0.095*k + 0.0032*k*k) * (1 + TUNE.late*(k/(TOTAL-1))**2) * (1 - TUNE.early*Math.max(0, 1-k/12)); }
 
 function makeEnemy(n, bossOrder, rnd=Math.random){
@@ -335,9 +355,10 @@ function makeEnemy(n, bossOrder, rnd=Math.random){
   if(isBoss(n)){
     const ch = CHARS.find(c=>c.id===bossOrder[a]);
     e = Object.assign(baseFighter(), ch.stats);
-    e.cid = ch.id; e.baseLook = ch.look; e.boss = 1;
-    e.maxHp = Math.round(ch.stats.maxHp * 0.62 * s * (TUNE.bHp0 + TUNE.bHpA*a));
-    e.atk = ch.stats.atk * 0.62 * s * (TUNE.bAtk0 + TUNE.bAtkA*a);
+    e.cid = ch.id; e.baseLook = ch.look; e.boss = 1; e.spId = ch.id;
+    // stats de boss lissées vers la moyenne, pour qu'un tank ne soit pas un mur infranchissable
+    e.maxHp = Math.round((ch.stats.maxHp*0.5 + 60) * 0.62 * s * (TUNE.bHp0 + TUNE.bHpA*a));
+    e.atk = (ch.stats.atk*0.5 + 5) * 0.62 * s * (TUNE.bAtk0 + TUNE.bAtkA*a);
     e.def = (ch.stats.def||0) + Math.floor(n*0.18) + 1;
     // les boss ont eux aussi gagné quelques augments
     const nb = a + 1;
@@ -391,12 +412,14 @@ function randomLook(n, rnd){
   };
 }
 
-function resetRuntime(f){ f.cd = 0.4 + Math.random()*0.3; f.pst = 0; f.ptick = 0; f.usedUndying = 0; f.enraged = 0; f.anim=0; f.flash=0; f.didFirst=0; f.bst=0; f.btick=0; f.stack=0; f.pilumDone=0; }
+function resetRuntime(f){ f.cd = 0.4 + Math.random()*0.3; f.pst = 0; f.ptick = 0; f.usedUndying = 0; f.enraged = 0; f.anim=0; f.flash=0; f.didFirst=0; f.bst=0; f.btick=0; f.stack=0; f.pilumDone=0;
+  f.gauge=0; f.taken=0; f.rageT=0; f.stunT=0; f.medT=0; f.nextMult=1; f.stoneT=0; f.cheerT=0; f.beerT=0; f.danceN=0; }
 function newFight(p,e){ resetRuntime(p); resetRuntime(e); return {a:p,b:e,t:0,events:[],over:false,winner:null,lionT:0}; }
 
 function hurt(f, dmg, st, kind){
+  if(f.stoneT>0) dmg *= 0.3;
   dmg = Math.max(0, Math.round(dmg));
-  f.hp -= dmg; f.flash = 0.18;
+  f.hp -= dmg; f.flash = 0.18; f.taken += dmg;
   st.events.push({side:f.side, txt:(kind==='crit'?dmg+'!':String(dmg)), kind});
   if(f.hp<=0 && f.undying && !f.usedUndying){
     f.usedUndying = 1; f.hp = Math.round(f.maxHp*0.3);
@@ -404,37 +427,60 @@ function hurt(f, dmg, st, kind){
   }
 }
 function heal(f, v){ if(v>0 && f.hp<f.maxHp) f.hp = Math.min(f.maxHp, f.hp+v); }
-function strike(att, tgt, st, rnd){
+function strike(att, tgt, st, rnd, mult){
   const n0 = st.events.length;
-  strikeInner(att, tgt, st, rnd);
+  strikeInner(att, tgt, st, rnd, mult);
   for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1;
 }
 function strikeInner(att, tgt, st, rnd, mult=1){
-  if(rnd() < Math.min(0.6, tgt.dodge)){
+  const dance = tgt.danceN > 0;
+  if(dance || rnd() < (tgt.rageT>0 ? 0 : Math.min(0.6, tgt.dodge))){
+    if(dance) tgt.danceN--;
     st.events.push({side:tgt.side, txt:'Esquive', kind:'miss'});
-    if(tgt.riposte && !st.inRiposte && tgt.hp>0 && rnd() < tgt.riposte){
+    if(tgt.dodgeGauge) tgt.gauge += 10;
+    if((tgt.riposte || dance) && !st.inRiposte && tgt.hp>0 && (dance || rnd() < tgt.riposte)){
       st.inRiposte = 1; st.events.push({side:tgt.side, kind:'swing'}); st.events.push({side:att.side, txt:'Riposte', kind:'special'});
       strikeInner(tgt, att, st, rnd); st.inRiposte = 0;
     }
     return;
   }
-  let d = att.atk*(0.9 + rnd()*0.2) * mult;
+  let d = att.atk*(att.drunk ? 0.5 + rnd()*1.2 : 0.9 + rnd()*0.2) * mult * att.nextMult;
+  att.nextMult = 1;
   if(att.mars) d += Math.min(20, att.stack);
   if(att.berserk) d *= 1 + att.berserk*(1 - att.hp/att.maxHp);
-  const crit = rnd() < att.crit || (att.firstCrit && !att.didFirst);
+  const crit = !tgt.critImmune && (rnd() < att.crit + (att.cheerT>0?.15:0) || (att.firstCrit && !att.didFirst));
   att.didFirst = 1;
   if(crit) d *= att.critMult;
   if(att.execute && tgt.hp < tgt.maxHp*0.25) d *= 2;
+  d *= (1 + att.dmgMul) * (1 + tgt.vuln) * (att.cheerT>0?1.25:1) * (att.beerT>0?1.3:1) * (att.rageT>0?1.3:1);
+  if(att.grudge) d *= 1 + 0.12*Math.floor(att.taken/(att.maxHp*0.1));
   d = Math.max(1, d - tgt.def*(1-att.pen)) * (1 - tgt.dr);
   if(tgt.block && rnd() < tgt.block){ d *= 0.5; st.events.push({side:tgt.side, txt:'Bloqué', kind:'special'}); }
   hurt(tgt, d, st, crit?'crit':'hit');
-  if(att.lifesteal) heal(att, d*att.lifesteal);
+  const ls = att.lifesteal + (att.rageT>0?.25:0);
+  if(ls) heal(att, d*ls);
+  att.gauge += 12; tgt.gauge += 8;
   if(att.mars) att.stack += att.mars;
   if(att.bleed) tgt.bst += d*att.bleed;
   if(att.poison && !tgt.antidote) tgt.pst = Math.min(tgt.pst + att.poison, att.poison*6);
   if(tgt.thorns && tgt.hp>0) hurt(att, tgt.thorns, st, 'thorns');
 }
-function effSpd(f, o){ return f.spd * (1 - Math.min(0.5, o.slow)) * (f.enraged?1.45:1) * (f.adren && f.hp < f.maxHp*0.4 ? 1+f.adren : 1); }
+function effSpd(f, o){ return f.spd * (1 - Math.min(0.5, o.slow)) * (f.enraged?1.45:1) * (f.rageT>0?1.6:1) * (f.adren && f.hp < f.maxHp*0.4 ? 1+f.adren : 1); }
+function doSpecial(f, o, st, rnd){
+  const sp = SPECIALS[f.spId];
+  st.events.push({side:f.side, txt:sp.n, kind:'special', big:1, log:`${f.name} : ${sp.n} !`});
+  const hitWith = (mult)=>{ st.events.push({side:f.side, kind:'swing'}); strike(f, o, st, rnd, mult); };
+  switch(f.spId){
+    case 'darkkus': f.rageT = 6; break;
+    case 'fredhus': { st.events.push({side:f.side, kind:'swing'}); const n0 = st.events.length; hurt(o, Math.max(1, Math.min(f.taken*0.4, o.maxHp*0.3)), st, 'crit'); for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1; break; }
+    case 'sweevus': hitWith(2.5); if(o.hp>0) o.stunT = 1.5; break;
+    case 'chelmacus': f.medT = 1.5; heal(f, f.maxHp*0.30); f.nextMult = 4; break;
+    case 'dridricus': heal(f, f.maxHp*0.25); f.beerT = 6; hitWith(1.5); break;
+    case 'kubenicus': f.stoneT = 3; heal(f, f.maxHp*0.10); break;
+    case 'maximusrr': f.cheerT = 6; break;
+    case 'beelgraalus': f.danceN = 2; break;
+  }
+}
 function step(st, dt, rnd=Math.random){
   if(st.over) return;
   st.t += dt;
@@ -445,6 +491,8 @@ function step(st, dt, rnd=Math.random){
     if(f.bst>0){ f.btick += dt; if(f.btick>=1){ f.btick-=1; const b = Math.max(1, f.bst/3); f.bst = Math.max(0, f.bst-b); hurt(f, b, st, 'bleed'); } }
     if(f.anim>0) f.anim -= dt;
     if(f.flash>0) f.flash -= dt;
+    for(const k of ['rageT','stunT','medT','stoneT','cheerT','beerT']) if(f[k]>0) f[k] -= dt;
+    if(f.spId) f.gauge += 3*dt;
   }
   if(st.t>45){
     st.lionT += dt;
@@ -461,6 +509,8 @@ function step(st, dt, rnd=Math.random){
       const n0 = st.events.length; strikeInner(f, o, st, rnd, 1 + 3*f.pilum); for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1;
       continue;
     }
+    if(f.spId && f.gauge >= 100 && f.stunT <= 0 && o.hp > 0){ f.gauge = 0; doSpecial(f, o, st, rnd); continue; }
+    if(f.stunT > 0 || f.medT > 0) continue;
     f.cd -= dt * effSpd(f,o);
     if(f.cd<=0){
       f.cd += 1; f.anim = 0.22; st.events.push({side:f.side, kind:'swing'});
@@ -479,11 +529,13 @@ function rarityWeights(n){
 function pickRarity(w, rnd){ let x = rnd()*(w.C+w.R+w.L); if((x-=w.C)<0) return 'C'; if((x-=w.R)<0) return 'R'; return 'L'; }
 function rollChoices(n, p, rnd=Math.random){
   const w = rarityWeights(n), out = [];
-  for(const t of ['arme','armure','aptitude']){
+  const types = ['arme','armure','aptitude'];
+  for(let i=3;i<(p.choices||3);i++) types.push(types[Math.floor(rnd()*3)]);
+  for(const t of types){
     const r = pickRarity(w, rnd);
     const order = r==='L'?['L','R','C']:r==='R'?['R','C']:['C','R'];
     let pool = [];
-    for(const rr of order){ pool = AUGS.filter(a=>a.t===t && a.r===rr && !(a.u && p.augs.includes(a.id))); if(pool.length) break; }
+    for(const rr of order){ pool = AUGS.filter(a=>a.t===t && a.r===rr && !(a.u && p.augs.includes(a.id)) && !out.includes(a)); if(pool.length) break; }
     out.push(pool[Math.floor(rnd()*pool.length)]);
   }
   return out;
@@ -491,6 +543,7 @@ function rollChoices(n, p, rnd=Math.random){
 function applyAug(p, aug){ aug.a(p); p.augs.push(aug.id); }
 function postWin(p, n){
   if(isBoss(n) && p.glory){ p.atk += 2; p.maxHp += 12; }
+  if(isBoss(n) && p.calm) p.def += 2;
   p.hp = Math.min(p.maxHp, Math.round(p.hp + p.maxHp*p.postHeal)); p.pst=0;
 }
 //LOGIC-END
@@ -1062,7 +1115,9 @@ function renderChars(){
     el.onclick = ()=>{ selChar = ch; renderChars(); };
   });
   const s = selChar.stats;
+  const sp = SPECIALS[selChar.id];
   $('charDesc').innerHTML = `<b>${selChar.name}, ${selChar.title}</b><br>${selChar.desc}
+    <div class="spec">${icImg('burst')} <b>Spécial — ${sp.n}</b> : ${sp.d}</div>
     <div class="statline"><span class="stat">${icImg('heart')} ${s.maxHp} PV</span><span class="stat">${icImg('sword')} ${s.atk} attaque</span><span class="stat">${icImg('shield')} ${s.def} défense</span><span class="stat">${icImg('bolt')} ${s.spd} att/s</span></div>`;
 }
 
@@ -1081,7 +1136,7 @@ function showIntro(){
   $('journey').innerHTML = ROMAN.map((r,i)=>`<div class="jdot ${i<a?'done':i===a?'cur':''}">${r}</div>`).join('');
   $('introBossLbl').textContent = last ? 'Sur le trône t\'attend…' : 'Le champion de cette arène';
   $('introBoss').textContent = last ? "L'Empereur " + ch.name : ch.name;
-  $('introBossDesc').textContent = last ? `Ton ancien compagnon s'est fait couronner. Abats-le et tu seras libre.` : `${ch.title} — ${ch.desc}`;
+  $('introBossDesc').textContent = last ? `Ton ancien compagnon s'est fait couronner. Abats-le et tu seras libre.` : `${ch.title} — ${ch.desc} Spécial : ${SPECIALS[ch.id].n}.`;
   paintFig($('introCv'), {baseLook:ch.look, augs:[], emperor:last?1:0});
   show('s-intro');
 }
@@ -1117,6 +1172,7 @@ function updateBars(){
   $('pBar').style.width = pa+'%'; $('pTr').style.width = pa+'%';
   $('eBar').style.width = pb+'%'; $('eTr').style.width = pb+'%';
   $('pBox').classList.toggle('low', pa>0 && pa<30);
+  for(const [id,f] of [['pGa',a],['eGa',b]]){ const g=$(id); g.classList.toggle('none', !f.spId); const v=Math.min(100,f.gauge||0); g.firstChild.style.width=v+'%'; g.classList.toggle('full', v>=90); }
   $('pHp').textContent = `${Math.ceil(ha)} / ${a.maxHp} PV`;
   $('eHp').textContent = `${Math.ceil(hb)} / ${b.maxHp} PV`;
 }
@@ -1396,8 +1452,24 @@ function pendDmg(side){ let d=0; for(const p of PEND){ const e=p.ev; if(e.side==
 function shownHp(side){ const f=ST[side]; return Math.max(0, Math.min(f.maxHp, f.hp + pendDmg(side))); }
 let VIS = {a:null, b:null}, parts = [], shake = 0, freeze = 0, timeScale = 1, zoom = null, endT = 0;
 const newVis = ()=>({atk:0, hit:0, dodge:0, kb:1, die:0, win:0, flash:0});
+// halo des effets de coup spécial actifs
+function drawBuffAura(f, p){
+  const c = f.rageT>0 ? '255,60,40' : f.stoneT>0 ? '200,200,215' : f.cheerT>0 ? '255,210,80' : f.beerT>0 ? '255,170,40' : f.danceN>0 ? '120,220,255' : f.medT>0 ? '140,170,255' : null;
+  if(c){
+    const pul = 0.55 + 0.25*Math.sin(perfT*10);
+    const g = ctx.createRadialGradient(p.x, p.y-80, 10, p.x, p.y-80, 110);
+    g.addColorStop(0, `rgba(${c},${0.35*pul})`); g.addColorStop(1, `rgba(${c},0)`);
+    ctx.fillStyle = g; ctx.fillRect(p.x-120, p.y-200, 240, 220);
+  }
+  if(f.stunT>0){
+    ctx.save(); ctx.font = '700 18px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe27a';
+    for(let i=0;i<3;i++){ const a = perfT*5 + i*2.1; ctx.fillText('★', p.x + Math.cos(a)*26, p.y - 205 + Math.sin(a)*7); }
+    ctx.restore();
+  }
+}
 function drawFighter(f, side){
   const p = POS[side], dir = side==='a'?1:-1, v = VIS[side] || newVis();
+  drawBuffAura(f, p);
   const t = perfT + (side==='b'?1.3:0);
   const scale = (f.boss?1.15:1)*1.3;
   if(f.beast || !(side==='a'?lookA:lookB).sprite || !SPR[(side==='a'?lookA:lookB).sprite]){
@@ -1453,7 +1525,7 @@ function spawnFloat(ev){
   if(ev.kind==='none' || !ev.txt) return;
   const p = POS[ev.side];
   const col = {hit:'#fff', crit:'#ffcf3a', miss:'#9ad', thorns:'#ff9a6a', poison:'#9be36b', bleed:'#ff5a4a', special:'#d9a6ff'}[ev.kind] || '#fff';
-  floats.push({x:p.x + (Math.random()*30-15), y:p.y-165, txt:ev.txt, col, size: ev.kind==='crit'?26: ev.kind==='special'?20:18, life:1});
+  floats.push({x:ev.big ? p.x : p.x + (Math.random()*30-15), y:p.y-(ev.big?190:165), txt:ev.txt, col:ev.big?(ev.side==='a'?'#ffd34a':'#e0a0ff'):col, size: ev.big?28: ev.kind==='crit'?26: ev.kind==='special'?20:18, life:ev.big?1.6:1});
 }
 
 let lastT = 0;
@@ -1481,6 +1553,7 @@ function loop(ts){
     if(ev.kind==='poison') burst(ev.side, 'poison', 3);
     if(ev.kind==='bleed') burst(ev.side, 'blood', 3);
     if(ev.kind==='miss'){ v.dodge = DODGE_T; burst(ev.side, 'sand', 6); }
+    if(ev.big){ burst(ev.side, 'spark', 14); shake = Math.max(shake, 6); crowd = 1.3; freeze = Math.max(freeze, 0.12); }
   };
   for(const ev of ST.events){
     if(ev.kind==='swing') VIS[ev.side].atk = ATK_T;
