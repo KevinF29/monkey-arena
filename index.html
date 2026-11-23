@@ -208,7 +208,7 @@ h2{font-size:22px}
       <div class="fbox" id="pBox"><div class="fname" id="pN"></div><div class="bar"><div class="trail" id="pTr"></div><div class="fill" id="pBar"></div></div><div class="gauge" id="pGa"><div></div></div><div class="hpnum" id="pHp"></div></div>
       <div class="fbox r" id="eBox"><div class="fname" id="eN"></div><div class="bar"><div class="trail" id="eTr"></div><div class="fill" id="eBar"></div></div><div class="gauge" id="eGa"><div></div></div><div class="hpnum" id="eHp"></div></div>
     </div>
-    <canvas id="cv" width="600" height="330"></canvas>
+    <canvas id="cv" width="1200" height="660"></canvas>
     <div class="log" id="log"></div>
     <div id="preFight" class="controls"><button class="btn wide" id="btnFight">Combattre !</button></div>
     <div class="chips" id="chips"></div>
@@ -1261,7 +1261,8 @@ function augArt(g, small){
 function fillIcons(){ document.querySelectorAll('[data-ic]').forEach(el=>{ el.src = ic(el.dataset.ic); }); document.documentElement.style.setProperty('--skull', `url(${ic('skull')})`); }
 
 /* --- arène --- */
-const cv = $('cv'), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+// le canevas est en double résolution ; tout le dessin reste en coordonnées 600 × 330
+const cv = $('cv'), ctx = cv.getContext('2d'), W = 600, H = 330, RES = cv.width / W;
 const POS = {a:{x:185,y:285}, b:{x:415,y:285}};
 let perfT = 0, crowd = 0.3, lookA = null, lookB = null;
 
@@ -1424,8 +1425,19 @@ function bakeArena(act, emptyThrone){
   ARENA = {key:act+'/'+emptyThrone, bg:cv, crowd, torches, th:T, vig:null};
 }
 
+// décors peints (assets/arenes) ; le décor dessiné en code sert de secours tant qu'une image n'est pas chargée
+const ARENA_IMG = Array.from({length:7}, (_,i)=>{ const im = new Image(); im.src = `assets/arenes/acte${i+1}.webp`; return im; });
 function drawArena(){
   const act = actOf(N), empty = ST && ST.b && ST.b.emperor ? 1 : 0;
+  const pic = ARENA_IMG[act];
+  if(pic && pic.complete && pic.naturalWidth){
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(pic, 0, 0, W, H);
+    // léger voile pour que les combattants ressortent sur le décor
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(10,6,4,.28)'); g.addColorStop(0.6, 'rgba(10,6,4,.12)'); g.addColorStop(1, 'rgba(10,6,4,.22)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    return;
+  }
   if(ARENA.key !== act+'/'+empty) bakeArena(act, empty);
   const A = ARENA, ex = crowd + (ST && ST.b && ST.b.boss ? 0.25 : 0);
   fx.drawImage(A.bg,0,0);
@@ -1511,6 +1523,7 @@ function drawParts(dt){
 }
 let lastDrawDt = 0;
 function draw(){
+  ctx.setTransform(RES,0,0,RES,0,0);
   ctx.save();
   if(shake > 0.3){ ctx.translate((Math.random()*2-1)*shake, (Math.random()*2-1)*shake); }
   if(zoom){ ctx.translate(zoom.x, zoom.y); ctx.scale(zoom.z, zoom.z); ctx.translate(-zoom.x, -zoom.y); }
