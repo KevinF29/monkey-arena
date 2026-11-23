@@ -178,6 +178,7 @@ Pour l'interface, `augArt(g)` montre l'image d'objet (`AUG_IMG[id]` ou `WEAPON_O
 - **Tout en français** : textes du jeu, commentaires, noms de fichiers d'assets, messages de commit (courts, descriptifs, sans préfixe, ex. « Nouveaux objets dessinés : Sica, Scissor… »).
 - **Le bloc `LOGIC-START`/`LOGIC-END` reste sans DOM ni rendu** et utilise le `rnd` passé en paramètre plutôt que `Math.random` quand une fonction le reçoit : il est extrait tel quel par le simulateur d'équilibrage. Toute nouvelle constante d'équilibrage va dans `TUNE`.
 - Après un changement d'équilibrage, un nouvel augment ou un nouveau perso, lancer `node tools/simulate.js` et comparer les taux de victoire par perso avant/après plutôt que juger au feeling.
+- **Remplacer une image sous le même nom** (sprite, objet, décor) : augmenter `ASSET_V` (ex. `'?v=3'` → `'?v=4'`), sinon les navigateurs des joueurs gardent l'ancienne en cache et la découpe ne correspond plus. Toute nouvelle URL d'asset doit finir par `+ ASSET_V`.
 - Toujours prévoir un repli quand une image n'est pas chargée (`hasImg`, `SPR[...]`, `ARENA_IMG.complete`) : le jeu doit rester jouable sans assets.
 - Les dessins en pixel art désactivent le lissage (`imageSmoothingEnabled = false`), les images peintes l'activent en qualité haute : conserver ce basculement autour de chaque `drawImage`.
 - Interface pensée mobile d'abord (`#app` max 640 px, grille 4 → 2 colonnes sous 520 px).

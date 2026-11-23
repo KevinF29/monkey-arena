@@ -719,11 +719,14 @@ function drawGlad(c, x, y, dir, L, st={}){
 
 
 /* ============ SPRITES DES POTES ============ */
+// version des images : à augmenter quand une image est remplacée sous le même nom,
+// pour que les navigateurs ne ressortent pas l'ancienne de leur cache
+const ASSET_V = '?v=3';
 const SPR = {};
 const SPR_AX = 100, SPR_AY = 488, SPR_H = 478;   // ancre = entre les pieds
 function loadSprites(cb){
-  const list = CHARS.map(ch=>({key:ch.id, src:'assets/persos/'+ch.id+'.png', rig:RIG_PERSO}))
-    .concat(Object.values(ENEMY_LOOK).map(l=>({key:l.sprite, src:'assets/ennemis/'+l.sprite.slice(2)+'.png', rig:RIG_ENEMY})));
+  const list = CHARS.map(ch=>({key:ch.id, src:'assets/persos/'+ch.id+'.png'+ASSET_V, rig:RIG_PERSO}))
+    .concat(Object.values(ENEMY_LOOK).map(l=>({key:l.sprite, src:'assets/ennemis/'+l.sprite.slice(2)+'.png'+ASSET_V, rig:RIG_ENEMY})));
   let left = list.length;
   const done = ()=>{ if(--left===0) cb(); };
   for(const it of list){
@@ -783,7 +786,7 @@ function loadItems(cb){
       done();
     };
     img.onerror = done;
-    img.src = 'assets/items/' + f + '.png';
+    img.src = 'assets/items/' + f + '.png' + ASSET_V;
   }
 }
 function wear(c, f, flash){
@@ -1134,7 +1137,7 @@ const BEAST_IMG = {}, BEAST_H = {loup:58, ours:80, lion:68, tigre:62};
 for(const b of Object.keys(BEAST_H)){
   const im = new Image();
   im.onload = ()=>{ const w = document.createElement('canvas'); w.width = im.width; w.height = im.height; const x = w.getContext('2d'); x.drawImage(im,0,0); x.globalCompositeOperation='source-in'; x.fillStyle='#fff'; x.fillRect(0,0,w.width,w.height); BEAST_IMG[b] = {n:im, w}; };
-  im.src = 'assets/ennemis/' + b + '.png';
+  im.src = 'assets/ennemis/' + b + '.png' + ASSET_V;
 }
 function beastKey(name){ return name.includes('Loup')?'loup': name.includes('Ours')?'ours': name.includes('Tigre')?'tigre':'lion'; }
 function drawBeast(c, x, y, dir, name, st={}){
@@ -1320,7 +1323,7 @@ const AUG_IMG = {caestus:'cestes', cuir:'tunique-cuir', scutum:'scutum', galerus
 function augFile(g){ return AUG_IMG[g.id] || WEAPON_OF[g.id] || null; }
 function augArt(g, small){
   const f = augFile(g);
-  if(f) return `<img class="itm" src="assets/items/${f}.png" alt="">`;
+  if(f) return `<img class="itm" src="assets/items/${f}.png${ASSET_V}" alt="">`;
   return icImg(AUG_ICON[g.id] || 'burst', small ? '' : 'big', g.id==='adren' ? {Y:'#ff5a3a'} : undefined);
 }
 function fillIcons(){ document.querySelectorAll('[data-ic]').forEach(el=>{ el.src = ic(el.dataset.ic); }); document.documentElement.style.setProperty('--skull', `url(${ic('skull')})`); }
@@ -1491,7 +1494,7 @@ function bakeArena(act, emptyThrone){
 }
 
 // décors peints (assets/arenes) ; le décor dessiné en code sert de secours tant qu'une image n'est pas chargée
-const ARENA_IMG = Array.from({length:7}, (_,i)=>{ const im = new Image(); im.src = `assets/arenes/acte${i+1}.webp`; return im; });
+const ARENA_IMG = Array.from({length:7}, (_,i)=>{ const im = new Image(); im.src = `assets/arenes/acte${i+1}.webp${ASSET_V}`; return im; });
 function drawArena(){
   const act = actOf(N), empty = ST && ST.b && ST.b.emperor ? 1 : 0;
   const pic = ARENA_IMG[act];
