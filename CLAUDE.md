@@ -113,6 +113,7 @@ Tous les sprites humains font **204×490 px**, personnage de face, pieds en bas.
 
 Deux découpes :
 - **`RIG_PERSO`** (les 8 potes, proportions réalistes comme les adversaires) : tête 0–122, bras 122–315, jambes 338–490 (sous l'ourlet de la tunique, pour qu'elle ne se coupe pas quand les jambes bougent).
+- **Poings des potes** (`RIG_PERSO.fist`) : les 8 sprites ont les poings fermés et vides, avec un trou transparent. `FISTS[id]` donne le centre de chaque trou en pixels du sprite (`f` main de l'arme, `b` main du bouclier). L'arme est dessinée à `FISTS.f`, **avant** le bras avant, pour que le manche passe derrière les doigts ; pas de poing ajouté (`getFist` ne sert plus qu'aux adversaires, mains ouvertes). Les cestes sont posés par-dessus le poing. Boucliers, filet et chope sont décalés de `FISTS.b − FIST_B0` ; filet et chope sont dessinés avant le bras arrière. Nouveau sprite de pote → mesurer ses deux trous et compléter `FISTS`.
 - **`RIG_ENEMY`** (adversaires) : tête 0–124, bras 124–312, jambes 300–490 (pagne court).
 - `PART_POLY` / `PIV` sont l'ancienne découpe « grosse tête », gardée seulement comme valeur par défaut de `buildParts`.
 
@@ -158,7 +159,7 @@ Pour l'interface, `augArt(g)` montre l'image d'objet (`AUG_IMG[id]` ou `WEAPON_O
 - Pièce portée : régler `WEAR` en repère relatif (origine entre les pieds, y négatif vers le haut) et vérifier sur un perso **et** sur l'écran de sélection, en pose de repos et en attaque.
 
 ### Un gladiateur jouable
-1. Sprite `assets/persos/<id>.png` **exactement 204×490**, mêmes proportions que les 8 autres pour que `RIG_PERSO` le découpe correctement (tête au-dessus de 122, bras libres du torse jusqu'à 315, tunique terminée avant 338, tunique au pixel `probe` (100, 190), peau visible dans la zone `skin`). Les 8 sprites actuels ont été générés avec le même prompt que les adversaires (pose de 3/4 vers la droite, mains vides, sans casque ni armure), puis détourés et ramenés à 478 px de haut, pieds à y = 488.
+1. Sprite `assets/persos/<id>.png` **exactement 204×490**, mêmes proportions que les 8 autres pour que `RIG_PERSO` le découpe correctement (tête au-dessus de 122, bras libres du torse jusqu'à 315, tunique terminée avant 338, tunique au pixel `probe` (100, 190), peau visible dans la zone `skin`). Les 8 sprites actuels ont été générés avec le même prompt que les adversaires (pose de 3/4 vers la droite, poings fermés vides « as if gripping an invisible vertical pole, with a clear empty hole through each fist », sans casque ni armure), puis détourés et ramenés à 478 px de haut, pieds à y = 488.
 2. Entrée dans `CHARS` (`id` = nom du fichier, stats, `desc` qui décrit fidèlement le passif, `look.sprite = id`, arme de départ).
 3. Entrée dans `SPECIALS` et `case` dans `doSpecial` ; tout nouveau buff temporisé doit être ajouté à `resetRuntime`, au décompte dans `step` et à `drawBuffAura`.
 4. Il faut toujours au moins `NB_ACTS` (7) autres persos pour remplir les boss.

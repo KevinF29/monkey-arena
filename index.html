@@ -721,7 +721,7 @@ function drawGlad(c, x, y, dir, L, st={}){
 /* ============ SPRITES DES POTES ============ */
 // version des images : à augmenter quand une image est remplacée sous le même nom,
 // pour que les navigateurs ne ressortent pas l'ancienne de leur cache
-const ASSET_V = '?v=3';
+const ASSET_V = '?v=4';
 const SPR = {};
 const SPR_AX = 100, SPR_AY = 488, SPR_H = 478;   // ancre = entre les pieds
 function loadSprites(cb){
@@ -759,14 +759,14 @@ const WEAR = {
   jambieres:{x:-66, y:-116, w:130},
   plastron:{x:-66, y:-364, w:122},
   manica:{x:-84, y:-292, h:100},
-  filet:{x:-112, y:-236, w:100},
+  filet:{x:-100, y:-232, w:100},
   'bouclier-bois':{cx:-58, cy:-262, h:205},
   'bouclier-pointes':{cx:-52, cy:-262, h:205},
   egide:{cx:-58, cy:-262, h:205},
   scutum:{cx:-58, cy:-262, h:225},
   'tunique-cuir':{x:-70, y:-366, w:134},
   galerus:{x:-100, y:-420, h:92},
-  chope:{cx:-62, cy:-200, w:84},
+  chope:{cx:-74, cy:-206, w:84, flip:1},
   casque:{x:-78, y:-522, w:148},
   'peau-lion':{x:-126, y:-520, w:214},
   laurier:{cx:-2, cy:-450, w:118},
@@ -948,8 +948,16 @@ const RIG_PERSO = {
          legB:[[0,338],[102,338],[102,490],[0,490]],
          legF:[[102,338],[204,338],[204,490],[102,490]] },
   piv:{head:[0,-366], armB:[-60,-350], armF:[62,-350], legB:[-25,-150], legF:[25,-150]},
-  hand:[78,-196], probe:[100,190], fill:[[56,126],[72,126],[72,300],[56,300]], skin:[150,170,40,90]
+  hand:[78,-196], probe:[100,190], fill:[[56,126],[72,126],[72,300],[56,300]], skin:[150,170,40,90],
+  fist:true   // poings fermés dessinés : l'arme passe dans le trou du poing, pas de poing ajouté
 };
+// centre du trou de chaque poing, en pixels du sprite (f = main de l'arme, b = main du bouclier)
+const FISTS = {
+  darkkus:{f:[171,287], b:[51,289]}, fredhus:{f:[175,285], b:[50,287]}, sweevus:{f:[174,285], b:[47,285]},
+  chelmacus:{f:[172,288], b:[52,291]}, dridricus:{f:[173,283], b:[37,283]}, kubenicus:{f:[171,287], b:[50,288]},
+  maximusrr:{f:[167,255], b:[43,257]}, beelgraalus:{f:[173,285], b:[48,289]}
+};
+const FIST_B0 = [-50,-200];   // main arrière de référence pour WEAR (boucliers, filet, chope)
 // adversaires : proportions réalistes (tête plus petite, bras plus longs, bassin plus haut)
 const RIG_ENEMY = {
   poly:{ head:[[0,0],[204,0],[204,124],[0,124]],
@@ -991,7 +999,10 @@ function buildParts(img, rig=RIG_PERSO){
 
 function drawSpriteGlad(c, x, y, dir, L, st={}){
   const S = SPR[L.sprite], flash = (st.flash||0) > 0, sc = st.scale||1;
-  const PIV = S.rig.piv, HD = S.rig.hand, hdx = HD[0]-72, hdy = HD[1]+185;
+  const PIV = S.rig.piv, FI = S.rig.fist && FISTS[L.sprite];
+  const HD = FI ? [FI.f[0]-SPR_AX, FI.f[1]-SPR_AY] : S.rig.hand;
+  // décalage de la main arrière de ce perso par rapport à la référence de WEAR
+  const BD = FI ? [FI.b[0]-SPR_AX-FIST_B0[0], FI.b[1]-SPR_AY-FIST_B0[1]] : [0,0];
   // les adversaires dessinés portent déjà leur tenue : seuls l'arme, le bouclier et le filet s'ajoutent
   if(S.rig === RIG_ENEMY) L = Object.assign({}, L, {helmet:0, chest:0, cuir:0, greaves:0, manica:0, galerus:0, lion:0, emperor:0, chope:0});
   const G = getGear(L);
@@ -1042,13 +1053,16 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   });
   // bras arrière + bouclier / filet
   at(PIV.armB, P.armB, ()=>{
+    const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', scutum:'scutum'}[L.shield];
+    const inHand = fn=>{ c.save(); c.translate(BD[0],BD[1]); fn(); c.restore(); };
+    // tenus dans le poing : dessinés avant le bras pour que les doigts passent devant
+    if(FI){ if(L.net) inHand(()=>wear(c,'filet',flash)); if(!shImg && L.chope) inHand(()=>wear(c,'chope',flash)); }
     img(PT.armB);
     if(L.manica) wear(c,'manica',flash);
     if(L.galerus) wear(c,'galerus',flash);
-    if(L.net) wear(c,'filet',flash);
-    const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', scutum:'scutum'}[L.shield];
-    if(shImg) wear(c,shImg,flash);
-    else if(L.chope) wear(c,'chope',flash);
+    if(!FI && L.net) wear(c,'filet',flash);
+    if(shImg) inHand(()=>wear(c,shImg,flash));
+    else if(!FI && L.chope) wear(c,'chope',flash);
   });
   // traînée de l'arme
   if(P.trail && !flash){
@@ -1064,6 +1078,16 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   }
   // bras avant + arme
   at(PIV.armF, P.armF, ()=>{
+    if(FI){
+      // l'arme passe derrière les doigts, visible dans le trou du poing ; les cestes, eux, habillent le poing
+      if(L.weapon === 'cestes'){
+        img(PT.armF);
+        const it = IMG.cestes;
+        if(it){ const h = 74, w = h*it.n.width/it.n.height; c.save(); c.translate(HD[0],HD[1]); c.rotate(P.wpn); c.drawImage(flash?it.w:it.n, -w*0.45, -h*0.55, w, h); c.restore(); }
+        return;
+      }
+      if(!polearm) weapon(); img(PT.armF); return;
+    }
     img(PT.armF);
     if(!polearm) weapon();
     // poing incliné dans l'axe de l'arme (45°) et qui suit sa rotation
