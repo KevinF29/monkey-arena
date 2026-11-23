@@ -259,7 +259,7 @@ const CHARS = [
    look:{sprite:'chelmacus', skin:'#d8a878', hair:'#5a2a1a', hairStyle:'chauve', beard:'longue', tunic:'#6a9a3a', build:'costaud', weapon:'glaive'}},
   {id:'dridricus', name:"Dridricus", title:"Le Fêtard", desc:"Ivresse : ses coups font entre 50 % et 170 % de dégâts, et il titube (10 % d'esquive).",
    stats:{maxHp:115, atk:10, def:1, spd:1, drunk:1, dodge:.10},
-   look:{sprite:'dridricus', skin:'#b07a50', hair:'#2a1a10', hairStyle:'queue', beard:'moustache', tunic:'#3a5a9a', build:'normal', weapon:'trident'}},
+   look:{sprite:'dridricus', skin:'#b07a50', hair:'#2a1a10', hairStyle:'queue', beard:'moustache', tunic:'#3a5a9a', build:'normal', weapon:'trident', chope:1}},
   {id:'kubenicus', name:"Kubenicus", title:"Le Mur", desc:"Carapace : subit 12 % de dégâts en moins et renvoie 3 dégâts à chaque coup reçu.",
    stats:{maxHp:150, atk:8, def:4, spd:.8, dr:.12, thorns:3},
    look:{sprite:'kubenicus', skin:'#e0b080', hair:'#3a2a1a', hairStyle:'court', beard:'none', glasses:1, tunic:'#8a6a2a', build:'normal', weapon:'gladius'}},
@@ -549,17 +549,19 @@ function postWin(p, n){
 //LOGIC-END
 
 /* ============ APPARENCE ============ */
-const WEAPON_OF = {glaive:'glaive', trident:'trident', fouet:'fouet', gladius:'gladius', hache:'hache', dague:'dague', hydre:'lance', champion:'champion'};
-const SHIELD_RANK = {bois:1, pointes:2, egide:3};
+const WEAPON_OF = {glaive:'glaive', trident:'trident', fouet:'fouet', gladius:'gladius', hache:'hache', dague:'dague', hydre:'lance', champion:'champion', sica:'sica', scissor:'scissor', pilum:'pilum', caestus:'cestes'};
+const SHIELD_RANK = {bois:1, pointes:2, scutum:2.5, egide:3};
 function computeLook(f){
   const L = Object.assign({}, f.baseLook || {});
   for(const id of f.augs){
     if(WEAPON_OF[id]) L.weapon = WEAPON_OF[id];
     if(id==='filet') L.net = 1;
-    const sh = id==='boisb'?'bois': id==='pointes'?'pointes': id==='egide'?'egide':null;
+    const sh = id==='boisb'?'bois': id==='pointes'?'pointes': id==='egide'?'egide': id==='scutum'?'scutum':null;
     if(sh && (SHIELD_RANK[sh] > (SHIELD_RANK[L.shield]||0))) L.shield = sh;
     if(id==='casque') L.helmet = 1;
     if(id==='plastron') L.chest = 1;
+    if(id==='cuir') L.cuir = 1;
+    if(id==='galerus') L.galerus = 1;
     if(id==='jamb') L.greaves = 1;
     if(id==='manica') L.manica = 1;
     if(id==='lion') L.lion = 1;
@@ -721,13 +723,14 @@ function loadSprites(cb){
 
 
 /* --- objets dessinés (assets/items) --- */
-const ITEM_FILES = ['gladius','glaive','champion','dague','hache','trident','lance','fouet','bouclier-bois','bouclier-pointes','egide','casque','plastron','jambieres','manica','peau-lion','filet','laurier','echarpe','crane'];
+const ITEM_FILES = ['gladius','glaive','champion','dague','hache','trident','lance','fouet','bouclier-bois','bouclier-pointes','egide','casque','plastron','jambieres','manica','peau-lion','filet','laurier','echarpe','crane','sica','scissor','pilum','cestes','scutum','tunique-cuir','galerus','chope'];
 const IMG = {};
 // armes : longueur (unités du sprite) + point de prise (fraction pommeau → pointe)
 const WEAPON_IMG = {
   gladius:{f:'gladius', len:190, t:.14}, glaive:{f:'glaive', len:280, t:.12}, champion:{f:'champion', len:300, t:.12},
   dague:{f:'dague', len:135, t:.17}, hache:{f:'hache', len:270, t:.12}, trident:{f:'trident', len:400, t:.27},
-  lance:{f:'lance', len:400, t:.27}, fouet:{f:'fouet', w:250, gx:.12, gy:.74}
+  lance:{f:'lance', len:400, t:.27}, fouet:{f:'fouet', w:250, gx:.12, gy:.74},
+  sica:{f:'sica', len:220, t:.13}, scissor:{f:'scissor', len:230, t:.22}, pilum:{f:'pilum', len:420, t:.3}, cestes:{f:'cestes', len:175, t:.52}
 };
 // pièces portées : rectangle (unités du sprite, origine entre les pieds)
 const WEAR = {
@@ -738,6 +741,10 @@ const WEAR = {
   'bouclier-bois':{cx:-46, cy:-245, h:205},
   'bouclier-pointes':{cx:-40, cy:-245, h:205},
   egide:{cx:-46, cy:-245, h:205},
+  scutum:{cx:-46, cy:-245, h:225},
+  'tunique-cuir':{x:-84, y:-358, w:140},
+  galerus:{x:-108, y:-402, h:104},
+  chope:{cx:-74, cy:-176, w:96},
   casque:{x:-100, y:-532, w:188},
   'peau-lion':{x:-160, y:-530, w:268},
   laurier:{cx:6, cy:-442, w:150},
@@ -828,7 +835,7 @@ function gearFront(c, L){
     c.fillStyle='#f0c040';
     for(let i=0;i<9;i++){ const a=Math.PI*(1.02+i*0.12); c.beginPath(); c.ellipse(8+Math.cos(a)*66,-420+Math.sin(a)*66,20,10,a+Math.PI/2,0,7); c.fill(); }
   }
-  const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide'}[L.shield];
+  const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', scutum:'scutum'}[L.shield];
   if(shImg && hasImg(shImg)){}
   else if(L.shield==='bois'){ c.fillStyle='#9a6a30'; rr(c,-108,-330,64,170,16);
     c.strokeStyle='#5a3a14'; c.lineWidth=7; c.beginPath(); c.moveTo(-76,-320); c.lineTo(-76,-170); c.moveTo(-104,-290); c.lineTo(-48,-290); c.moveTo(-104,-200); c.lineTo(-48,-200); c.stroke();
@@ -958,7 +965,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
   if(L.lion) wear(c,'peau-lion',flash);
   // arme : les armes d'hast passent derrière le corps, la main reste devant
-  const polearm = ['trident','lance'].includes(L.weapon);
+  const polearm = ['trident','lance','pilum'].includes(L.weapon);
   const weapon = ()=>{
     c.save(); c.translate(72,-185); c.rotate(P.wpn);
     c.imageSmoothingEnabled = false; blitPix(c, G.weapon, WPN_BOX, flash); c.imageSmoothingEnabled = true;
@@ -973,6 +980,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // torse
   img(PT.torso);
   if(L.chest) wear(c,'plastron',flash);
+  else if(L.cuir) wear(c,'tunique-cuir',flash);
   if(L.skull) wear(c,'crane',flash);
   if(L.emperor) wear(c,'echarpe',flash);
   c.imageSmoothingEnabled = false; blitPix(c, G.front, GEAR_BOX, flash); c.imageSmoothingEnabled = true;
@@ -988,9 +996,11 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   at(PIV.armB, P.armB, ()=>{
     img(PT.armB);
     if(L.manica) wear(c,'manica',flash);
+    if(L.galerus) wear(c,'galerus',flash);
     if(L.net) wear(c,'filet',flash);
-    const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide'}[L.shield];
+    const shImg = {bois:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', scutum:'scutum'}[L.shield];
     if(shImg) wear(c,shImg,flash);
+    else if(L.chope) wear(c,'chope',flash);
   });
   // traînée de l'arme
   if(P.trail && !flash){
@@ -1241,7 +1251,7 @@ function ic(name, over){
 function icImg(name, cls='', over){ return `<img class="pxi ${cls}" src="${ic(name,over)}" alt="">`; }
 const POISON = {R:'#6ac83a', r:'#3a8a1a', w:'#d0ffa8'};
 const AUG_ICON = {caestus:'fist', sica:'sica', scissor:'scissor', pilum:'pilum', cuir:'tunic', scutum:'scutum', galerus:'galerus', mithri:'flask', adren:'bolt', mars:'helm', fortuna:'wheel', souffle:'heart', rage:'flame', agile:'wing', sang:'drop', frenesie:'bolt', brutal:'burst', foule:'laurel', rempart:'tower', berserk:'skull', exec:'axe'};
-const AUG_IMG = {boisb:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', casque:'casque', plastron:'plastron', jamb:'jambieres', manica:'manica', lion:'peau-lion', filet:'filet'};
+const AUG_IMG = {caestus:'cestes', cuir:'tunique-cuir', scutum:'scutum', galerus:'galerus', boisb:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', casque:'casque', plastron:'plastron', jamb:'jambieres', manica:'manica', lion:'peau-lion', filet:'filet'};
 function augFile(g){ return AUG_IMG[g.id] || WEAPON_OF[g.id] || null; }
 function augArt(g, small){
   const f = augFile(g);
