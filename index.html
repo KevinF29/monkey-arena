@@ -1189,6 +1189,8 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   const PIV = S.rig.piv, FI = S.rig.fist && FISTS[L.sprite];
   const HD = FI ? [FI.f[0]-SPR_AX, FI.f[1]-SPR_AY] : S.rig.hand;
   // décalage de la main arrière de ce perso par rapport à la référence de WEAR
+  // poing dessiné autour d'un manche vertical : on redresse l'arme (images à 45°) pour qu'elle traverse le trou du poing
+  const WOFF = FI ? -0.62 : 0;
   const BD = FI ? [FI.b[0]-SPR_AX-FIST_B0[0], FI.b[1]-SPR_AY-FIST_B0[1]] : [0,0];
   // les adversaires dessinés portent déjà leur tenue : seuls l'arme, le bouclier et le filet s'ajoutent
   if(S.rig === RIG_ENEMY) L = Object.assign({}, L, {helmet:0, chest:0, cuir:0, greaves:0, manica:0, galerus:0, lion:0, emperor:0, chope:0});
@@ -1225,7 +1227,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
   // arme : les armes d'hast passent derrière le corps, la main reste devant
   const polearm = ['trident','lance','pilum'].includes(L.weapon);
   const weapon = ()=>{
-    c.save(); c.translate(HD[0],HD[1]); c.rotate(P.wpn);
+    c.save(); c.translate(HD[0],HD[1]); c.rotate(P.wpn + WOFF);
     c.imageSmoothingEnabled = false; blitPix(c, G.weapon, WPN_BOX, flash); c.imageSmoothingEnabled = true;
     drawWeaponImg(c, L.weapon||'gladius', flash);
     c.restore();
@@ -1273,7 +1275,7 @@ function drawSpriteGlad(c, x, y, dir, L, st={}){
     if(d.len){ const sc = d.len/Math.hypot(iw, ih); tip = [(1-d.t)*iw*sc, -(1-d.t)*ih*sc]; }
     else { const sc = d.w/iw; tip = [(1-d.gx)*iw*sc, -d.gy*ih*sc]; }
     const rot = ([x,y], a) => [x*Math.cos(a) - y*Math.sin(a), x*Math.sin(a) + y*Math.cos(a)];
-    const hand = [HD[0]-PIV.armF[0], HD[1]-PIV.armF[1]], wt = rot(tip, P.wpn);
+    const hand = [HD[0]-PIV.armF[0], HD[1]-PIV.armF[1]], wt = rot(tip, P.wpn + WOFF);
     // point de la lame (fraction f entre la main et la pointe) quand le bras est à l'angle a
     const at = (a, f) => rot([hand[0] + wt[0]*f, hand[1] + wt[1]*f], a);
     c.save(); c.translate(PIV.armF[0], PIV.armF[1]);
