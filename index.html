@@ -170,7 +170,41 @@ h2{font-size:22px}
 .sec{font-family:Cinzel,Georgia,serif;font-size:15px;color:var(--gold);margin-top:4px}
 .endtitle{font-size:34px}
 .note{font-size:12px;color:var(--mute);margin-top:14px;text-align:center;line-height:1.5}
-.sndRow{display:flex;justify-content:flex-end;margin-bottom:-4px}
+.optRow{display:flex;justify-content:flex-end;gap:6px;margin-bottom:-4px;flex-wrap:wrap}
+.resume{padding:10px 12px;margin:0 0 14px;text-align:center}
+.resInfo{font-size:13.5px;margin:4px 0 10px;color:var(--txt)}
+.resInfo b{color:var(--gold2);font-family:Cinzel,Georgia,serif}
+.pc{position:relative}
+.crownBadge{position:absolute;top:5px;right:5px;z-index:1;filter:drop-shadow(0 2px 0 rgba(0,0,0,.7))}
+.crownBadge .pxi{width:22px;height:22px}
+.summary{text-align:left;padding:10px 12px;margin:8px 0;font-size:13px;background:linear-gradient(#f0e2c0,#e2cfa4);color:var(--parchInk);border:2px solid var(--ink);border-radius:6px;box-shadow:inset 0 0 0 2px #c9ad78}
+.sumHead{font-weight:700;margin-bottom:6px;color:#8a2a14}
+.sumRow{display:flex;gap:10px;padding:3px 0;border-bottom:1px solid rgba(90,60,20,.2)}
+.sumRow span{flex:none;width:118px;color:#6a5034}
+.sumRow b{flex:1;min-width:0}
+.recList{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media (max-width:520px){.recList{grid-template-columns:1fr}}
+.rec{display:flex;gap:8px;align-items:center;padding:8px}
+.rec canvas{width:64px;height:auto;flex:none}
+.rec.crowned{box-shadow:inset 0 0 0 2px var(--gold), 0 0 14px rgba(232,176,74,.35)}
+.recInfo{flex:1;min-width:0;font-size:12px}
+.recName{font-family:Cinzel,Georgia,serif;font-weight:800;color:var(--gold2);font-size:14px;margin-bottom:3px}
+.recRow{display:flex;justify-content:space-between;gap:6px;color:var(--mute)}
+.recRow b{color:var(--txt);font-variant-numeric:tabular-nums}
+.tuto{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;padding:16px 16px 28px;background:rgba(8,5,3,.55)}
+.tuto[hidden]{display:none}
+.tutoBox{position:relative;width:100%;max-width:420px;padding:14px;background:linear-gradient(#f0e2c0,#e2cfa4);color:var(--parchInk);border:2px solid var(--ink);border-radius:12px;
+  box-shadow:inset 0 0 0 2px #c9ad78, 0 8px 24px rgba(0,0,0,.6);font-size:14px;line-height:1.45;animation:fadeIn .2s ease-out}
+.tutoBox::after{content:"";position:absolute;left:36px;bottom:-14px;width:22px;height:14px;background:#e2cfa4;border:2px solid var(--ink);border-top:0;clip-path:polygon(0 0,100% 0,0 100%)}
+@media (min-width:600px){.tuto{align-items:center}}
+.tutoTop{display:flex;gap:10px;align-items:center}
+.tutoTop h3{font-size:18px;color:#8a2a14}
+.tutoTop .lbl{color:#7a6448}
+.tutoBox p{margin-top:8px}
+.tutoDots{display:flex;gap:6px;justify-content:center;margin:10px 0 2px}
+.tutoDots span{width:8px;height:8px;border-radius:50%;background:#c9ad78;border:1px solid var(--ink)}
+.tutoDots span.on{background:var(--bronze)}
+.tutoBtns{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
 .sndToggle .pxi{width:16px;height:16px;vertical-align:-3px}
 
 /* inventaire */
@@ -237,9 +271,18 @@ h2{font-size:22px}
 <div id="app">
 
   <section id="s-start" class="screen on">
-    <div class="sndRow"><button class="btn ghost small sndToggle" aria-pressed="true" title="Activer / couper le son"></button></div>
+    <div class="optRow">
+      <button class="btn ghost small" id="btnRecords">Records</button>
+      <button class="btn ghost small" id="btnTuto">Tutoriel</button>
+      <button class="btn ghost small sndToggle" aria-pressed="true" title="Activer / couper le son"></button>
+    </div>
     <h1><img class="pxi lg" data-ic="laurel" alt="">Monkey Arena<img class="pxi lg flip" data-ic="laurel" alt=""></h1>
     <div class="sub">Choisis ton gladiateur. Les 7 autres seront tes boss…<br>et l'un d'eux sera couronné Empereur.</div>
+    <div class="resume tablet" id="resumeBox" hidden>
+      <div class="lbl">Run en cours</div>
+      <div class="resInfo" id="resumeInfo"></div>
+      <button class="btn wide" id="btnResume">Reprendre la run</button>
+    </div>
     <div class="grid8" id="charGrid"></div>
     <div class="desc" id="charDesc"></div>
     <button class="btn wide" id="btnStart">Commencer la run</button>
@@ -295,9 +338,22 @@ h2{font-size:22px}
     <div class="stage sm" style="margin-top:10px"><canvas id="endCv" width="180" height="216"></canvas></div>
     <h1 id="endTitle" class="endtitle"></h1>
     <div class="sub" id="endSub"></div>
+    <h3 class="sec">Résumé de la run</h3>
+    <div class="summary" id="endSummary"></div>
+    <button class="btn ghost wide" id="btnCopy">Copier le résumé</button>
+    <h3 class="sec" style="margin-top:14px">Ton gladiateur</h3>
     <div class="statsgrid" id="endStats"></div>
     <button class="btn wide" id="btnRestart">Nouvelle run</button>
   </section>
+
+  <section id="s-records" class="screen">
+    <h2 class="title2"><img class="pxi lg" data-ic="crown" alt="">Records<img class="pxi lg" data-ic="crown" alt=""></h2>
+    <div class="sub">Tes meilleurs résultats avec chaque gladiateur. La couronne marque ceux qui ont abattu l'Empereur.</div>
+    <div class="recList" id="recList"></div>
+    <button class="btn wide" id="btnRecBack" style="margin-top:14px">Retour</button>
+  </section>
+
+  <div id="tuto" class="tuto" hidden><div class="tutoBox" id="tutoBox"></div></div>
 
   <div id="sheet" class="sheet" hidden><div class="sheetBox" id="sheetBox"></div></div>
 </div>
@@ -1455,7 +1511,8 @@ function paintFig(canvas, f, opts={}){
 }
 
 function renderChars(){
-  $('charGrid').innerHTML = CHARS.map(ch=>`<div class="pc ${ch===selChar?'sel':''}" data-id="${ch.id}">
+  const REC = loadRecords();
+  $('charGrid').innerHTML = CHARS.map(ch=>`<div class="pc ${ch===selChar?'sel':''}" data-id="${ch.id}">${(REC.perso[ch.id]||{}).emperor ? `<span class="crownBadge" title="A battu l'Empereur">${icImg('crown')}</span>` : ''}
     <canvas width="100" height="120"></canvas><div class="plate"><div class="nm">${ch.name}</div><div class="tt">${ch.title}</div></div></div>`).join('');
   $('charGrid').querySelectorAll('.pc').forEach(el=>{
     const ch = CHARS.find(c=>c.id===el.dataset.id);
@@ -1469,10 +1526,178 @@ function renderChars(){
     <div class="statline"><span class="stat">${icImg('heart')} ${s.maxHp} PV</span><span class="stat">${icImg('sword')} ${s.atk} attaque</span><span class="stat">${icImg('shield')} ${s.def} défense</span><span class="stat">${icImg('bolt')} ${s.spd} att/s</span></div>`;
 }
 
+/* ============ CONFORT : sauvegarde, statistiques de run, records, tutoriel ============ */
+// stockage local protégé : navigation privée, stockage bloqué ou plein → le jeu continue sans mémoire
+const STORE = {
+  get(k){ try { const v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); } catch(e) { return null; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e) { return false; } },
+  del(k){ try { localStorage.removeItem(k); } catch(e) {} }
+};
+const SAVE_KEY = 'monkeyArena.run', REC_KEY = 'monkeyArena.records', TUTO_KEY = 'monkeyArena.tuto', SAVE_V = 1;
+
+/* --- statistiques de la run en cours --- */
+let RS = null, tickT = 0;
+const newRunStats = () => ({time:0, wins:0, dealt:0, taken:0, biggest:0, crits:0, dodges:0, bosses:[]});
+// temps de jeu : on n'ajoute que le temps où la page est visible (au plus 15 min d'un coup)
+function tickTime(){ const t = Date.now(); if(RS && tickT) RS.time += Math.min(900, (t - tickT)/1000); tickT = t; }
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) tickTime(); else tickT = Date.now(); });
+// alimenté par la boucle de combat (événements déjà affichés)
+function trackEvent(ev){
+  if(!RS) return;
+  const dmg = ['hit','crit','thorns','poison','bleed'].includes(ev.kind) ? (+String(ev.txt).replace('!','') || 0) : 0;
+  if(dmg){
+    if(ev.side === 'b'){ RS.dealt += dmg; if(ev.kind==='hit' || ev.kind==='crit') RS.biggest = Math.max(RS.biggest, dmg); }
+    else RS.taken += dmg;
+  }
+  if(ev.kind === 'crit' && ev.side === 'b') RS.crits++;
+  if(ev.kind === 'miss' && ev.side === 'a') RS.dodges++;
+}
+
+/* --- sauvegarde de la run --- */
+// phase : 'intro' (écran d'acte), 'fight' (avant le combat, adversaire figé), 'reward' (cartes déjà tirées)
+function saveRun(phase, extra={}){
+  if(!P) return;
+  tickTime();
+  STORE.set(SAVE_KEY, {v:SAVE_V, cid:P.cid, bosses:BOSSES, N, phase,
+    player:{base:P.base, gear:P.gear, apts:P.apts, hp:P.hp}, stats:RS, ...extra});
+}
+function loadSave(){
+  const s = STORE.get(SAVE_KEY);
+  if(!s || s.v !== SAVE_V || !CHARS.some(c=>c.id===s.cid) || !(s.N >= 1 && s.N <= TOTAL)) { if(s) STORE.del(SAVE_KEY); return null; }
+  return s;
+}
+function clearSave(){ STORE.del(SAVE_KEY); }
+function resumeRun(){
+  const s = loadSave(); if(!s) return renderTitle();
+  const ch = CHARS.find(c=>c.id===s.cid);
+  selChar = ch;
+  P = makePlayer(ch);
+  P.base = Object.assign({}, P.base, s.player.base);
+  P.gear = s.player.gear || {}; P.apts = (s.player.apts || []).filter(a=>ITEM[a.id]);
+  for(const k in P.gear) if(!ITEM[P.gear[k].id]) delete P.gear[k];
+  recalc(P);
+  P.hp = Math.max(1, Math.min(P.maxHp, s.player.hp));
+  BOSSES = s.bosses; N = s.N;
+  RS = Object.assign(newRunStats(), s.stats || {}); tickT = Date.now();
+  if(s.phase === 'reward' && s.choices) showReward({choices:s.choices, foe:s.foe});
+  else if(s.phase === 'fight' && s.enemy) prepareFight(Object.assign(baseFighter(), s.enemy));
+  else showIntro();
+}
+
+/* --- records par perso --- */
+function loadRecords(){ const r = STORE.get(REC_KEY); return r && r.perso ? r : {v:1, perso:{}}; }
+function recordOf(R, cid){ return R.perso[cid] || (R.perso[cid] = {best:0, emperor:0, runs:0, biggest:0}); }
+function bumpRecords(fn){ const R = loadRecords(); fn(recordOf(R, P.cid)); STORE.set(REC_KEY, R); }
+
+/* --- écran titre : reprise, nouvelle run --- */
+function renderTitle(){
+  const s = loadSave();
+  $('resumeBox').hidden = !s;
+  if(s){
+    const ch = CHARS.find(c=>c.id===s.cid), a = actOf(s.N);
+    const where = s.phase === 'reward' ? `après le combat ${s.N}/${TOTAL}` : `combat ${s.N}/${TOTAL}`;
+    $('resumeInfo').innerHTML = `<b>${ch.name}</b> · Acte ${ROMAN[a]} — ${ACT_NAMES[a]} · ${where}`;
+    $('btnStart').textContent = 'Nouvelle run';
+    $('btnStart').classList.add('ghost');
+  } else {
+    $('btnStart').textContent = 'Commencer la run';
+    $('btnStart').classList.remove('ghost');
+  }
+}
+function newRun(){
+  const s = loadSave();
+  if(s){
+    const ch = CHARS.find(c=>c.id===s.cid);
+    openSheet(`<h3>Écraser la run en cours ?</h3><p>Ta run avec <b>${ch.name}</b> (combat ${s.N}/${TOTAL}) sera perdue et remplacée par une nouvelle run avec <b>${selChar.name}</b>.</p>
+      <button class="btn wide" id="confirmNew">Écraser et commencer</button>`, 'Annuler');
+    $('confirmNew').onclick = ()=>{ $('sheet').hidden = true; clearSave(); startRun(); };
+    return;
+  }
+  startRun();
+}
+
+/* --- résumé de fin de run --- */
+function fmtDuration(s){
+  s = Math.round(s); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), sec = s%60;
+  return h ? `${h} h ${String(m).padStart(2,'0')}` : m ? `${m} min ${String(sec).padStart(2,'0')}` : `${sec} s`;
+}
+const fmtN = n => Math.round(n).toLocaleString('fr-FR');
+function gearList(p){ return SLOTS.filter(s=>p.gear[s.k]).map(s=>{ const g = p.gear[s.k]; return `${ITEM[g.id].n} niv. ${g.lvl}`; }); }
+function aptList(p){ return p.apts.map(a=>`${ITEM[a.id].n} niv. ${a.lvl}`); }
+function runSummary(win){
+  const a = actOf(N), r = RS || newRunStats();
+  const head = win ? `Victoire ! ${ST.b.name} est tombé, ${P.name} a gagné sa liberté.`
+                   : `Mort à l'acte ${ROMAN[a]} (${ACT_NAMES[a]}), combat ${N}/${TOTAL}, face à ${ST.b.name}.`;
+  const rows = [
+    ['Perso', `${P.name}, ${selChar.title}`],
+    ['Atteint', `Acte ${ROMAN[a]} · combat ${N}/${TOTAL}`],
+    ['Durée', fmtDuration(r.time)],
+    ['Combats gagnés', r.wins],
+    ['Dégâts infligés', fmtN(r.dealt)],
+    ['Dégâts reçus', fmtN(r.taken)],
+    ['Plus gros coup', fmtN(r.biggest)],
+    ['Critiques', r.crits],
+    ['Esquives', r.dodges],
+    ['Boss vaincus', r.bosses.length ? r.bosses.join(', ') : 'aucun'],
+    ['Équipement', gearList(P).join(', ') || 'rien'],
+    ['Aptitudes', aptList(P).join(', ') || 'aucune']
+  ];
+  const text = [`🏛️ Monkey Arena — ${P.name}`, head, ...rows.slice(1).map(([k,v])=>`${k} : ${v}`)].join('\n');
+  const html = `<div class="sumHead">${head}</div>` + rows.map(([k,v])=>`<div class="sumRow"><span>${k}</span><b>${v}</b></div>`).join('');
+  return {text, html};
+}
+function copyText(text){
+  const fallback = ()=>{ const t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch(e) {} t.remove(); return ok; };
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(()=>true, ()=>fallback());
+  return Promise.resolve(fallback());
+}
+
+/* --- écran des records --- */
+function renderRecords(){
+  const R = loadRecords();
+  $('recList').innerHTML = CHARS.map(ch=>{
+    const r = R.perso[ch.id] || {best:0, emperor:0, runs:0, biggest:0};
+    const best = r.best ? `Acte ${ROMAN[actOf(r.best)]} · combat ${r.best}/${TOTAL}` : '—';
+    return `<div class="rec tablet ${r.emperor ? 'crowned' : ''}">
+      <canvas width="100" height="120"></canvas>
+      <div class="recInfo"><div class="recName">${ch.name}${r.emperor ? ` ${icImg('crown')}` : ''}</div>
+        <div class="recRow"><span>Meilleur</span><b>${best}</b></div>
+        <div class="recRow"><span>Empereur battu</span><b>${r.emperor}</b></div>
+        <div class="recRow"><span>Runs</span><b>${r.runs}</b></div>
+        <div class="recRow"><span>Plus gros coup</span><b>${r.biggest ? fmtN(r.biggest) : '—'}</b></div></div>
+    </div>`;
+  }).join('');
+  $('recList').querySelectorAll('canvas').forEach((cv2,i)=>paintFig(cv2, {baseLook:CHARS[i].look, emperor:(R.perso[CHARS[i].id]||{}).emperor ? 1 : 0}));
+  show('s-records');
+}
+
+/* --- tutoriel : quelques bulles au premier lancement, à revoir depuis les options --- */
+const TUTO = [
+  {ic:'sword', t:'Combats automatiques', d:"Ton gladiateur se bat tout seul : il frappe, esquive et lance son <b>coup spécial</b> dès que sa jauge est pleine. Le bouton <b>×1</b> accélère le combat."},
+  {ic:'burst', t:'Une récompense par victoire', d:"Après chaque combat gagné, choisis <b>1 carte parmi 3</b> : un objet ou une aptitude. Reprendre le <b>même objet</b> le fait monter de niveau, jusqu'au niveau 3 et son bonus."},
+  {ic:'shield', t:'Ton inventaire', d:"Sous l'arène : <b>7 emplacements</b> autour de ton gladiateur et <b>5 aptitudes</b>. Touche une case pour lire sa fiche. Trois pièces d'une même <b>panoplie</b> donnent un bonus."},
+  {ic:'skull', t:'Les boss', d:"Chaque acte finit par un <b>boss</b> : l'un de tes potes. Au bout des 7 actes, le dernier est couronné <b>Empereur</b>. Bats-le pour gagner ta liberté !"}
+];
+let tutoI = 0;
+function openTuto(){ tutoI = 0; renderTuto(); $('tuto').hidden = false; }
+function closeTuto(){ $('tuto').hidden = true; STORE.set(TUTO_KEY, 1); }
+function renderTuto(){
+  const s = TUTO[tutoI], last = tutoI === TUTO.length - 1;
+  $('tutoBox').innerHTML = `<div class="tutoTop">${icImg(s.ic, 'big')}<div><div class="lbl">${tutoI+1} / ${TUTO.length}</div><h3>${s.t}</h3></div></div>
+    <p>${s.d}</p>
+    <div class="tutoDots">${TUTO.map((_,i)=>`<span class="${i===tutoI?'on':''}"></span>`).join('')}</div>
+    <div class="tutoBtns"><button class="btn ghost small" id="tutoSkip">${last ? 'Fermer' : 'Passer'}</button><button class="btn small" id="tutoNext">${last ? "C'est parti !" : 'Suivant'}</button></div>`;
+  $('tutoSkip').onclick = closeTuto;
+  $('tutoNext').onclick = ()=>{ if(last) closeTuto(); else { tutoI++; renderTuto(); } };
+}
+
 function startRun(){
   P = makePlayer(selChar);
   BOSSES = shuffle(CHARS.filter(c=>c.id!==selChar.id).map(c=>c.id));
-  N = 1; showIntro();
+  N = 1; RS = newRunStats(); tickT = Date.now();
+  bumpRecords(r=>{ r.runs++; });
+  saveRun('intro'); showIntro();
 }
 
 function showIntro(){
@@ -1489,8 +1714,10 @@ function showIntro(){
   show('s-intro');
 }
 
-function prepareFight(){
-  const e = makeEnemy(N, BOSSES);
+function prepareFight(saved){
+  const e = saved || makeEnemy(N, BOSSES);
+  saveRun('fight', {enemy: JSON.parse(JSON.stringify(e))});
+  bumpRecords(r=>{ r.best = Math.max(r.best, N); });
   ST = newFight(P, e); floats = []; lastLog = [];
   VIS = {a:newVis(), b:newVis()}; PEND = []; parts = []; shake = 0; freeze = 0; timeScale = 1; zoom = null; endT = 0; vicE = 0; petals = [];
   lookA = computeLook(ST.a); lookB = ST.b.beast ? null : computeLook(ST.b);
@@ -1527,6 +1754,8 @@ function updateBars(){
 }
 /* --- icônes pixel art (12×12) --- */
 const ICON_DEF = {
+  crown:{p:{G:'#ffd34a',g:'#c8821e',R:'#d83a2a'}, g:[
+'............','............','.o...o...o..','oGo.oGo.oGo.','oGGoGGGoGGo.','oGGGGRGGGGo.','oGRGGGGGRGo.','oGGGGGGGGGo.','.oggggggggo.','.oooooooooo.','............','............']},
   sound:{p:{W:'#e8e0d0',Y:'#ffd23a'}, g:[
 '............','.....o......','....oWo...Y.','...oWWo.Y..Y','oooWWWo..Y.Y','oWWWWWo..Y.Y','oWWWWWo..Y.Y','oooWWWo..Y.Y','...oWWo.Y..Y','....oWo...Y.','.....o......','............']},
   mute:{p:{W:'#a8a094',R:'#e0533d'}, g:[
@@ -2170,6 +2399,7 @@ function loop(ts){
   const dt = freeze > 0 ? 0 : dtReal*speed*timeScale;
   if(!ST.over){ let rem = dt; while(rem>0){ const s=Math.min(0.02,rem); step(ST,s); rem-=s; } }
   const handle = (ev)=>{
+    trackEvent(ev);
     spawnFloat(ev); if(ev.log) addLog(ev.log);
     if(['hit','crit','thorns','poison','bleed'].includes(ev.kind)) VIS[ev.side].flash = 0.18;
     const v = VIS[ev.side], other = ev.side==='a'?'b':'a';
@@ -2252,6 +2482,7 @@ function startFight(){
 }
 function endFight(){
   if(ST.winner==='a'){
+    if(RS){ RS.wins++; if(isBoss(N)) RS.bosses.push(ST.b.name); }
     if(N===TOTAL) return endRun(true);
     postWin(P, N);
     showReward();
@@ -2313,7 +2544,7 @@ function setSheet(s, p){
     <div class="shItems">${s.items.map(id=>{ const g = ITEM[id], has = Object.values(p.gear).some(x=>x.id===id);
       return `<div class="${has?'on':''}">${augArt(g,true)} ${g.n} <small>(${SLOT_N[g.slot]})</small>${has?' ✓':''}</div>`; }).join('')}</div>`;
 }
-function openSheet(html){ $('sheetBox').innerHTML = html + '<button class="btn wide small" id="sheetClose">Fermer</button>'; $('sheet').hidden = false; }
+function openSheet(html, closeLabel='Fermer'){ $('sheetBox').innerHTML = html + `<button class="btn ghost wide small" id="sheetClose">${closeLabel}</button>`; $('sheet').hidden = false; }
 $('sheet').onclick = e=>{ if(e.target.id==='sheet' || e.target.id==='sheetClose') $('sheet').hidden = true; };
 
 // ce que la carte de récompense va faire : nouveau, remplacement ou montée de niveau
@@ -2329,12 +2560,15 @@ function offerOf(p, g){
   if(cur) return {cls:'up', t:`Niveau +1 (${cur.lvl} → ${cur.lvl+1})`, lvl:cur.lvl+1};
   return {cls:'new', t:`Nouveau (${p.apts.length+1}/${MAX_APTS})`, lvl:1};
 }
-function showReward(){
-  const choices = rollChoices(N, P);
+// saved : cartes déjà tirées (reprise d'une run), pour qu'un rechargement ne permette pas de les retirer
+function showReward(saved){
+  const choices = saved ? saved.choices.map(id=>ITEM[id]).filter(Boolean) : rollChoices(N, P);
+  const foe = saved ? saved.foe : ST.b.name;
+  if(!saved) saveRun('reward', {choices: choices.map(g=>g.id), foe});
   const boss = isBoss(N);
   $('rewardSub').textContent = boss
-    ? `${ST.b.name} est terrassé ! Récompense de champion.` + (P.glory?' Gloire : +1 attaque, +10 PV max.':'')
-    : `${ST.b.name} est vaincu. Choisis ta récompense.`;
+    ? `${foe} est terrassé ! Récompense de champion.` + (P.glory?' Gloire : +1 attaque, +10 PV max.':'')
+    : `${foe} est vaincu. Choisis ta récompense.`;
   $('rewardList').innerHTML = choices.map((g,i)=>{
     const o = offerOf(P, g);
     const set = setsOf(g.id).map(s=>{ const k = setCount(P,s) + (o.cls==='up' ? 0 : 1); return `<span class="setHint ${k===s.items.length?'on':''}">${s.n} ${k}/${s.items.length}</span>`; }).join('');
@@ -2349,7 +2583,7 @@ function showReward(){
   $('rewardList').querySelectorAll('.card').forEach(el=>el.onclick=()=>{
     applyAug(P, choices[+el.dataset.i]);
     N++;
-    if(boss) showIntro(); else prepareFight();
+    if(boss){ saveRun('intro'); showIntro(); } else prepareFight();
   });
   show('s-reward');
 }
@@ -2374,19 +2608,33 @@ function endRun(win){
     : `${P.name} est tombé face à ${ST.b.name}<br>Acte ${ROMAN[a]} — ${ACT_NAMES[a]} · combat ${N}/${TOTAL}`;
   $('endStats').innerHTML = statsHTML(P);
   paintFig($('endCv'), P);
+  // fin de run : records, résumé à partager, et plus de sauvegarde à reprendre
+  tickTime();
+  bumpRecords(r=>{ r.best = Math.max(r.best, N); r.biggest = Math.max(r.biggest, RS ? RS.biggest : 0); if(win) r.emperor++; });
+  clearSave();
+  const sum = runSummary(win);
+  $('endSummary').innerHTML = sum.html;
+  $('btnCopy').textContent = 'Copier le résumé';
+  $('btnCopy').onclick = ()=> copyText(sum.text).then(ok=>{ $('btnCopy').textContent = ok ? 'Résumé copié !' : 'Copie impossible : sélectionne le texte'; });
   show('s-end');
 }
 
-$('btnStart').onclick = startRun;
-$('btnIntro').onclick = prepareFight;
+$('btnStart').onclick = newRun;
+$('btnResume').onclick = resumeRun;
+$('btnIntro').onclick = ()=>prepareFight();
+$('btnRecords').onclick = renderRecords;
+$('btnRecBack').onclick = ()=>{ renderChars(); show('s-start'); };
+$('btnTuto').onclick = openTuto;
 $('btnFight').onclick = startFight;
-$('btnRestart').onclick = ()=>{ renderChars(); show('s-start'); };
+$('btnRestart').onclick = ()=>{ renderChars(); renderTitle(); show('s-start'); };
 $('btnSpeed').onclick = ()=>{ speed = speed===1?2:speed===2?4:1; $('btnSpeed').textContent = '×'+speed; };
 $('btnStats').onclick = ()=>{ $('statsGrid').innerHTML = statsHTML(P); renderInv($('inv2'), P); show('s-stats'); };
 $('btnBack').onclick = ()=>show('s-fight');
 fillIcons();
 renderSoundBtns();
 renderChars();
+renderTitle();
+if(!STORE.get(TUTO_KEY)) openTuto();
 loadSprites(()=>{ if($('s-start').classList.contains('on')) renderChars(); });
 loadItems(()=>{ if($('s-start').classList.contains('on')) renderChars(); });
 </script>

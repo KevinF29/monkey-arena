@@ -187,6 +187,22 @@ Tout est synthétisé avec la Web Audio API dans le module `SFX` (section UI, ju
 - `throttle` limite chaque son (vitesse ×4, double coup) pour éviter la bouillie et la saturation. Pics mesurés en sortie : critique ≈ 0,42, fanfare ≈ 0,35, coup ≈ 0,2, foule ≈ 0,06. Garder tout nouveau son sous ~0,5.
 - Bouton `.sndToggle` (écran de départ et barre du combat) : `SFX.toggle()` puis `renderSoundBtns()` ; l'état est mémorisé dans `localStorage` (`monkeyArena.son`, lecture et écriture protégées par `try/catch`).
 
+## Sauvegarde, résumé, records, tutoriel
+
+Module « confort » (section UI, juste avant `startRun`). Tout passe par `STORE` (`get` / `set` / `del` en JSON, chaque accès dans un `try/catch`) : sans `localStorage` (navigation privée, stockage bloqué), le jeu marche normalement, simplement sans mémoire. Clés : `monkeyArena.run`, `monkeyArena.records`, `monkeyArena.tuto` (et `monkeyArena.son` pour le son).
+
+- **Sauvegarde de run** (`saveRun(phase, extra)`, version `SAVE_V`) : perso, ordre des boss, `N`, joueur (`base`, `gear`, `apts`, `hp`) et stats de run. Trois phases :
+  - `intro` (écran d'acte) : au début de la run et après la récompense d'un boss ;
+  - `fight` : dans `prepareFight`, avec l'**adversaire figé** (`enemy`, l'objet sérialisé) pour qu'un rechargement ne permette pas d'en tirer un autre ;
+  - `reward` : dans `showReward`, avec les **cartes déjà tirées** (`choices`, ids) et le nom du vaincu.
+  `resumeRun()` reconstruit le joueur (`makePlayer` → `base` sauvée → `recalc`) puis rouvre la bonne phase (`showReward(saved)`, `prepareFight(saved)` ou `showIntro`). Quitter en plein combat fait reprendre ce combat depuis le début. La sauvegarde est supprimée dans `endRun` (mort ou victoire finale). Un champ ajouté à `baseFighter` est repris tel quel ; changer la forme de la sauvegarde → augmenter `SAVE_V` (les anciennes sont alors ignorées).
+- **Écran titre** (`renderTitle`) : encart « Reprendre la run » s'il existe une sauvegarde ; « Nouvelle run » (`newRun`) demande alors confirmation dans la fiche avant d'écraser.
+- **Stats de run** (`RS`, `newRunStats`) : `trackEvent(ev)` est appelé pour chaque événement affiché par `loop` (dégâts infligés côté `b`, reçus côté `a`, plus gros coup, critiques du joueur, esquives du joueur) ; `wins` et `bosses` dans `endFight` ; `time` = temps de jeu, page visible seulement (`tickTime`, `visibilitychange`).
+- **Résumé de fin** (`runSummary(win)`) : rendu HTML dans `#endSummary` et texte brut pour le bouton « Copier le résumé » (`copyText` : `navigator.clipboard`, sinon `execCommand('copy')`).
+- **Records par perso** (`loadRecords`, `bumpRecords`) : `runs` (+1 au début d'une run), `best` (combat atteint, à chaque `prepareFight` et en fin de run), `biggest`, `emperor` (+1 à la victoire finale). Écran `s-records` (`renderRecords`) ; badge couronne (`crownBadge`, icône `crown`) sur la sélection des persos qui ont battu l'Empereur.
+- **Tutoriel** (`TUTO`, `openTuto`) : 4 bulles (combat auto, récompenses, inventaire, boss) au premier lancement, puis via le bouton « Tutoriel » de l'écran titre (rangée d'options avec « Records » et le son).
+- Pour tester dans le navigateur : `localStorage.clear()` puis recharger rejoue le premier lancement.
+
 ## Ajouter de nouveaux éléments
 
 ### Un objet d'équipement
