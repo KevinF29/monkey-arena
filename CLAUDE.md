@@ -112,8 +112,9 @@ Tous les sprites humains font **204×490 px**, personnage de face, pieds en bas.
 - `skin` / `skinDark` : teinte de peau moyenne mesurée dans le rectangle `rig.skin` (sert au poing).
 
 Deux découpes :
-- **`RIG_PERSO`** (les 8 potes, grosse tête) : tête 0–146, bras ~186–340, jambes 347–490. Pivots `PIV`.
-- **`RIG_ENEMY`** (adversaires, proportions réalistes) : tête 0–124, bras 124–312, jambes 300–490.
+- **`RIG_PERSO`** (les 8 potes, proportions réalistes comme les adversaires) : tête 0–122, bras 122–315, jambes 338–490 (sous l'ourlet de la tunique, pour qu'elle ne se coupe pas quand les jambes bougent).
+- **`RIG_ENEMY`** (adversaires) : tête 0–124, bras 124–312, jambes 300–490 (pagne court).
+- `PART_POLY` / `PIV` sont l'ancienne découpe « grosse tête », gardée seulement comme valeur par défaut de `buildParts`.
 
 **Repère relatif** : tout ce qui n'est pas `poly` (pivots `piv`, `hand`, `WEAR`, `WEAPON_IMG`, `GEAR_BOX`) est en unités du sprite avec **l'origine entre les pieds** : `x_rel = x_img − 100`, `y_rel = y_img − 488` (`SPR_AX`, `SPR_AY`), y négatif vers le haut. Mise à l'échelle à l'écran : `k = scale × 1,12 × 100 / 478`.
 
@@ -157,7 +158,7 @@ Pour l'interface, `augArt(g)` montre l'image d'objet (`AUG_IMG[id]` ou `WEAPON_O
 - Pièce portée : régler `WEAR` en repère relatif (origine entre les pieds, y négatif vers le haut) et vérifier sur un perso **et** sur l'écran de sélection, en pose de repos et en attaque.
 
 ### Un gladiateur jouable
-1. Sprite `assets/persos/<id>.png` **exactement 204×490**, mêmes proportions que les 8 autres pour que `RIG_PERSO` le découpe correctement (tête dans 0–146, bras libres du torse, jambes sous 347, tunique au pixel `probe` (100, 300), peau visible dans la zone `skin`).
+1. Sprite `assets/persos/<id>.png` **exactement 204×490**, mêmes proportions que les 8 autres pour que `RIG_PERSO` le découpe correctement (tête au-dessus de 122, bras libres du torse jusqu'à 315, tunique terminée avant 338, tunique au pixel `probe` (100, 190), peau visible dans la zone `skin`). Les 8 sprites actuels ont été générés avec le même prompt que les adversaires (pose de 3/4 vers la droite, mains vides, sans casque ni armure), puis détourés et ramenés à 478 px de haut, pieds à y = 488.
 2. Entrée dans `CHARS` (`id` = nom du fichier, stats, `desc` qui décrit fidèlement le passif, `look.sprite = id`, arme de départ).
 3. Entrée dans `SPECIALS` et `case` dans `doSpecial` ; tout nouveau buff temporisé doit être ajouté à `resetRuntime`, au décompte dans `step` et à `drawBuffAura`.
 4. Il faut toujours au moins `NB_ACTS` (7) autres persos pour remplir les boss.
