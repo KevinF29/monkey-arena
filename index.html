@@ -170,6 +170,65 @@ h2{font-size:22px}
 .sec{font-family:Cinzel,Georgia,serif;font-size:15px;color:var(--gold);margin-top:4px}
 .endtitle{font-size:34px}
 .note{font-size:12px;color:var(--mute);margin-top:14px;text-align:center;line-height:1.5}
+
+/* inventaire */
+.inv{margin-top:12px;padding:10px;background:linear-gradient(#30251b,#251c15);border:2px solid var(--ink);border-radius:6px;box-shadow:inset 0 0 0 2px #4e3c2a}
+.invBody{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.invCol{display:flex;flex-direction:column;gap:6px}
+.invFig{text-align:center;min-width:0}
+.invFig canvas{width:100%;max-width:150px;height:auto;display:block;margin:0 auto}
+.slotw{display:flex;flex-direction:column;align-items:center;gap:1px}
+.sn{font-size:9.5px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
+.slot{position:relative;width:52px;height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  border:2px solid var(--ink);border-radius:6px;background:radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--rc,#5a4530) 30%, #2a2018), #1a130e 75%);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--rc,#5a4530) 70%, #000)}
+.slot img.itm{max-width:40px;max-height:40px;object-fit:contain;filter:drop-shadow(0 2px 0 rgba(0,0,0,.6))}
+.slot .pxi{width:30px;height:30px}
+.slot.empty{background:#1e1610;box-shadow:inset 0 0 0 2px #3a2c20;border-style:dashed}
+.slot .lv{position:absolute;right:-5px;bottom:-5px;min-width:18px;height:18px;padding:0 3px;border-radius:9px;border:2px solid var(--ink);
+  background:linear-gradient(#5a4634,#3a2c20);color:var(--txt);font:800 10.5px/14px Inter,sans-serif}
+.slot.lv2 .lv{background:linear-gradient(#cfd6dc,#8a949c);color:#1a1208}
+.slot.lv3 .lv{background:linear-gradient(#ffe08a,#d89a2c);color:#2a1505}
+.slot.lv3{box-shadow:inset 0 0 0 2px var(--rc), 0 0 10px color-mix(in srgb, var(--rc) 60%, transparent)}
+.aptRow{margin-top:10px;padding-top:8px;border-top:1px dashed rgba(232,176,74,.25)}
+.aptRow .lbl{display:block;margin-bottom:5px;font-size:11px}
+.apts{display:flex;gap:8px;flex-wrap:wrap}
+.slot.apt{width:44px;height:44px}
+.slot.apt .pxi{width:26px;height:26px}
+.sets{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:4px}
+.set{cursor:pointer;font:700 10.5px Inter,sans-serif;color:var(--mute);background:#1e1610;border:1px solid #4e3c2a;border-radius:4px;padding:2px 6px}
+.set.on{color:#2a1505;background:linear-gradient(#ffe08a,#d89a2c);border-color:var(--ink)}
+/* fiche d'objet */
+.sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding:16px;background:rgba(8,5,3,.6)}
+.sheet[hidden]{display:none}
+.sheetBox{width:100%;max-width:420px;max-height:85vh;overflow:auto;padding:14px;background:linear-gradient(#f0e2c0,#e2cfa4);color:var(--parchInk);
+  border:2px solid var(--ink);border-radius:8px;box-shadow:inset 0 0 0 2px #c9ad78, 0 8px 24px rgba(0,0,0,.6);font-size:14px;line-height:1.45;animation:fadeIn .2s ease-out}
+@media (min-width:600px){.sheet{align-items:center}}
+.sheetBox h3{font-size:18px;color:#8a2a14}
+.sheetBox p{margin-top:8px}
+.sheetBox .btn{margin-top:12px}
+.shHead{display:flex;gap:12px;align-items:center}
+.shHead .art{width:64px;height:64px}
+.shHead .tag.typ{color:#6a5034}
+.shLv{font-size:12px;font-weight:700;color:#6a5034}
+.sheetBox .mute{color:#7a6448;font-size:13px}
+.b3{font-size:13px;color:#7a6448;font-style:italic}
+.b3.on{color:#8a5a08;font-style:normal;font-weight:700}
+.card .b3{color:var(--mute)} .card .b3.on{color:var(--gold2)}
+.shSet{margin-top:10px;padding:7px 9px;border-radius:5px;background:rgba(90,60,20,.12);border:1px solid rgba(90,60,20,.3);font-size:13px}
+.shSet.on{background:rgba(232,176,74,.35)}
+.shItems{margin-top:8px;display:grid;gap:4px}
+.shItems>div{display:flex;align-items:center;gap:6px;opacity:.55}
+.shItems>div.on{opacity:1;font-weight:700}
+.shItems img.itm{width:26px;height:26px;object-fit:contain}
+/* cartes de récompense */
+.offer{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.04em;padding:1px 7px;border-radius:3px;border:1px solid var(--ink)}
+.offer.new{background:#2f6a32;color:#d8ffd0}
+.offer.rep{background:#8a4a1a;color:#ffe2c8}
+.offer.up{background:linear-gradient(#ffe08a,#d89a2c);color:#2a1505}
+.lvTag{font-size:12px;color:var(--gold2);font-family:Inter,sans-serif;font-weight:700}
+.setHint{display:inline-block;margin:5px 5px 0 0;font-size:10.5px;font-weight:700;color:var(--mute);border:1px solid #5a4530;border-radius:3px;padding:1px 5px}
+.setHint.on{color:#2a1505;background:var(--gold);border-color:var(--ink)}
 </style>
 </head>
 <body>
@@ -181,7 +240,7 @@ h2{font-size:22px}
     <div class="grid8" id="charGrid"></div>
     <div class="desc" id="charDesc"></div>
     <button class="btn wide" id="btnStart">Commencer la run</button>
-    <div class="note">7 actes · 5 combats + 1 boss par acte · combats automatiques.<br>Après chaque victoire : 1 augment parmi 3. Ton équipement apparaît sur ton gladiateur.</div>
+    <div class="note">7 actes · 5 combats + 1 boss par acte · combats automatiques.<br>Après chaque victoire : 1 récompense parmi 3. 7 emplacements d'équipement, 5 aptitudes, jusqu'au niveau 3.</div>
   </section>
 
   <section id="s-intro" class="screen intro">
@@ -211,7 +270,7 @@ h2{font-size:22px}
     <canvas id="cv" width="1200" height="660"></canvas>
     <div class="log" id="log"></div>
     <div id="preFight" class="controls"><button class="btn wide" id="btnFight">Combattre !</button></div>
-    <div class="chips" id="chips"></div>
+    <div class="inv" id="inv"></div>
   </section>
 
   <section id="s-reward" class="screen">
@@ -222,10 +281,9 @@ h2{font-size:22px}
 
   <section id="s-stats" class="screen">
     <h2 class="title2">Ton gladiateur</h2>
-    <div class="center"><div class="stage sm"><canvas id="statsCv" width="180" height="216"></canvas></div></div>
     <div class="statsgrid" id="statsGrid"></div>
-    <h3 class="sec">Augments</h3>
-    <div class="chips" id="chips2"></div>
+    <h3 class="sec">Équipement</h3>
+    <div class="inv" id="inv2"></div>
     <div style="margin-top:16px"><button class="btn wide" id="btnBack">Retour</button></div>
   </section>
 
@@ -236,38 +294,43 @@ h2{font-size:22px}
     <div class="statsgrid" id="endStats"></div>
     <button class="btn wide" id="btnRestart">Nouvelle run</button>
   </section>
+
+  <div id="sheet" class="sheet" hidden><div class="sheetBox" id="sheetBox"></div></div>
 </div>
 
 <script>
 //LOGIC-START
 const RAR = {C:{n:'Commun',c:'#9aa4ad'}, R:{n:'Rare',c:'#4aa3ff'}, L:{n:'Légendaire',c:'#ffb02e'}};
-const TYPES = {arme:{n:'Arme',ic:'🗡️',c:'#7a2f22'}, armure:{n:'Armure',ic:'🛡️',c:'#2d4a6b'}, aptitude:{n:'Aptitude',ic:'✨',c:'#4b3470'}};
+// emplacements d'équipement (un objet par emplacement) ; les aptitudes ont leur propre rangée
+const SLOTS = [{k:'tete',n:'Tête'},{k:'corps',n:'Corps'},{k:'bras',n:'Bras'},{k:'jambes',n:'Jambes'},{k:'arme',n:'Arme'},{k:'main',n:'Main gauche'},{k:'acc',n:'Accessoire'}];
+const SLOT_N = Object.fromEntries(SLOTS.map(s=>[s.k,s.n]));
+const MAX_LVL = 3, MAX_APTS = 5;
 
 // Les 8 gladiateurs (physique provisoire : à ajuster selon les vrais potes)
 const CHARS = [
-  {id:'darkkus', name:"DarkKus", title:"Le Berserker", desc:"Soif de combat : jusqu'à +60 % de dégâts selon les PV qui lui manquent. 8 % de vol de vie.",
-   stats:{maxHp:125, atk:13, def:2, spd:1.1, berserk:.6, lifesteal:.08},
+  {id:'darkkus', name:"DarkKus", title:"Le Berserker", desc:"Soif de combat : jusqu'à +60 % de dégâts selon les PV qui lui manquent. 6 % de vol de vie.",
+   stats:{maxHp:125, atk:12, def:2, spd:1.1, berserk:.6, lifesteal:.06},
    look:{sprite:'darkkus', skin:'#c99a6e', hair:'#151515', hairStyle:'long', beard:'courte', tunic:'#2a2a38', build:'fin', weapon:'dague'}},
   {id:'fredhus', name:"Fredhus", title:"Le Roc rancunier", desc:"Rancune : chaque tranche de 10 % de PV perdus pendant le combat lui donne +12 % de dégâts, même s'il se soigne.",
-   stats:{maxHp:150, atk:9, def:3, spd:.8, grudge:1},
+   stats:{maxHp:150, atk:10, def:3, spd:.8, grudge:1},
    look:{sprite:'fredhus', skin:'#e8c09a', hair:'#8a5a2a', hairStyle:'court', beard:'longue', tunic:'#9a3a2a', build:'costaud', weapon:'hache'}},
   {id:'sweevus', name:"Sweevus", title:"Le Cogneur", desc:"Tout ou rien : inflige +30 % de dégâts, mais en subit +10 %.",
-   stats:{maxHp:115, atk:15, def:0, spd:.9, dmgMul:.30, vuln:.10},
+   stats:{maxHp:125, atk:16, def:0, spd:.9, dmgMul:.30, vuln:.10},
    look:{sprite:'sweevus', skin:'#f0caa0', hair:'#d8b040', hairStyle:'crete', beard:'none', tunic:'#2a7a9a', build:'fin', weapon:'gladius'}},
-  {id:'chelmacus', name:"Chelmacus", title:"La Force tranquille", desc:"Impassible : immunisé aux coups critiques, régénère 2,5 PV/s et gagne +2 défense à chaque boss vaincu.",
-   stats:{maxHp:135, atk:12, def:2, spd:1, critImmune:1, regen:2.5, calm:1},
+  {id:'chelmacus', name:"Chelmacus", title:"La Force tranquille", desc:"Impassible : immunisé aux coups critiques, régénère 1,5 PV/s et gagne +1 défense à chaque boss vaincu.",
+   stats:{maxHp:135, atk:11, def:2, spd:1, critImmune:1, regen:1.5, calm:1},
    look:{sprite:'chelmacus', skin:'#d8a878', hair:'#5a2a1a', hairStyle:'chauve', beard:'longue', tunic:'#6a9a3a', build:'costaud', weapon:'glaive'}},
   {id:'dridricus', name:"Dridricus", title:"Le Fêtard", desc:"Ivresse : ses coups font entre 50 % et 170 % de dégâts, et il titube (10 % d'esquive).",
    stats:{maxHp:115, atk:10, def:1, spd:1, drunk:1, dodge:.10},
    look:{sprite:'dridricus', skin:'#b07a50', hair:'#2a1a10', hairStyle:'queue', beard:'moustache', tunic:'#3a5a9a', build:'normal', weapon:'trident', chope:1}},
-  {id:'kubenicus', name:"Kubenicus", title:"Le Mur", desc:"Carapace : subit 12 % de dégâts en moins et renvoie 3 dégâts à chaque coup reçu.",
-   stats:{maxHp:150, atk:8, def:4, spd:.8, dr:.12, thorns:3},
+  {id:'kubenicus', name:"Kubenicus", title:"Le Mur", desc:"Carapace : subit 12 % de dégâts en moins et renvoie 4 dégâts à chaque coup reçu.",
+   stats:{maxHp:150, atk:10, def:4, spd:.8, dr:.12, thorns:4},
    look:{sprite:'kubenicus', skin:'#e0b080', hair:'#3a2a1a', hairStyle:'court', beard:'none', glasses:1, tunic:'#8a6a2a', build:'normal', weapon:'gladius'}},
-  {id:'maximusrr', name:"MaximusRr", title:"Le Champion", desc:"Polyvalent : choisit parmi 4 augments au lieu de 3. Gloire : +2 attaque et +12 PV max à chaque boss vaincu.",
+  {id:'maximusrr', name:"MaximusRr", title:"Le Champion", desc:"Polyvalent : choisit parmi 4 récompenses au lieu de 3. Gloire : +1 attaque et +10 PV max à chaque boss vaincu.",
    stats:{maxHp:120, atk:11, def:2, spd:1, glory:1, choices:4},
    look:{sprite:'maximusrr', skin:'#e8b890', hair:'#6a4a2a', hairStyle:'court', beard:'courte', tunic:'#a02a2a', build:'normal', weapon:'gladius'}},
-  {id:'beelgraalus', name:"Beel'Graalus", title:"L'Insaisissable", desc:"Pieds légers : 15 % d'esquive, attaque très vite, et chaque esquive charge sa jauge.",
-   stats:{maxHp:90, atk:9, def:1, spd:1.3, dodge:.15, dodgeGauge:1},
+  {id:'beelgraalus', name:"Beel'Graalus", title:"L'Insaisissable", desc:"Pieds légers : 18 % d'esquive, attaque très vite, et chaque esquive charge sa jauge.",
+   stats:{maxHp:105, atk:11, def:1, spd:1.3, dodge:.18, dodgeGauge:1},
    look:{sprite:'beelgraalus', skin:'#b8c8a0', hair:'#4a1a5a', hairStyle:'long', beard:'none', tunic:'#4a2a5a', build:'fin', weapon:'dague'}}
 ];
 
@@ -282,46 +345,98 @@ const SPECIALS = {
   maximusrr:{n:'Pouce levé', d:"La foule l'acclame : +25 % de dégâts et +15 % de critique pendant 6 s."},
   beelgraalus:{n:'Pas de danse', d:"Esquive à coup sûr les 2 prochains coups et riposte à chacun."}
 };
-const AUGS = [
-  {id:'glaive', t:'arme', r:'C', n:'Glaive rouillé', d:'+4 attaque', a:p=>{p.atk+=4}},
-  {id:'trident', t:'arme', r:'C', n:'Trident', d:'+3 attaque, +5 % critique', a:p=>{p.atk+=3;p.crit+=.05}},
-  {id:'fouet', t:'arme', r:'C', n:'Fouet', d:'+15 % vitesse d\'attaque', a:p=>{p.spd*=1.15}},
-  {id:'gladius', t:'arme', r:'R', n:'Gladius aiguisé', d:'+8 attaque', a:p=>{p.atk+=8}},
-  {id:'hache', t:'arme', r:'R', n:'Hache de guerre', d:'+12 attaque, −10 % vitesse', a:p=>{p.atk+=12;p.spd*=.9}},
-  {id:'dague', t:'arme', r:'R', n:'Dague empoisonnée', d:'Chaque coup empoisonne (+2 poison/s, cumulable)', a:p=>{p.poison+=2}},
-  {id:'filet', t:'arme', r:'R', n:'Filet de rétiaire', d:'L\'ennemi attaque 15 % moins vite', a:p=>{p.slow+=.15}},
-  {id:'caestus', t:'arme', r:'C', n:'Cestes', d:'+2 attaque, +10 % vitesse d\'attaque', a:p=>{p.atk+=2;p.spd*=1.1}},
-  {id:'sica', t:'arme', r:'R', n:'Sica thrace', d:'+3 attaque. Chaque coup fait saigner (30 % des dégâts en 3 s)', a:p=>{p.atk+=3;p.bleed+=.3}},
-  {id:'scissor', t:'arme', r:'R', n:'Scissor', d:'+5 attaque, ignore 50 % de la défense adverse', a:p=>{p.atk+=5;p.pen=Math.min(1,p.pen+.5)}},
-  {id:'pilum', t:'arme', r:'R', n:'Pilum', d:'Ouvre chaque combat par un lancer de javelot (×4 dégâts)', a:p=>{p.pilum+=1}},
-  {id:'hydre', t:'arme', r:'L', n:'Lance de l\'Hydre', d:'35 % de chance de frapper deux fois', a:p=>{p.doubleHit+=.35}, u:1},
-  {id:'champion', t:'arme', r:'L', n:'Épée du Champion', d:'+16 attaque, +10 % critique', a:p=>{p.atk+=16;p.crit+=.10}, u:1},
-  {id:'boisb', t:'armure', r:'C', n:'Bouclier en bois', d:'+2 défense', a:p=>{p.def+=2}},
-  {id:'jamb', t:'armure', r:'C', n:'Jambières', d:'+25 PV max', a:p=>{p.maxHp+=25;p.hp+=25}},
-  {id:'casque', t:'armure', r:'C', n:'Casque de mirmillon', d:'+1 défense, +15 PV max', a:p=>{p.def+=1;p.maxHp+=15;p.hp+=15}},
-  {id:'plastron', t:'armure', r:'R', n:'Plastron de bronze', d:'+4 défense', a:p=>{p.def+=4}},
-  {id:'pointes', t:'armure', r:'R', n:'Bouclier à pointes', d:'Renvoie 5 dégâts à chaque coup reçu', a:p=>{p.thorns+=5}},
-  {id:'manica', t:'armure', r:'R', n:'Manica', d:'+8 % esquive, +10 PV max', a:p=>{p.dodge+=.08;p.maxHp+=10;p.hp+=10}},
-  {id:'cuir', t:'armure', r:'C', n:'Tunique de cuir', d:'+1 défense, +12 PV max', a:p=>{p.def+=1;p.maxHp+=12;p.hp+=12}},
-  {id:'scutum', t:'armure', r:'R', n:'Scutum', d:'+1 défense. 25 % de chance de bloquer la moitié d\'un coup', a:p=>{p.def+=1;p.block=Math.min(.6,p.block+.25)}},
-  {id:'galerus', t:'armure', r:'R', n:'Galerus', d:'+4 % esquive. Après une esquive : riposte immédiate (50 %)', a:p=>{p.dodge+=.04;p.riposte=Math.min(1,p.riposte+.5)}},
-  {id:'lion', t:'armure', r:'L', n:'Peau du lion de Némée', d:'+70 PV max, +2 PV/s', a:p=>{p.maxHp+=70;p.hp+=70;p.regen+=2}, u:1},
-  {id:'egide', t:'armure', r:'L', n:'Égide', d:'+7 défense, +6 % esquive', a:p=>{p.def+=7;p.dodge+=.06}, u:1},
-  {id:'souffle', t:'aptitude', r:'C', n:'Second souffle', d:'+1 PV/s pendant le combat', a:p=>{p.regen+=1}},
-  {id:'rage', t:'aptitude', r:'C', n:'Rage', d:'+8 % critique', a:p=>{p.crit+=.08}},
-  {id:'agile', t:'aptitude', r:'C', n:'Jeu de jambes', d:'+5 % esquive', a:p=>{p.dodge+=.05}},
-  {id:'sang', t:'aptitude', r:'R', n:'Soif de sang', d:'+8 % vol de vie', a:p=>{p.lifesteal+=.08}},
-  {id:'frenesie', t:'aptitude', r:'R', n:'Frénésie', d:'+25 % vitesse d\'attaque', a:p=>{p.spd*=1.25}},
-  {id:'brutal', t:'aptitude', r:'R', n:'Coups brutaux', d:'Critiques +60 % de dégâts', a:p=>{p.critMult+=.6}},
-  {id:'foule', t:'aptitude', r:'R', n:'Ferveur de la foule', d:'+20 % de soin après chaque victoire', a:p=>{p.postHeal+=.2}},
-  {id:'mithri', t:'aptitude', r:'C', n:'Mithridatisation', d:'Immunisé au poison, +10 PV max', a:p=>{p.antidote=1;p.maxHp+=10;p.hp+=10}},
-  {id:'adren', t:'aptitude', r:'R', n:'Adrénaline', d:'Sous 40 % PV : +50 % vitesse d\'attaque', a:p=>{p.adren+=.5}},
-  {id:'mars', t:'aptitude', r:'L', n:'Furie de Mars', d:'Chaque coup porté ajoute +1 attaque jusqu\'à la fin du combat (max +20)', a:p=>{p.mars+=1}, u:1},
-  {id:'fortuna', t:'aptitude', r:'L', n:'Faveur de Fortuna', d:'+12 % critique, +10 % esquive', a:p=>{p.crit+=.12;p.dodge+=.10}, u:1},
-  {id:'rempart', t:'aptitude', r:'L', n:'Dernier rempart', d:'1 fois par combat : survit à un coup fatal et récupère 30 % PV', a:p=>{p.undying=1}, u:1},
-  {id:'berserk', t:'aptitude', r:'L', n:'Berserker', d:'Jusqu\'à +60 % de dégâts selon les PV manquants', a:p=>{p.berserk+=.6}, u:1},
-  {id:'exec', t:'aptitude', r:'L', n:'Exécution', d:'Dégâts ×2 contre un ennemi sous 25 % PV', a:p=>{p.execute=1}, u:1}
+// Équipement : a(p, L) applique l'objet au niveau L (1 à 3) ; b = bonus débloqué au niveau 3
+// f = image dans assets/items, ic (+ ico) = icône pixel de secours
+const pc = v => Math.round(v*100)+' %';
+const GEAR = [
+  // --- Arme : chacune a son style de combat ---
+  {id:'gladius', slot:'arme', r:'R', n:'Gladius', f:'gladius', d:L=>`L'arme équilibrée : +${4*L+2} attaque, +${pc(.04*L)} critique`, b:'Le premier coup de chaque combat est critique',
+   a:(p,L)=>{p.atk+=4*L+2; p.crit+=.04*L; if(L>=3) p.firstCrit=1;}},
+  {id:'glaive', slot:'arme', r:'C', n:'Glaive rouillé', f:'glaive', d:L=>`Ouvre la garde : +${2+2*L} attaque, +${pc(.15*L)} de dégâts contre un adversaire au-dessus de 70 % PV`, b:'Frappe le premier coup du combat immédiatement',
+   a:(p,L)=>{p.atk+=2+2*L; p.opener+=.15*L; if(L>=3) p.quick=1;}},
+  {id:'trident', slot:'arme', r:'C', n:'Trident', f:'trident', d:L=>`Tient à distance : +${1+2*L} attaque, +${pc(.03*L)} esquive, +3 % critique`, b:'Riposte 35 % du temps après une esquive',
+   a:(p,L)=>{p.atk+=1+2*L; p.dodge+=.03*L; p.crit+=.03; if(L>=3) p.riposte+=.35;}},
+  {id:'hache', slot:'arme', r:'R', n:'Hache de guerre', f:'hache', d:L=>`Coups lourds : +${6+4*L} attaque, −10 % vitesse d'attaque`, b:'Fend l\'armure : ignore 50 % de la défense adverse',
+   a:(p,L)=>{p.atk+=6+4*L; p.spd*=.9; if(L>=3) p.pen+=.5;}},
+  {id:'dague', slot:'arme', r:'R', n:'Dague empoisonnée', f:'dague', d:L=>`Chaque coup empoisonne (+${2*L} poison/s, cumulable), +${L} attaque`, b:'+15 % vitesse d\'attaque',
+   a:(p,L)=>{p.poison+=2*L; p.atk+=L; if(L>=3) p.spd*=1.15;}},
+  {id:'fouet', slot:'arme', r:'C', n:'Fouet', f:'fouet', d:L=>`Harcèle : +${pc(.08*L)} vitesse d'attaque, l'adversaire attaque ${pc(.06*L)} moins vite, +${L} attaque`, b:'Ralentit encore l\'adversaire de 10 %',
+   a:(p,L)=>{p.spd*=1+.08*L; p.slow+=.06*L; p.atk+=L; if(L>=3) p.slow+=.10;}},
+  {id:'caestus', slot:'arme', r:'C', n:'Cestes', f:'cestes', d:L=>`Enchaînements : +${1+L} attaque, +${pc(.06*L)} vitesse, ${pc(.05*L)} de chance de frapper deux fois`, b:'+10 % de double coup',
+   a:(p,L)=>{p.atk+=1+L; p.spd*=1+.06*L; p.doubleHit+=.05*L; if(L>=3) p.doubleHit+=.10;}},
+  {id:'sica', slot:'arme', r:'R', n:'Sica thrace', f:'sica', d:L=>`+${1+2*L} attaque. Chaque coup fait saigner (${pc(.2*L)} des dégâts en 3 s)`, b:'+10 % critique',
+   a:(p,L)=>{p.atk+=1+2*L; p.bleed+=.2*L; if(L>=3) p.crit+=.10;}},
+  {id:'scissor', slot:'arme', r:'R', n:'Scissor', f:'scissor', d:L=>`Perce-armure : +${3+2*L} attaque, ignore ${pc(.25*L)} de la défense adverse`, b:'+8 % vol de vie',
+   a:(p,L)=>{p.atk+=3+2*L; p.pen+=.25*L; if(L>=3) p.lifesteal+=.08;}},
+  {id:'pilum', slot:'arme', r:'R', n:'Pilum', f:'pilum', d:L=>`Ouvre chaque combat par un lancer de javelot (×${2+2*L} dégâts), +${2*L} attaque`, b:'Le lancer étourdit l\'adversaire 1 s',
+   a:(p,L)=>{p.pilum+=L; p.atk+=2*L; if(L>=3) p.pilumStun=1;}},
+  {id:'hydre', slot:'arme', r:'L', n:'Lance de l\'Hydre', f:'lance', d:L=>`${pc(.2+.1*L)} de chance de frapper deux fois, +${2*L} attaque`, b:'+10 % vol de vie',
+   a:(p,L)=>{p.doubleHit+=.2+.1*L; p.atk+=2*L; if(L>=3) p.lifesteal+=.10;}},
+  {id:'champion', slot:'arme', r:'L', n:'Épée du Champion', f:'champion', d:L=>`Puissance pure : +${10+4*L} attaque, +${pc(.06+.02*L)} critique`, b:'Critiques +40 % de dégâts',
+   a:(p,L)=>{p.atk+=10+4*L; p.crit+=.06+.02*L; if(L>=3) p.critMult+=.4;}},
+  // --- Main gauche ---
+  {id:'boisb', slot:'main', r:'C', n:'Bouclier en bois', f:'bouclier-bois', d:L=>`+${1+L} défense`, b:'+20 PV max',
+   a:(p,L)=>{p.def+=1+L; if(L>=3) p.maxHp+=20;}},
+  {id:'pointes', slot:'main', r:'R', n:'Bouclier à pointes', f:'bouclier-pointes', d:L=>`+1 défense, renvoie ${2+3*L} dégâts à chaque coup reçu`, b:'+3 défense',
+   a:(p,L)=>{p.def+=1; p.thorns+=2+3*L; if(L>=3) p.def+=3;}},
+  {id:'scutum', slot:'main', r:'R', n:'Scutum', f:'scutum', d:L=>`+${L} défense, ${pc(.15+.05*L)} de chance de bloquer la moitié d'un coup`, b:'Un blocage arrête 75 % du coup',
+   a:(p,L)=>{p.def+=L; p.block+=.15+.05*L; if(L>=3) p.blockPow=.75;}},
+  {id:'egide', slot:'main', r:'L', n:'Égide', f:'egide', d:L=>`+${4+L} défense, +${pc(.04+.01*L)} esquive`, b:'Immunisé aux coups critiques',
+   a:(p,L)=>{p.def+=4+L; p.dodge+=.04+.01*L; if(L>=3) p.critImmune=1;}},
+  {id:'filet', slot:'main', r:'R', n:'Filet de rétiaire', f:'filet', d:L=>`Chaque coup a ${pc(.04+.03*L)} de chance d'immobiliser l'adversaire 0,8 s, +3 % esquive`, b:'L\'adversaire attaque 15 % moins vite',
+   a:(p,L)=>{p.entangle+=.04+.03*L; p.dodge+=.03; if(L>=3) p.slow+=.15;}},
+  // --- Tête ---
+  {id:'casque', slot:'tete', r:'C', n:'Casque de mirmillon', f:'casque', d:L=>`+${L} défense, +${10*L} PV max`, b:'Immunisé à l\'étourdissement',
+   a:(p,L)=>{p.def+=L; p.maxHp+=10*L; if(L>=3) p.stunImmune=1;}},
+  {id:'lion', slot:'tete', r:'L', n:'Peau du lion de Némée', f:'peau-lion', d:L=>`+${30+20*L} PV max, +${L} PV/s`, b:'Fureur du lion : +15 % de dégâts',
+   a:(p,L)=>{p.maxHp+=30+20*L; p.regen+=L; if(L>=3) p.dmgMul+=.15;}},
+  // --- Corps ---
+  {id:'cuir', slot:'corps', r:'C', n:'Tunique de cuir', f:'tunique-cuir', d:L=>`+${L} défense, +${8+4*L} PV max`, b:'+5 % esquive',
+   a:(p,L)=>{p.def+=L; p.maxHp+=8+4*L; if(L>=3) p.dodge+=.05;}},
+  {id:'plastron', slot:'corps', r:'R', n:'Plastron de bronze', f:'plastron', d:L=>`+${1+2*L} défense`, b:'Subit 8 % de dégâts en moins',
+   a:(p,L)=>{p.def+=1+2*L; if(L>=3) p.dr+=.08;}},
+  // --- Bras ---
+  {id:'manica', slot:'bras', r:'R', n:'Manica', f:'manica', d:L=>`+${pc(.03+.02*L)} esquive, +${5*L} PV max`, b:'Riposte 30 % du temps après une esquive',
+   a:(p,L)=>{p.dodge+=.03+.02*L; p.maxHp+=5*L; if(L>=3) p.riposte+=.3;}},
+  {id:'galerus', slot:'bras', r:'R', n:'Galerus', f:'galerus', d:L=>`+${pc(.02*L)} esquive, riposte ${pc(.25*L)} du temps après une esquive`, b:'+10 % critique',
+   a:(p,L)=>{p.dodge+=.02*L; p.riposte+=.25*L; if(L>=3) p.crit+=.10;}},
+  // --- Jambes ---
+  {id:'jamb', slot:'jambes', r:'C', n:'Jambières', f:'jambieres', d:L=>`+${15+10*L} PV max`, b:'+2 défense',
+   a:(p,L)=>{p.maxHp+=15+10*L; if(L>=3) p.def+=2;}},
+  {id:'caligae', slot:'jambes', r:'R', n:'Caligae cloutées', ic:'wing', ico:{W:'#c89a5a',B:'#6a4220'}, d:L=>`+${pc(.06*L)} vitesse d'attaque, +${pc(.02*L)} esquive`, b:'Frappe le premier coup du combat immédiatement',
+   a:(p,L)=>{p.spd*=1+.06*L; p.dodge+=.02*L; if(L>=3) p.quick=1;}},
+  // --- Accessoire ---
+  {id:'fiole', slot:'acc', r:'C', n:'Fiole de Mithridate', ic:'flask', d:L=>`Immunisé au poison, +${8*L} PV max`, b:'+1,5 PV/s',
+   a:(p,L)=>{p.antidote=1; p.maxHp+=8*L; if(L>=3) p.regen+=1.5;}},
+  {id:'phalerae', slot:'acc', r:'R', n:'Phalères', ic:'wheel', ico:{G:'#c8ccd4',W:'#ffffff'}, d:L=>`Médailles de vétéran : +${pc(.08*L)} de soin après chaque victoire, +${L} attaque`, b:'+5 % critique',
+   a:(p,L)=>{p.postHeal+=.08*L; p.atk+=L; if(L>=3) p.crit+=.05;}},
+  {id:'fortuna', slot:'acc', r:'L', n:'Amulette de Fortuna', ic:'wheel', d:L=>`+${pc(.05+.03*L)} critique, +${pc(.04+.02*L)} esquive`, b:'Critiques +30 % de dégâts',
+   a:(p,L)=>{p.crit+=.05+.03*L; p.dodge+=.04+.02*L; if(L>=3) p.critMult+=.3;}}
 ];
+// Aptitudes : 5 au plus, chacune de niveau 1 à 3
+const APTS = [
+  {id:'souffle', r:'C', n:'Second souffle', ic:'heart', d:L=>`+${L} PV/s pendant le combat`, a:(p,L)=>{p.regen+=L}},
+  {id:'rage', r:'C', n:'Rage', ic:'flame', d:L=>`+${pc(.06*L)} critique`, a:(p,L)=>{p.crit+=.06*L}},
+  {id:'agile', r:'C', n:'Jeu de jambes', ic:'wing', d:L=>`+${pc(.04*L)} esquive`, a:(p,L)=>{p.dodge+=.04*L}},
+  {id:'sang', r:'R', n:'Soif de sang', ic:'drop', d:L=>`+${pc(.05*L)} vol de vie`, a:(p,L)=>{p.lifesteal+=.05*L}},
+  {id:'frenesie', r:'R', n:'Frénésie', ic:'bolt', d:L=>`+${pc(.12*L)} vitesse d'attaque`, a:(p,L)=>{p.spd*=1+.12*L}},
+  {id:'brutal', r:'R', n:'Coups brutaux', ic:'burst', d:L=>`Critiques +${pc(.35*L)} de dégâts`, a:(p,L)=>{p.critMult+=.35*L}},
+  {id:'foule', r:'R', n:'Ferveur de la foule', ic:'laurel', d:L=>`+${pc(.12*L)} de soin après chaque victoire`, a:(p,L)=>{p.postHeal+=.12*L}},
+  {id:'adren', r:'R', n:'Adrénaline', ic:'bolt', ico:{Y:'#ff5a3a'}, d:L=>`Sous 40 % PV : +${pc(.3*L)} vitesse d'attaque`, a:(p,L)=>{p.adren+=.3*L}},
+  {id:'mars', r:'L', n:'Furie de Mars', ic:'helm', d:L=>`Chaque coup porté ajoute +${L} attaque jusqu'à la fin du combat (max +20)`, a:(p,L)=>{p.mars+=L}},
+  {id:'rempart', r:'L', n:'Dernier rempart', ic:'tower', d:L=>`1 fois par combat : survit à un coup fatal et remonte à ${pc(.2+.1*L)} PV`, a:(p,L)=>{p.undying=Math.max(p.undying,.2+.1*L)}},
+  {id:'berserk', r:'L', n:'Berserker', ic:'skull', d:L=>`Jusqu'à +${pc(.2+.2*L)} de dégâts selon les PV manquants`, a:(p,L)=>{p.berserk+=.2+.2*L}},
+  {id:'exec', r:'L', n:'Exécution', ic:'axe', d:L=>`Dégâts ×2 contre un ennemi sous ${pc(.2+.05*L)} PV`, a:(p,L)=>{p.execute=Math.max(p.execute,.2+.05*L)}}
+];
+// Panoplies : bonus quand les trois pièces sont équipées ensemble
+const SETS = [
+  {id:'mirmillon', n:'Panoplie du Mirmillon', items:['casque','scutum','gladius'], d:'+15 % de dégâts, +2 défense', a:p=>{p.dmgMul+=.15; p.def+=2}},
+  {id:'retiaire', n:'Panoplie du Rétiaire', items:['trident','filet','galerus'], d:'+8 % esquive, riposte à chaque esquive', a:p=>{p.dodge+=.08; p.riposte=1}},
+  {id:'thrace', n:'Panoplie du Thrace', items:['sica','manica','jamb'], d:'+30 % de saignement, +10 % vitesse d\'attaque', a:p=>{p.bleed+=.3; p.spd*=1.1}}
+];
+const AUGS = GEAR.concat(APTS);
+const ITEM = Object.fromEntries(AUGS.map(g=>[g.id,g]));
+
 
 const ACT_NAMES = ['Les Fosses de Capoue','Le Ludus de Ravenne','L\'Arène de Nîmes','L\'Amphithéâtre de Pompéi','Le Cirque de Carthage','L\'Arène de Vérone','Le Colisée de Rome'];
 const ROMAN = ['I','II','III','IV','V','VI','VII'];
@@ -352,23 +467,40 @@ const isBoss = n => (n-1)%PER_ACT === PER_ACT-1;
 function baseFighter(){
   return {maxHp:100,hp:100,atk:10,def:0,spd:1,crit:.05,critMult:1.6,dodge:0,lifesteal:0,thorns:0,regen:0,
     poison:0,slow:0,doubleHit:0,berserk:0,execute:0,undying:0,dr:0,postHeal:.3,firstCrit:0,glory:0,
-    pen:0,bleed:0,pilum:0,riposte:0,block:0,adren:0,antidote:0,mars:0,
-    dmgMul:0,vuln:0,critImmune:0,drunk:0,grudge:0,dodgeGauge:0,choices:3,augs:[]};
+    pen:0,bleed:0,pilum:0,riposte:0,block:0,blockPow:.5,adren:0,antidote:0,mars:0,
+    opener:0,quick:0,entangle:0,stunImmune:0,pilumStun:0,
+    dmgMul:0,vuln:0,critImmune:0,drunk:0,grudge:0,dodgeGauge:0,calm:0,choices:3,gear:{},apts:[]};
+}
+// stats recalculées à partir de la base (perso + gains permanents) + équipement + aptitudes + panoplies
+const STAT_KEYS = Object.keys(baseFighter()).filter(k=>!['hp','gear','apts'].includes(k));
+function snapBase(f){ f.base = {}; for(const k of STAT_KEYS) f.base[k] = f[k]; }
+function setCount(f, s){ return s.items.filter(id=>Object.values(f.gear).some(g=>g.id===id)).length; }
+function activeSets(f){ return SETS.filter(s=>setCount(f,s)===s.items.length); }
+function recalc(f){
+  const lost = f.maxHp - f.hp;
+  Object.assign(f, f.base);
+  for(const k in f.gear) ITEM[f.gear[k].id].a(f, f.gear[k].lvl);
+  for(const g of f.apts) ITEM[g.id].a(f, g.lvl);
+  for(const s of activeSets(f)) s.a(f);
+  f.maxHp = Math.round(f.maxHp);
+  f.pen = Math.min(1, f.pen); f.block = Math.min(.6, f.block); f.riposte = Math.min(1, f.riposte);
+  f.hp = Math.max(1, Math.min(f.maxHp, f.maxHp - lost));
 }
 function shuffle(a, rnd=Math.random){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 function makePlayer(ch){
   const p = Object.assign(baseFighter(), ch.stats);
   p.hp = p.maxHp; p.name = ch.name; p.cid = ch.id; p.baseLook = ch.look; p.side='a'; p.spId = ch.id;
+  snapBase(p);
   return p;
 }
-// réglages d'équilibrage (testés au simulateur)
-const TUNE = {eHp:60, eAtk:7.5, eAug:0.55, eliteK:1.15, bHp0:0.95, bHpA:0.09, bAtk0:0.82, bAtkA:0.06, late:0.18, early:0.25};
-function scaleOf(n){ const k=n-1; return (1 + 0.095*k + 0.0032*k*k) * (1 + TUNE.late*(k/(TOTAL-1))**2) * (1 - TUNE.early*Math.max(0, 1-k/12)); }
+// réglages d'équilibrage (testés au simulateur : node tools/simulate.js)
+const TUNE = {eHp:95, eAtk:11.5, eAug:0.55, eliteK:1.15, bHp0:0.7, bHpA:0.09, bAtk0:0.62, bAtkA:0.06, late:0.18, early:0.25, lin:0.029, quad:0};
+function scaleOf(n){ const k=n-1; return (1 + TUNE.lin*k + TUNE.quad*k*k) * (1 + TUNE.late*(k/(TOTAL-1))**2) * (1 - TUNE.early*Math.max(0, 1-k/12)); }
 
 function makeEnemy(n, bossOrder, rnd=Math.random){
   const s = scaleOf(n), a = actOf(n);
-  let e;
+  let e, nb, pool;
   if(isBoss(n)){
     const ch = CHARS.find(c=>c.id===bossOrder[a]);
     e = Object.assign(baseFighter(), ch.stats);
@@ -377,16 +509,12 @@ function makeEnemy(n, bossOrder, rnd=Math.random){
     e.maxHp = Math.round((ch.stats.maxHp*0.5 + 60) * 0.62 * s * (TUNE.bHp0 + TUNE.bHpA*a));
     e.atk = (ch.stats.atk*0.5 + 5) * 0.62 * s * (TUNE.bAtk0 + TUNE.bAtkA*a);
     e.def = (ch.stats.def||0) + Math.floor(n*0.18) + 1;
-    // les boss ont eux aussi gagné quelques augments
-    const nb = a + 1;
-    for(let i=0;i<nb;i++){
-      const pool = AUGS.filter(g=>!(g.u && e.augs.includes(g.id)) && g.id!=='foule');
-      applyAug(e, pool[Math.floor(rnd()*pool.length)]);
-    }
     if(a === NB_ACTS-1){
       e.emperor = 1; e.name = "L'Empereur " + ch.name;
       e.maxHp = Math.round(e.maxHp*1.3); e.def += 2; e.regen += 2;
     } else e.name = ch.name;
+    // les boss ont eux aussi gagné quelques objets et aptitudes
+    nb = a + 1; pool = g => g.id!=='foule';
   } else {
     e = baseFighter();
     e.maxHp = Math.round(TUNE.eHp*s); e.atk = TUNE.eAtk*s; e.def = Math.floor(n*0.18); e.spd = 0.85 + rnd()*0.3;
@@ -401,14 +529,16 @@ function makeEnemy(n, bossOrder, rnd=Math.random){
     }
     // les gladiateurs adverses s'équipent eux aussi au fil des actes ; le 5e combat de l'acte est un élite
     const elite = pos === PER_ACT-2;
-    const nb = Math.floor(a*TUNE.eAug + (elite?1:0) + rnd()*0.999);
-    for(let i=0;i<nb;i++){
-      const pool = AUGS.filter(g=>g.r!=='L' && g.id!=='foule' && !e.augs.includes(g.id));
-      applyAug(e, pool[Math.floor(rnd()*pool.length)]);
-    }
     if(elite){ e.elite = 1; e.maxHp = Math.round(e.maxHp*TUNE.eliteK); e.atk *= TUNE.eliteK; }
+    nb = Math.floor(a*TUNE.eAug + (elite?1:0) + rnd()*0.999); pool = g => g.r!=='L' && g.id!=='foule';
   }
   e.side='b'; e.hp = e.maxHp;
+  snapBase(e);
+  for(let i=0;i<nb;i++){
+    const p = AUGS.filter(g=>pool(g) && canGain(e,g));
+    if(p.length) applyAug(e, p[Math.floor(rnd()*p.length)]);
+  }
+  e.hp = e.maxHp;
   return e;
 }
 function randomLook(n, rnd){
@@ -431,7 +561,7 @@ function randomLook(n, rnd){
 
 function resetRuntime(f){ f.cd = 0.4 + Math.random()*0.3; f.pst = 0; f.ptick = 0; f.usedUndying = 0; f.enraged = 0; f.anim=0; f.flash=0; f.didFirst=0; f.bst=0; f.btick=0; f.stack=0; f.pilumDone=0;
   f.gauge=0; f.taken=0; f.rageT=0; f.stunT=0; f.medT=0; f.nextMult=1; f.stoneT=0; f.cheerT=0; f.beerT=0; f.danceN=0; }
-function newFight(p,e){ resetRuntime(p); resetRuntime(e); return {a:p,b:e,t:0,events:[],over:false,winner:null,lionT:0}; }
+function newFight(p,e){ resetRuntime(p); resetRuntime(e); for(const f of [p,e]) if(f.quick) f.cd = 0.02; return {a:p,b:e,t:0,events:[],over:false,winner:null,lionT:0}; }
 
 function hurt(f, dmg, st, kind){
   if(f.stoneT>0) dmg *= 0.3;
@@ -439,7 +569,7 @@ function hurt(f, dmg, st, kind){
   f.hp -= dmg; f.flash = 0.18; f.taken += dmg;
   st.events.push({side:f.side, txt:(kind==='crit'?dmg+'!':String(dmg)), kind});
   if(f.hp<=0 && f.undying && !f.usedUndying){
-    f.usedUndying = 1; f.hp = Math.round(f.maxHp*0.3);
+    f.usedUndying = 1; f.hp = Math.round(f.maxHp*f.undying);
     st.events.push({side:f.side, txt:'Dernier rempart !', kind:'special', log:`${f.name} refuse de tomber !`});
   }
 }
@@ -468,11 +598,12 @@ function strikeInner(att, tgt, st, rnd, mult=1){
   const crit = !tgt.critImmune && (rnd() < att.crit + (att.cheerT>0?.15:0) || (att.firstCrit && !att.didFirst));
   att.didFirst = 1;
   if(crit) d *= att.critMult;
-  if(att.execute && tgt.hp < tgt.maxHp*0.25) d *= 2;
+  if(att.opener && tgt.hp > tgt.maxHp*0.7) d *= 1 + att.opener;
+  if(att.execute && tgt.hp < tgt.maxHp*att.execute) d *= 2;
   d *= (1 + att.dmgMul) * (1 + tgt.vuln) * (att.cheerT>0?1.25:1) * (att.beerT>0?1.3:1) * (att.rageT>0?1.3:1);
   if(att.grudge) d *= 1 + 0.12*Math.floor(att.taken/(att.maxHp*0.1));
   d = Math.max(1, d - tgt.def*(1-att.pen)) * (1 - tgt.dr);
-  if(tgt.block && rnd() < tgt.block){ d *= 0.5; st.events.push({side:tgt.side, txt:'Bloqué', kind:'special'}); }
+  if(tgt.block && rnd() < tgt.block){ d *= 1 - tgt.blockPow; st.events.push({side:tgt.side, txt:'Bloqué', kind:'special'}); }
   hurt(tgt, d, st, crit?'crit':'hit');
   const ls = att.lifesteal + (att.rageT>0?.25:0);
   if(ls) heal(att, d*ls);
@@ -480,6 +611,7 @@ function strikeInner(att, tgt, st, rnd, mult=1){
   if(att.mars) att.stack += att.mars;
   if(att.bleed) tgt.bst += d*att.bleed;
   if(att.poison && !tgt.antidote) tgt.pst = Math.min(tgt.pst + att.poison, att.poison*6);
+  if(att.entangle && tgt.hp>0 && !tgt.stunImmune && rnd() < att.entangle){ tgt.stunT = Math.max(tgt.stunT, 0.8); st.events.push({side:tgt.side, txt:'Pris au filet', kind:'special'}); }
   if(tgt.thorns && tgt.hp>0) hurt(att, tgt.thorns, st, 'thorns');
 }
 function effSpd(f, o){ return f.spd * (1 - Math.min(0.5, o.slow)) * (f.enraged?1.45:1) * (f.rageT>0?1.6:1) * (f.adren && f.hp < f.maxHp*0.4 ? 1+f.adren : 1); }
@@ -490,7 +622,7 @@ function doSpecial(f, o, st, rnd){
   switch(f.spId){
     case 'darkkus': f.rageT = 6; break;
     case 'fredhus': { st.events.push({side:f.side, kind:'swing'}); const n0 = st.events.length; hurt(o, Math.max(1, Math.min(f.taken*0.4, o.maxHp*0.3)), st, 'crit'); for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1; break; }
-    case 'sweevus': hitWith(2.5); if(o.hp>0) o.stunT = 1.5; break;
+    case 'sweevus': hitWith(2.5); if(o.hp>0 && !o.stunImmune) o.stunT = 1.5; break;
     case 'chelmacus': f.medT = 1.5; heal(f, f.maxHp*0.30); f.nextMult = 4; break;
     case 'dridricus': heal(f, f.maxHp*0.25); f.beerT = 6; hitWith(1.5); break;
     case 'kubenicus': f.stoneT = 3; heal(f, f.maxHp*0.10); break;
@@ -523,7 +655,8 @@ function step(st, dt, rnd=Math.random){
     if(st.a.hp<=0 || st.b.hp<=0) break;
     if(f.pilum && !f.pilumDone && st.t >= (f.side==='a'?0.25:0.45)){
       f.pilumDone = 1; st.events.push({side:f.side, kind:'swing'}); st.events.push({side:f.side, txt:'Pilum !', kind:'special', log:`${f.name} ouvre le combat d'un lancer de pilum !`});
-      const n0 = st.events.length; strikeInner(f, o, st, rnd, 1 + 3*f.pilum); for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1;
+      const n0 = st.events.length; strikeInner(f, o, st, rnd, 2 + 2*f.pilum); for(let i=n0;i<st.events.length;i++) st.events[i].strike = 1;
+      if(f.pilumStun && o.hp>0 && !o.stunImmune) o.stunT = Math.max(o.stunT, 1);
       continue;
     }
     if(f.spId && f.gauge >= 100 && f.stunT <= 0 && o.hp > 0){ f.gauge = 0; doSpecial(f, o, st, rnd); continue; }
@@ -544,47 +677,67 @@ function rarityWeights(n){
   return {C:70-a*8, R:27+a*4, L:3+a*4.5};
 }
 function pickRarity(w, rnd){ let x = rnd()*(w.C+w.R+w.L); if((x-=w.C)<0) return 'C'; if((x-=w.R)<0) return 'R'; return 'L'; }
+// un objet est proposable s'il n'est pas déjà au niveau max ; une nouvelle aptitude seulement s'il reste une place
+function canGain(p, g){
+  if(g.slot){ const cur = p.gear[g.slot]; return !(cur && cur.id===g.id && cur.lvl>=MAX_LVL); }
+  const cur = p.apts.find(a=>a.id===g.id);
+  return cur ? cur.lvl < MAX_LVL : p.apts.length < MAX_APTS;
+}
 function rollChoices(n, p, rnd=Math.random){
   const w = rarityWeights(n), out = [];
+  const fam = {arme:g=>g.slot==='arme', armure:g=>g.slot && g.slot!=='arme', aptitude:g=>!g.slot};
   const types = ['arme','armure','aptitude'];
   for(let i=3;i<(p.choices||3);i++) types.push(types[Math.floor(rnd()*3)]);
   for(const t of types){
     const r = pickRarity(w, rnd);
-    const order = r==='L'?['L','R','C']:r==='R'?['R','C']:['C','R'];
+    const order = r==='L'?['L','R','C']:r==='R'?['R','C','L']:['C','R','L'];
     let pool = [];
-    for(const rr of order){ pool = AUGS.filter(a=>a.t===t && a.r===rr && !(a.u && p.augs.includes(a.id)) && !out.includes(a)); if(pool.length) break; }
-    out.push(pool[Math.floor(rnd()*pool.length)]);
+    for(const rr of order){ pool = AUGS.filter(a=>fam[t](a) && a.r===rr && canGain(p,a) && !out.includes(a)); if(pool.length) break; }
+    if(!pool.length) pool = AUGS.filter(a=>canGain(p,a) && !out.includes(a));
+    if(pool.length) out.push(pool[Math.floor(rnd()*pool.length)]);
   }
   return out;
 }
-function applyAug(p, aug){ aug.a(p); p.augs.push(aug.id); }
+// prendre un objet : nouveau, remplace celui de l'emplacement, ou monte de niveau s'il est déjà porté
+function applyAug(p, g){
+  if(g.slot){
+    const cur = p.gear[g.slot];
+    if(cur && cur.id===g.id) cur.lvl = Math.min(MAX_LVL, cur.lvl+1);
+    else p.gear[g.slot] = {id:g.id, lvl:1};
+  } else {
+    const cur = p.apts.find(a=>a.id===g.id);
+    if(cur) cur.lvl = Math.min(MAX_LVL, cur.lvl+1);
+    else if(p.apts.length < MAX_APTS) p.apts.push({id:g.id, lvl:1});
+  }
+  recalc(p);
+}
 function postWin(p, n){
-  if(isBoss(n) && p.glory){ p.atk += 2; p.maxHp += 12; }
-  if(isBoss(n) && p.calm) p.def += 2;
+  if(isBoss(n) && p.glory){ p.base.atk += 1; p.base.maxHp += 10; }
+  if(isBoss(n) && p.calm) p.base.def += 1;
+  recalc(p);
   p.hp = Math.min(p.maxHp, Math.round(p.hp + p.maxHp*p.postHeal)); p.pst=0;
 }
 //LOGIC-END
 
 /* ============ APPARENCE ============ */
 const WEAPON_OF = {glaive:'glaive', trident:'trident', fouet:'fouet', gladius:'gladius', hache:'hache', dague:'dague', hydre:'lance', champion:'champion', sica:'sica', scissor:'scissor', pilum:'pilum', caestus:'cestes'};
-const SHIELD_RANK = {bois:1, pointes:2, scutum:2.5, egide:3};
+const SHIELD_OF = {boisb:'bois', pointes:'pointes', scutum:'scutum', egide:'egide'};
 function computeLook(f){
   const L = Object.assign({}, f.baseLook || {});
-  for(const id of f.augs){
-    if(WEAPON_OF[id]) L.weapon = WEAPON_OF[id];
-    if(id==='filet') L.net = 1;
-    const sh = id==='boisb'?'bois': id==='pointes'?'pointes': id==='egide'?'egide': id==='scutum'?'scutum':null;
-    if(sh && (SHIELD_RANK[sh] > (SHIELD_RANK[L.shield]||0))) L.shield = sh;
-    if(id==='casque') L.helmet = 1;
-    if(id==='plastron') L.chest = 1;
-    if(id==='cuir') L.cuir = 1;
-    if(id==='galerus') L.galerus = 1;
-    if(id==='jamb') L.greaves = 1;
-    if(id==='manica') L.manica = 1;
-    if(id==='lion') L.lion = 1;
-    if(id==='rempart') L.aura = '#ffd34a';
-    if(id==='berserk') L.aura = '#ff3a2a';
-    if(id==='exec') L.skull = 1;
+  const G = f.gear || {}, id = k => G[k] && G[k].id;
+  if(WEAPON_OF[id('arme')]) L.weapon = WEAPON_OF[id('arme')];
+  if(G.main){ L.shield = SHIELD_OF[id('main')] || 0; L.net = id('main')==='filet' ? 1 : 0; }
+  if(id('tete')==='casque') L.helmet = 1;
+  if(id('tete')==='lion') L.lion = 1;
+  if(id('corps')==='plastron') L.chest = 1;
+  if(id('corps')==='cuir') L.cuir = 1;
+  if(id('bras')==='manica') L.manica = 1;
+  if(id('bras')==='galerus') L.galerus = 1;
+  if(id('jambes')==='jamb') L.greaves = 1;
+  for(const a of f.apts || []){
+    if(a.id==='rempart') L.aura = '#ffd34a';
+    if(a.id==='berserk') L.aura = '#ff3a2a';
+    if(a.id==='exec') L.skull = 1;
   }
   if(f.emperor){ L.emperor = 1; L.helmet = 0; L.lion = 0; }
   return L;
@@ -1229,7 +1382,7 @@ function renderChars(){
     <canvas width="100" height="120"></canvas><div class="plate"><div class="nm">${ch.name}</div><div class="tt">${ch.title}</div></div></div>`).join('');
   $('charGrid').querySelectorAll('.pc').forEach(el=>{
     const ch = CHARS.find(c=>c.id===el.dataset.id);
-    paintFig(el.querySelector('canvas'), {baseLook:ch.look, augs:[]});
+    paintFig(el.querySelector('canvas'), {baseLook:ch.look});
     el.onclick = ()=>{ selChar = ch; renderChars(); };
   });
   const s = selChar.stats;
@@ -1255,7 +1408,7 @@ function showIntro(){
   $('introBossLbl').textContent = last ? 'Sur le trône t\'attend…' : 'Le champion de cette arène';
   $('introBoss').textContent = last ? "L'Empereur " + ch.name : ch.name;
   $('introBossDesc').textContent = last ? `Ton ancien compagnon s'est fait couronner. Abats-le et tu seras libre.` : `${ch.title} — ${ch.desc} Spécial : ${SPECIALS[ch.id].n}.`;
-  paintFig($('introCv'), {baseLook:ch.look, augs:[], emperor:last?1:0});
+  paintFig($('introCv'), {baseLook:ch.look, emperor:last?1:0});
   show('s-intro');
 }
 
@@ -1273,7 +1426,7 @@ function prepareFight(){
   addLog(isBoss(N) ? `⚠️ ${e.name} entre dans l'arène !` : `Combat ${pos}/5 de l'acte — face à : ${e.name}.`);
   $('preFight').style.display='flex';
   $('btnFight').textContent = e.emperor ? 'Affronter l\'Empereur !' : isBoss(N) ? `Affronter ${e.name} !` : 'Combattre !';
-  renderChips(); updateBars(); draw();
+  renderInv($('inv'), P); updateBars(); draw();
   show('s-fight');
 }
 
@@ -1294,11 +1447,6 @@ function updateBars(){
   $('pHp').textContent = `${Math.ceil(ha)} / ${a.maxHp} PV`;
   $('eHp').textContent = `${Math.ceil(hb)} / ${b.maxHp} PV`;
 }
-function renderChips(){
-  const html = P.augs.length ? P.augs.map(id=>{const g=AUGS.find(x=>x.id===id);return `<span class="chip" style="--rc:${RAR[g.r].c}">${augArt(g,true)}${g.n}</span>`}).join('') : '<span class="chip empty">Aucun augment</span>';
-  $('chips').innerHTML = html; $('chips2').innerHTML = html;
-}
-
 /* --- icônes pixel art (12×12) --- */
 const ICON_DEF = {
   heart:{p:{R:'#d83a2a',r:'#9a2218',w:'#ffd0c0'}, g:[
@@ -1358,13 +1506,9 @@ function ic(name, over){
 }
 function icImg(name, cls='', over){ return `<img class="pxi ${cls}" src="${ic(name,over)}" alt="">`; }
 const POISON = {R:'#6ac83a', r:'#3a8a1a', w:'#d0ffa8'};
-const AUG_ICON = {caestus:'fist', sica:'sica', scissor:'scissor', pilum:'pilum', cuir:'tunic', scutum:'scutum', galerus:'galerus', mithri:'flask', adren:'bolt', mars:'helm', fortuna:'wheel', souffle:'heart', rage:'flame', agile:'wing', sang:'drop', frenesie:'bolt', brutal:'burst', foule:'laurel', rempart:'tower', berserk:'skull', exec:'axe'};
-const AUG_IMG = {caestus:'cestes', cuir:'tunique-cuir', scutum:'scutum', galerus:'galerus', boisb:'bouclier-bois', pointes:'bouclier-pointes', egide:'egide', casque:'casque', plastron:'plastron', jamb:'jambieres', manica:'manica', lion:'peau-lion', filet:'filet'};
-function augFile(g){ return AUG_IMG[g.id] || WEAPON_OF[g.id] || null; }
 function augArt(g, small){
-  const f = augFile(g);
-  if(f) return `<img class="itm" src="assets/items/${f}.png${ASSET_V}" alt="">`;
-  return icImg(AUG_ICON[g.id] || 'burst', small ? '' : 'big', g.id==='adren' ? {Y:'#ff5a3a'} : undefined);
+  if(g.f) return `<img class="itm" src="assets/items/${g.f}.png${ASSET_V}" alt="">`;
+  return icImg(g.ic || 'burst', small ? '' : 'big', g.ico);
 }
 function fillIcons(){ document.querySelectorAll('[data-ic]').forEach(el=>{ el.src = ic(el.dataset.ic); }); document.documentElement.style.setProperty('--skull', `url(${ic('skull')})`); }
 
@@ -1735,18 +1879,95 @@ function endFight(){
     showReward();
   } else endRun(false);
 }
+/* --- inventaire : silhouette entourée des 7 emplacements, aptitudes dessous --- */
+const INV_LEFT = ['tete','corps','bras','jambes'], INV_RIGHT = ['acc','arme','main'];
+const famName = g => g.slot ? SLOT_N[g.slot] : 'Aptitude';
+function lvlOf(p, g){ const cur = g.slot ? p.gear[g.slot] : p.apts.find(a=>a.id===g.id); return cur && cur.id===g.id ? cur.lvl : 0; }
+function setsOf(id){ return SETS.filter(s=>s.items.includes(id)); }
+function slotHTML(p, k){
+  const cur = p.gear[k];
+  if(!cur) return `<div class="slotw"><button class="slot empty" data-empty="${k}"></button><span class="sn">${SLOT_N[k]}</span></div>`;
+  const g = ITEM[cur.id];
+  return `<div class="slotw"><button class="slot lv${cur.lvl}" data-id="${g.id}" style="--rc:${RAR[g.r].c}">${augArt(g,true)}<span class="lv">${cur.lvl}</span></button><span class="sn">${SLOT_N[k]}</span></div>`;
+}
+function renderInv(el, p){
+  const sets = SETS.map(s=>({s, k:setCount(p,s)})).filter(o=>o.k>0);
+  const apts = Array.from({length:MAX_APTS}, (_,i)=>{
+    const a = p.apts[i];
+    if(!a) return `<button class="slot apt empty" data-empty="apt"></button>`;
+    const g = ITEM[a.id];
+    return `<button class="slot apt lv${a.lvl}" data-id="${g.id}" style="--rc:${RAR[g.r].c}">${augArt(g,true)}<span class="lv">${a.lvl}</span></button>`;
+  }).join('');
+  el.innerHTML = `<div class="invBody">
+      <div class="invCol">${INV_LEFT.map(k=>slotHTML(p,k)).join('')}</div>
+      <div class="invFig"><canvas width="180" height="216"></canvas>
+        <div class="sets">${sets.map(({s,k})=>`<button class="set ${k===s.items.length?'on':''}" data-set="${s.id}">${s.n.replace('Panoplie du ','')} ${k}/${s.items.length}</button>`).join('')}</div></div>
+      <div class="invCol">${INV_RIGHT.map(k=>slotHTML(p,k)).join('')}</div>
+    </div>
+    <div class="aptRow"><span class="lbl">Aptitudes ${p.apts.length}/${MAX_APTS}</span><div class="apts">${apts}</div></div>`;
+  paintFig(el.querySelector('canvas'), p);
+  el.onclick = e=>{
+    const b = e.target.closest('[data-id],[data-set],[data-empty]'); if(!b) return;
+    if(b.dataset.id) openSheet(itemSheet(ITEM[b.dataset.id], lvlOf(p, ITEM[b.dataset.id]), p));
+    else if(b.dataset.set) openSheet(setSheet(SETS.find(s=>s.id===b.dataset.set), p));
+    else openSheet(b.dataset.empty==='apt'
+      ? `<h3>Aptitude libre</h3><p>Tu peux encore apprendre ${MAX_APTS - p.apts.length} aptitude(s). Chacune monte jusqu'au niveau ${MAX_LVL}.</p>`
+      : `<h3>${SLOT_N[b.dataset.empty]}</h3><p>Emplacement vide. Le prochain objet de ce type viendra s'y placer.</p>`);
+  };
+}
+// fiche d'un objet ou d'une aptitude (lvl = niveau porté, 0 si non porté)
+function itemSheet(g, lvl, p){
+  const L = Math.max(1, lvl);
+  const sets = setsOf(g.id).map(s=>{
+    const k = setCount(p, s), on = k===s.items.length;
+    return `<div class="shSet ${on?'on':''}"><b>${s.n}</b> (${k}/${s.items.length}) : ${s.d}<br><small>${s.items.map(id=>ITEM[id].n).join(' · ')}</small></div>`;
+  }).join('');
+  return `<div class="shHead" style="--rc:${RAR[g.r].c}"><div class="art">${augArt(g)}</div>
+      <div><div class="tags"><span class="tag rar">${RAR[g.r].n}</span><span class="tag typ">· ${famName(g)}</span></div><h3>${g.n}</h3>
+      <div class="shLv">${lvl ? `Niveau ${lvl} / ${MAX_LVL}` : 'Non porté'}</div></div></div>
+    <p>${g.d(L)}</p>
+    ${lvl && lvl<MAX_LVL ? `<p class="mute">Niveau ${lvl+1} : ${g.d(lvl+1)}</p>` : ''}
+    ${g.b ? `<p class="b3 ${L>=MAX_LVL?'on':''}">Niveau ${MAX_LVL} : ${g.b}</p>` : ''}
+    ${sets}`;
+}
+function setSheet(s, p){
+  return `<h3>${s.n}</h3><p>Bonus quand les trois pièces sont portées ensemble : <b>${s.d}</b>.</p>
+    <div class="shItems">${s.items.map(id=>{ const g = ITEM[id], has = Object.values(p.gear).some(x=>x.id===id);
+      return `<div class="${has?'on':''}">${augArt(g,true)} ${g.n} <small>(${SLOT_N[g.slot]})</small>${has?' ✓':''}</div>`; }).join('')}</div>`;
+}
+function openSheet(html){ $('sheetBox').innerHTML = html + '<button class="btn wide small" id="sheetClose">Fermer</button>'; $('sheet').hidden = false; }
+$('sheet').onclick = e=>{ if(e.target.id==='sheet' || e.target.id==='sheetClose') $('sheet').hidden = true; };
+
+// ce que la carte de récompense va faire : nouveau, remplacement ou montée de niveau
+function offerOf(p, g){
+  if(g.slot){
+    const cur = p.gear[g.slot];
+    if(!cur) return {cls:'new', t:'Nouveau', lvl:1};
+    if(cur.id===g.id) return {cls:'up', t:`Niveau +1 (${cur.lvl} → ${cur.lvl+1})`, lvl:cur.lvl+1};
+    const broken = activeSets(p).filter(s=>s.items.includes(cur.id)).map(s=>' · défait la '+s.n).join('');
+    return {cls:'rep', t:`Remplace ${ITEM[cur.id].n}${cur.lvl>1 ? ' niv. '+cur.lvl : ''}${broken}`, lvl:1};
+  }
+  const cur = p.apts.find(a=>a.id===g.id);
+  if(cur) return {cls:'up', t:`Niveau +1 (${cur.lvl} → ${cur.lvl+1})`, lvl:cur.lvl+1};
+  return {cls:'new', t:`Nouveau (${p.apts.length+1}/${MAX_APTS})`, lvl:1};
+}
 function showReward(){
   const choices = rollChoices(N, P);
   const boss = isBoss(N);
   $('rewardSub').textContent = boss
-    ? `${ST.b.name} est terrassé ! Récompense de champion.` + (P.glory?' Gloire : +2 attaque, +12 PV max.':'')
+    ? `${ST.b.name} est terrassé ! Récompense de champion.` + (P.glory?' Gloire : +1 attaque, +10 PV max.':'')
     : `${ST.b.name} est vaincu. Choisis ta récompense.`;
-  $('rewardList').innerHTML = choices.map((g,i)=>`
-    <div class="card r-${g.r}" data-i="${i}" style="--rc:${RAR[g.r].c};--i:${i}">
+  $('rewardList').innerHTML = choices.map((g,i)=>{
+    const o = offerOf(P, g);
+    const set = setsOf(g.id).map(s=>{ const k = setCount(P,s) + (o.cls==='up' ? 0 : 1); return `<span class="setHint ${k===s.items.length?'on':''}">${s.n} ${k}/${s.items.length}</span>`; }).join('');
+    return `<div class="card r-${g.r}" data-i="${i}" style="--rc:${RAR[g.r].c};--i:${i}">
       <div class="art">${augArt(g)}</div>
-      <div class="info"><div class="tags"><span class="tag rar">${RAR[g.r].n}</span><span class="tag typ">· ${TYPES[g.t].n}</span></div>
-      <h3>${g.n}</h3><p>${g.d}</p></div>
-    </div>`).join('');
+      <div class="info"><div class="tags"><span class="tag rar">${RAR[g.r].n}</span><span class="tag typ">· ${famName(g)}</span></div>
+      <div class="offer ${o.cls}">${o.t}</div>
+      <h3>${g.n}${o.lvl>1 ? ` <span class="lvTag">niv. ${o.lvl}</span>` : ''}</h3><p>${g.d(o.lvl)}</p>
+      ${g.b ? `<p class="b3 ${o.lvl>=MAX_LVL?'on':''}">Niveau ${MAX_LVL} : ${g.b}</p>` : ''}${set}</div>
+    </div>`;
+  }).join('');
   $('rewardList').querySelectorAll('.card').forEach(el=>el.onclick=()=>{
     applyAug(P, choices[+el.dataset.i]);
     N++;
@@ -1761,7 +1982,8 @@ function statsHTML(p){
     ['heart','Régén.', p.regen+' PV/s'],['shield','Épines', p.thorns],['drop','Poison', p.poison, POISON],['wing','Ralentit', pct(p.slow), {W:'#c8c8d0',B:'#8a8a94'}],
     ['sword','Double coup', pct(p.doubleHit)],['laurel','Soin post-combat', pct(p.postHeal)]];
   const extra = [['scissor','Perce-armure', p.pen, pct(p.pen)],['sica','Saignement', p.bleed, pct(p.bleed)],['scutum','Blocage', p.block, pct(p.block)],
-    ['galerus','Riposte', p.riposte, pct(p.riposte)],['pilum','Pilum', p.pilum, '×'+(1+3*p.pilum)],['helm','Furie de Mars', p.mars, '+'+p.mars+'/coup'],['bolt','Adrénaline', p.adren, '+'+pct(p.adren), {Y:'#ff5a3a'}]];
+    ['galerus','Riposte', p.riposte, pct(p.riposte)],['pilum','Pilum', p.pilum, '×'+(2+2*p.pilum)],['helm','Furie de Mars', p.mars, '+'+p.mars+'/coup'],['bolt','Adrénaline', p.adren, '+'+pct(p.adren), {Y:'#ff5a3a'}],
+    ['sword','Ouverture', p.opener, '+'+pct(p.opener)],['shield','Immobilise', p.entangle, pct(p.entangle)],['skull','Exécution', p.execute, 'sous '+pct(p.execute)],['tower','Dernier rempart', p.undying, pct(p.undying)]];
   for(const [ic_,k,v,txt,o] of extra) if(v) rows.push([ic_,k,txt,o]);
   return rows.map(([n,k,v,o])=>`<div>${icImg(n,'',o)}${k}<b>${v}</b></div>`).join('');
 }
@@ -1782,7 +2004,7 @@ $('btnIntro').onclick = prepareFight;
 $('btnFight').onclick = startFight;
 $('btnRestart').onclick = ()=>{ renderChars(); show('s-start'); };
 $('btnSpeed').onclick = ()=>{ speed = speed===1?2:speed===2?4:1; $('btnSpeed').textContent = '×'+speed; };
-$('btnStats').onclick = ()=>{ $('statsGrid').innerHTML = statsHTML(P); renderChips(); paintFig($('statsCv'), P); show('s-stats'); };
+$('btnStats').onclick = ()=>{ $('statsGrid').innerHTML = statsHTML(P); renderInv($('inv2'), P); show('s-stats'); };
 $('btnBack').onclick = ()=>show('s-fight');
 fillIcons();
 renderChars();

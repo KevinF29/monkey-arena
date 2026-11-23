@@ -1,6 +1,6 @@
 # CLAUDE.md — Monkey Arena
 
-Roguelite d'arène de gladiateurs en 2D, en français, combats automatiques. Le joueur choisit l'un des 8 « potes », les 7 autres deviennent les boss de la run (le dernier est couronné Empereur). 7 actes × (5 combats + 1 boss) = 42 combats. Après chaque victoire, le joueur choisit 1 augment parmi 3 (4 pour MaximusRr), et l'équipement gagné s'affiche sur le gladiateur.
+Roguelite d'arène de gladiateurs en 2D, en français, combats automatiques. Le joueur choisit l'un des 8 « potes », les 7 autres deviennent les boss de la run (le dernier est couronné Empereur). 7 actes × (5 combats + 1 boss) = 42 combats. Après chaque victoire, le joueur choisit 1 récompense parmi 3 (4 pour MaximusRr) : un objet pour l'un des 7 emplacements d'équipement ou une aptitude (5 au plus), chacun montant jusqu'au niveau 3. L'équipement porté s'affiche sur le gladiateur.
 
 Jeu en ligne : GitHub Pages (`https://kevinf29.github.io/monkey-arena/`), servi directement depuis `main`.
 
@@ -15,20 +15,28 @@ Jeu en ligne : GitHub Pages (`https://kevinf29.github.io/monkey-arena/`), servi 
 
 ## Simulateur d'équilibrage (`tools/simulate.js`)
 
-Script Node sans dépendance. Il extrait le bloc `//LOGIC-START` … `//LOGIC-END` d'`index.html` (exécuté via `new Function`, avec un `Math.random` remplacé par un générateur seedé, donc résultats reproductibles), puis joue des runs complètes de 42 combats pour chaque perso, avec deux stratégies de choix d'augment : **au hasard** et **le plus rare** (égalités tirées au hasard). Il affiche, par perso, le taux de victoire et la répartition des morts par acte (+ part des morts face à un boss).
+Script Node sans dépendance. Il extrait le bloc `//LOGIC-START` … `//LOGIC-END` d'`index.html` (exécuté via `new Function`, avec un `Math.random` remplacé par un générateur seedé, donc résultats reproductibles), puis joue des runs complètes de 42 combats pour chaque perso, avec trois stratégies de choix de récompense :
+- **hasard** : n'importe quelle carte (remplace souvent ses propres objets : borne basse) ;
+- **plus rares** : la carte de plus haute rareté, même si elle remplace un objet monté de niveau ;
+- **choix sensés** : emplacement vide ou montée de niveau d'abord, remplacement seulement par un objet plus rare d'un emplacement encore au niveau 1. C'est la **référence d'équilibrage** (joueur qui joue correctement).
+
+Il affiche, par perso, le taux de victoire et la répartition des morts par acte (+ part des morts face à un boss).
 
 ```
-node tools/simulate.js                  # 500 runs par perso et par stratégie (~30 s)
+node tools/simulate.js                  # 500 runs par perso et par stratégie (~1 min 40)
 node tools/simulate.js --runs 2000 --seed 7
 node tools/simulate.js --perso darkkus
+node tools/simulate.js --runs 100 --tune '{"lin":0.03,"eHp":100}'   # essayer d'autres valeurs de TUNE sans modifier index.html
 ```
 
-Le simulateur n'utilise que ce qu'expose le bloc logique (`makePlayer`, `makeEnemy`, `newFight`, `step`, `rollChoices`, `applyAug`, `postWin`, `shuffle`…) : si l'une de ces fonctions est renommée ou change de signature, mettre à jour la liste `EXPORTS` et `playRun` du script.
+Repères actuels (graine 1, 500 runs) : hasard ≈ 7 %, plus rares ≈ 32 %, choix sensés ≈ 64 % (52 à 76 % selon le perso). Viser à garder les choix sensés autour de 55–65 %, aucun perso à plus de ~12 points de la moyenne, et des morts réparties entre combats normaux et boss.
+
+Le simulateur n'utilise que ce qu'expose le bloc logique (`TUNE`, `makePlayer`, `makeEnemy`, `newFight`, `step`, `rollChoices`, `applyAug`, `postWin`, `ITEM`, `shuffle`…) : si l'une de ces fonctions est renommée ou change de signature, mettre à jour la liste `EXPORTS`, `playRun` et les stratégies du script.
 
 ## Structure du dépôt
 
 ```
-index.html          tout le jeu : CSS, HTML des écrans, JS (≈1700 lignes)
+index.html          tout le jeu : CSS, HTML des écrans, JS (≈1950 lignes)
 README.md
 tools/simulate.js   simulateur d'équilibrage (Node)
 assets/
@@ -43,12 +51,12 @@ assets/
 
 Ordre du fichier, avec les repères à chercher :
 
-1. **`<style>`** — thème romain : variables CSS sur `:root` (`--gold`, `--bronze`, `--parch`…), boutons bronze `.btn`, panneaux `.tablet` / parchemin `.desc`, cartes d'augments `.card.r-C|R|L`, barres de vie segmentées, jauge de spécial `.gauge`.
-2. **Écrans HTML** (`<section class="screen">`, un seul `.on` à la fois via `show(id)`) : `s-start` (choix du perso), `s-intro` (intro d'acte + boss), `s-fight`, `s-reward`, `s-stats`, `s-end`.
-3. **Bloc logique `//LOGIC-START` … `//LOGIC-END`** — données et règles de combat, sans DOM : `RAR`, `TYPES`, `CHARS`, `SPECIALS`, `AUGS`, `ACT_NAMES`, `ENEMY_NAMES`, `ENEMY_LOOK`, `BEASTS`, `baseFighter`, `makePlayer`, `TUNE`, `scaleOf`, `makeEnemy`, `strike`, `doSpecial`, `step`, `rollChoices`, `applyAug`, `postWin`.
-4. **`/* APPARENCE */`** — `WEAPON_OF`, `SHIELD_RANK`, `computeLook()` (augments → look), puis le rendu vectoriel de secours `drawGlad` / `drawWeapon` / `drawHair`.
+1. **`<style>`** — thème romain : variables CSS sur `:root` (`--gold`, `--bronze`, `--parch`…), boutons bronze `.btn`, panneaux `.tablet` / parchemin `.desc`, cartes de récompense `.card.r-C|R|L` (+ badge `.offer.new|rep|up`), inventaire `.inv` / `.slot`, fiche d'objet `.sheet`, barres de vie segmentées, jauge de spécial `.gauge`.
+2. **Écrans HTML** (`<section class="screen">`, un seul `.on` à la fois via `show(id)`) : `s-start` (choix du perso), `s-intro` (intro d'acte + boss), `s-fight` (inventaire `#inv` sous le combat), `s-reward`, `s-stats` (inventaire `#inv2`), `s-end`. Fenêtre `#sheet` (fiche d'objet) par-dessus.
+3. **Bloc logique `//LOGIC-START` … `//LOGIC-END`** — données et règles de combat, sans DOM : `RAR`, `SLOTS`, `CHARS`, `SPECIALS`, `GEAR`, `APTS`, `SETS`, `AUGS` (= `GEAR` + `APTS`), `ITEM` (par id), `ACT_NAMES`, `ENEMY_NAMES`, `ENEMY_LOOK`, `BEASTS`, `baseFighter`, `snapBase`, `recalc`, `activeSets`, `makePlayer`, `TUNE`, `scaleOf`, `makeEnemy`, `strike`, `doSpecial`, `step`, `canGain`, `rollChoices`, `applyAug`, `postWin`.
+4. **`/* APPARENCE */`** — `WEAPON_OF`, `SHIELD_OF`, `computeLook()` (équipement et aptitudes → look), puis le rendu vectoriel de secours `drawGlad` / `drawWeapon` / `drawHair`.
 5. **`/* SPRITES DES POTES */`** — `SPR`, `loadSprites`, objets dessinés (`ITEM_FILES`, `WEAPON_IMG`, `WEAR`, `wear`, `drawWeaponImg`), équipement pixelisé (`pixelize`, `getGear`, `gearBack/Front/Head/Weapon`), découpe marionnette (`PART_POLY`, `PIV`, `RIG_PERSO`, `RIG_ENEMY`, `buildParts`), `drawSpriteGlad`, poing (`getFist`), poses (`poseIdle`, `poseOf`), bêtes (`drawBeast`).
-6. **`/* UI */`** — état global (`selChar, P, N, ST, BOSSES, speed…`), `renderChars`, `startRun`, `showIntro`, `prepareFight`, barres, chips, icônes pixel 12×12 (`ICON_DEF`, `ic`, `icImg`, `AUG_ICON`, `AUG_IMG`, `augArt`).
+6. **`/* UI */`** — état global (`selChar, P, N, ST, BOSSES, speed…`), `renderChars`, `startRun`, `showIntro`, `prepareFight`, barres, icônes pixel 12×12 (`ICON_DEF`, `ic`, `icImg`, `augArt`), inventaire (`renderInv`, `slotHTML`), fiches (`itemSheet`, `setSheet`, `openSheet`), récompenses (`offerOf`, `showReward`).
 7. **`/* arène */`** — canevas `#cv` 1200×660 dessiné en coordonnées logiques **600×330** (`RES = 2`), `POS` des combattants, `ARENAS` (décor pixel art de secours, 200×110 agrandi ×3), `ARENA_IMG` (décors peints prioritaires), `drawArena`, effets (`burst`, particules, nombres flottants, secousse, gel, zoom de fin), boucle `loop`.
 8. Flux de run : `startFight` → `endFight` → `showReward` → (`prepareFight` | `showIntro`), `endRun`, `statsHTML`, branchement des boutons.
 
@@ -56,50 +64,63 @@ Ordre du fichier, avec les repères à chercher :
 
 Moteur à pas fixe : `loop` découpe le temps réel en pas de 0,02 s et appelle `step(ST, dt, rnd)`. La logique ne dessine rien : elle pousse des **événements** dans `ST.events` (`swing`, `hit`, `crit`, `miss`, `thorns`, `poison`, `bleed`, `special`, `none`) que l'UI consomme. Les événements d'un coup (`strike = 1`) sont retardés de `IMPACT` (moitié de l'animation d'attaque) dans `PEND`, pour que dégâts, flash et barre de vie (`shownHp`) tombent au moment de l'impact.
 
-Combattant = objet créé par `baseFighter()` (toutes les stats à zéro/défaut) puis surchargé. Champs runtime remis à zéro par `resetRuntime()` à chaque combat.
+Combattant = objet créé par `baseFighter()` (toutes les stats à zéro/défaut) puis surchargé. Ses stats « nues » (perso + gains permanents de Gloire/Impassible, ou stats d'adversaire) sont figées dans `f.base` par `snapBase()`. **`recalc(f)` reconstruit toutes les stats** à partir de `f.base` + équipement (`f.gear`) + aptitudes (`f.apts`) + panoplies, en conservant les PV perdus. Hors combat, ne jamais modifier une stat directement : modifier `f.base` puis appeler `recalc`. Champs runtime remis à zéro par `resetRuntime()` à chaque combat.
 
 **Cadence** : `cd` diminue de `dt × effSpd` ; un coup à chaque 1. `effSpd` = `spd` × (1 − ralentissement adverse, max 50 %) × fureur de l'Empereur ×1,45 × Fureur aveugle ×1,6 × Adrénaline.
 
 **Résolution d'un coup (`strikeInner`)** :
 1. Esquive : `Pas de danse` (garantie) ou `rnd < min(0,6, dodge)` (0 pendant Fureur aveugle). Une esquive peut déclencher une **riposte** (pas de riposte en chaîne, `st.inRiposte`).
 2. Dégâts de base `atk × 0,9–1,1` (ivre : `0,5–1,7`) × multiplicateur × `nextMult`, + bonus Furie de Mars (max +20).
-3. Berserk (selon PV manquants) → critique (`crit`, +15 % sous Pouce levé ; `critImmune` l'annule) × `critMult` → Exécution ×2 sous 25 % PV.
+3. Berserk (selon PV manquants) → critique (`crit`, +15 % sous Pouce levé ; `critImmune` l'annule) × `critMult` → Ouverture (`opener`, bonus si la cible est au-dessus de 70 % PV) → Exécution ×2 sous le seuil `execute`.
 4. Multiplicateurs : `(1+dmgMul) × (1+vuln cible)` × buffs de spécial (×1,25 / ×1,3 / ×1,3) × rancune (+12 % par tranche de 10 % de PV max encaissés).
-5. Défense : `max(1, d − def × (1 − pen)) × (1 − dr)`, puis blocage (½) éventuel.
-6. `hurt()` : Bouclier levé réduit à 30 %, arrondi, `Dernier rempart` (1×/combat, remonte à 30 %).
-7. Après coup : vol de vie, jauge (+12 attaquant, +8 cible), saignement (`bst`), poison (`pst`, plafonné à 6× la valeur, ignoré si `antidote`), épines.
+5. Défense : `max(1, d − def × (1 − pen)) × (1 − dr)`, puis blocage éventuel (réduit de `blockPow` : ½ de base, ¾ avec le Scutum niveau 3).
+6. `hurt()` : Bouclier levé réduit à 30 %, arrondi, `Dernier rempart` (1×/combat, remonte à `undying` × PV max).
+7. Après coup : vol de vie, jauge (+12 attaquant, +8 cible), saignement (`bst`), poison (`pst`, plafonné à 6× la valeur, ignoré si `antidote`), filet (`entangle` : chance d'immobiliser 0,8 s, sauf `stunImmune`), épines.
 
-**Par tick (`step`)** : régénération, poison et saignement (tick par seconde), décompte des buffs (`rageT, stunT, medT, stoneT, cheerT, beerT`), jauge +3/s. Pilum lancé en ouverture (0,25 s joueur / 0,45 s adversaire). Spécial lancé dès que la jauge atteint 100. Après **45 s**, « on lâche les lions » : 3 % des PV max par seconde aux deux combattants. L'Empereur passe en fureur sous 50 % PV.
+**Par tick (`step`)** : régénération, poison et saignement (tick par seconde), décompte des buffs (`rageT, stunT, medT, stoneT, cheerT, beerT`), jauge +3/s. Pilum lancé en ouverture (0,25 s joueur / 0,45 s adversaire, ×(2 + 2 × niveau), étourdit 1 s au niveau 3). `quick` : premier coup immédiat. Spécial lancé dès que la jauge atteint 100. Après **45 s**, « on lâche les lions » : 3 % des PV max par seconde aux deux combattants. L'Empereur passe en fureur sous 50 % PV.
 
-**Entre les combats** (`postWin`) : soin de `postHeal` (30 % de base) des PV max ; bonus de boss de MaximusRr (Gloire) et Chelmacus (Impassible).
+**Entre les combats** (`postWin`) : bonus de boss de MaximusRr (Gloire) et Chelmacus (Impassible) ajoutés à `f.base`, `recalc`, puis soin de `postHeal` (30 % de base) des PV max.
 
 ### Adversaires (`makeEnemy`)
 
-- Échelle de difficulté `scaleOf(n)` (quadratique, adoucie sur les 12 premiers combats, renforcée en fin de run), réglée par `TUNE`.
-- **Combat normal** : gladiateur aléatoire de `ENEMY_NAMES` avec son look `ENEMY_LOOK`, ou (combats 4–5 de l'acte, 30 %) une **bête** de `BEASTS` selon l'acte (plus rapide, moins forte). Augments aléatoires selon l'acte, jamais légendaires ni `foule`.
-- **Élite** : 5e combat de chaque acte, +1 augment, ×`eliteK` PV et attaque.
-- **Boss** : le pote `BOSSES[acte]` (ordre mélangé dans `startRun`), stats lissées vers la moyenne, `acte + 1` augments (légendaires possibles), garde son passif et son spécial. Au 7e acte : `emperor` (×1,3 PV, +2 déf, +2 régén, fureur, couronne/écharpe/cape).
+- Échelle de difficulté `scaleOf(n)` = `1 + lin·k + quad·k²` (k = n − 1), adoucie sur les 12 premiers combats et renforcée en fin de run, réglée par `TUNE`. La puissance du joueur est plafonnée (7 objets + 5 aptitudes, niveau 3 max) : la courbe est donc quasi linéaire (`lin` 0,029, `quad` 0). Ne pas revenir à l'ancienne courbe quadratique, calée pour des objets qui s'empilaient sans limite.
+- **Combat normal** : gladiateur aléatoire de `ENEMY_NAMES` avec son look `ENEMY_LOOK`, ou (combats 4–5 de l'acte, 30 %) une **bête** de `BEASTS` selon l'acte (plus rapide, moins forte). Objets/aptitudes aléatoires selon l'acte (`eAug`), jamais légendaires ni `foule`, via `canGain` + `applyAug` comme le joueur.
+- **Élite** : 5e combat de chaque acte, +1 objet/aptitude, ×`eliteK` PV et attaque.
+- **Boss** : le pote `BOSSES[acte]` (ordre mélangé dans `startRun`), stats lissées vers la moyenne, `acte + 1` objets/aptitudes (légendaires et montées de niveau possibles), garde son passif et son spécial. Au 7e acte : `emperor` (×1,3 PV, +2 déf, +2 régén, fureur, couronne/écharpe/cape).
 
-## Augments
+## Équipement, aptitudes et panoplies
 
-Tableau `AUGS` : `{id, t:'arme'|'armure'|'aptitude', r:'C'|'R'|'L', n, d, a:p=>{…}, u?:1}`.
-- `a` modifie directement le combattant ; toute stat qui augmente `maxHp` doit aussi augmenter `hp`.
-- `u:1` = unique (ne peut plus être proposé une fois pris). Les légendaires sont tous uniques.
-- `rollChoices` : un choix par type (arme, armure, aptitude) + types aléatoires si `choices > 3`. Rareté tirée par `rarityWeights(n)` : C 70→22, R 27→51, L 3→30 au fil des actes ; après un boss 60 % R / 40 % L, jamais de commun. Si la rareté tirée est vide pour ce type, repli L→R→C ou C→R.
-- Plafonds à respecter : esquive effective 60 %, ralentissement 50 %, `pen` 1, `block` 0,6, `riposte` 1.
+Deux familles, toutes deux de rareté `C` / `R` / `L` et de **niveau 1 à 3** (`MAX_LVL`) :
+
+**Équipement (`GEAR`)** : `{id, slot, r, n, f?|ic?+ico?, d:L=>texte, b, a:(p,L)=>{…}}`.
+- 7 emplacements (`SLOTS`) : `tete`, `corps`, `bras`, `jambes`, `arme`, `main` (main gauche), `acc` (accessoire). Un objet par emplacement, stocké dans `p.gear[slot] = {id, lvl}`.
+- Prendre un objet **différent** dans un emplacement occupé le **remplace** (retour au niveau 1). Reprendre le **même** objet le fait **monter de niveau** (+1, max 3).
+- `a(p, L)` applique l'effet au niveau `L` **et** le bonus de niveau 3 (`if(L>=3) …`) ; `d(L)` donne le texte au niveau `L` (doit refléter exactement `a`) ; `b` décrit le bonus de niveau 3.
+- `f` = image dans `assets/items/`, sinon `ic` = icône pixel de `ICON_DEF` (+ `ico` pour recolorer la palette).
+- Identité des armes : Gladius (équilibré, 1er coup critique), Glaive (ouverture), Trident (esquive, riposte), Hache (coups lourds, perce-armure), Dague (poison), Fouet (vitesse + ralentit), Cestes (double coup), Sica (saignement), Scissor (perce-armure, vol de vie), Pilum (lancer d'ouverture), Lance de l'Hydre (double coup, L), Épée du Champion (puissance pure, L). Garder une identité distincte pour toute nouvelle arme.
+
+**Aptitudes (`APTS`)** : `{id, r, n, ic, ico?, d:L=>texte, a:(p,L)=>{…}}`, sans bonus de niveau 3. 5 au plus (`MAX_APTS`) dans `p.apts = [{id, lvl}]`. Une fois les 5 places prises, seules les montées de niveau sont proposées.
+
+**Panoplies (`SETS`)** : `{id, n, items:[3 ids], d, a:p=>{…}}`, bonus actif quand les 3 pièces sont portées (`activeSets`). Actuelles : Mirmillon (casque + scutum + gladius), Rétiaire (trident + filet + galerus), Thrace (sica + manica + jambières). Les pièces d'une panoplie doivent être dans 3 emplacements différents.
+
+**Tirage (`rollChoices`)** : une carte par famille (arme, autre équipement, aptitude) + familles aléatoires si `choices > 3`. Rareté tirée par `rarityWeights(n)` : C 70→22, R 27→51, L 3→30 au fil des actes ; après un boss 60 % R / 40 % L. Seules les cartes `canGain` sont proposées (pas d'objet déjà niveau 3, pas de nouvelle aptitude si 5 places prises). Si la rareté tirée est vide, repli sur les autres raretés puis sur n'importe quelle famille.
+
+**Écran de récompense** : `offerOf(p, g)` donne le badge « Nouveau », « Remplace X (niv. N) » (avec « défait la Panoplie du … » si besoin) ou « Niveau +1 (a → b) », et le texte affiché est celui du niveau qui sera atteint.
+
+Plafonds appliqués dans `recalc` : `pen` 1, `block` 0,6, `riposte` 1 ; et en combat : esquive effective 60 %, ralentissement 50 %.
 
 ## Les 8 gladiateurs (`CHARS` + `SPECIALS`)
 
 | id | Nom | Titre | PV / Atk / Déf / Vit | Passif | Spécial |
 |---|---|---|---|---|---|
-| `darkkus` | DarkKus | Le Berserker | 125 / 13 / 2 / 1,1 | Berserk +60 % selon PV manquants, 8 % vol de vie | **Fureur aveugle** : 6 s, +60 % vitesse, +30 % dégâts, +25 % vol de vie, plus d'esquive |
-| `fredhus` | Fredhus | Le Roc rancunier | 150 / 9 / 3 / 0,8 | Rancune (`grudge`) : +12 % par 10 % de PV perdus dans le combat | **Vengeance** : rend 40 % des dégâts encaissés (max 30 % PV max adverses) |
-| `sweevus` | Sweevus | Le Cogneur | 115 / 15 / 0 / 0,9 | +30 % dégâts infligés, +10 % subis | **Coup de massue** : ×2,5 et assomme 1,5 s |
-| `chelmacus` | Chelmacus | La Force tranquille | 135 / 12 / 2 / 1 | Immunisé aux critiques, 2,5 PV/s, +2 déf par boss vaincu | **Le calme avant la tempête** : 1,5 s sans frapper, +30 % PV, coup suivant ×4 |
+| `darkkus` | DarkKus | Le Berserker | 125 / 12 / 2 / 1,1 | Berserk +60 % selon PV manquants, 6 % vol de vie | **Fureur aveugle** : 6 s, +60 % vitesse, +30 % dégâts, +25 % vol de vie, plus d'esquive |
+| `fredhus` | Fredhus | Le Roc rancunier | 150 / 10 / 3 / 0,8 | Rancune (`grudge`) : +12 % par 10 % de PV perdus dans le combat | **Vengeance** : rend 40 % des dégâts encaissés (max 30 % PV max adverses) |
+| `sweevus` | Sweevus | Le Cogneur | 125 / 16 / 0 / 0,9 | +30 % dégâts infligés, +10 % subis | **Coup de massue** : ×2,5 et assomme 1,5 s |
+| `chelmacus` | Chelmacus | La Force tranquille | 135 / 11 / 2 / 1 | Immunisé aux critiques, 1,5 PV/s, +1 déf par boss vaincu | **Le calme avant la tempête** : 1,5 s sans frapper, +30 % PV, coup suivant ×4 |
 | `dridricus` | Dridricus | Le Fêtard | 115 / 10 / 1 / 1 | Ivresse : dégâts 50–170 %, 10 % esquive | **Cul sec !** : +25 % PV, +30 % dégâts 6 s, chope lancée ×1,5 |
-| `kubenicus` | Kubenicus | Le Mur | 150 / 8 / 4 / 0,8 | −12 % dégâts subis, renvoie 3 | **Bouclier levé** : 3 s à −70 % de dégâts, +10 % PV |
-| `maximusrr` | MaximusRr | Le Champion | 120 / 11 / 2 / 1 | 4 choix d'augments ; +2 atk, +12 PV max par boss vaincu | **Pouce levé** : 6 s, +25 % dégâts, +15 % critique |
-| `beelgraalus` | Beel'Graalus | L'Insaisissable | 90 / 9 / 1 / 1,3 | 15 % esquive, chaque esquive charge la jauge (+10) | **Pas de danse** : esquive les 2 coups suivants et riposte |
+| `kubenicus` | Kubenicus | Le Mur | 150 / 10 / 4 / 0,8 | −12 % dégâts subis, renvoie 4 | **Bouclier levé** : 3 s à −70 % de dégâts, +10 % PV |
+| `maximusrr` | MaximusRr | Le Champion | 120 / 11 / 2 / 1 | 4 choix de récompense ; +1 atk, +10 PV max par boss vaincu | **Pouce levé** : 6 s, +25 % dégâts, +15 % critique |
+| `beelgraalus` | Beel'Graalus | L'Insaisissable | 105 / 11 / 1 / 1,3 | 18 % esquive, chaque esquive charge la jauge (+10) | **Pas de danse** : esquive les 2 coups suivants et riposte |
 
 `look` de chaque perso : `sprite` (= id), plus des champs du rendu vectoriel de secours (`skin, hair, hairStyle, beard, tunic, build`) et l'arme de départ affichée (`weapon`). `chope:1` (Dridricus) affiche une chope dans la main gauche quand il n'a pas de bouclier.
 
@@ -129,7 +150,7 @@ Si un sprite manque (pas chargé, ou look sans `sprite`), `drawGlad` bascule sur
 
 ## Placement des objets
 
-`computeLook(f)` traduit la liste d'augments en champs de look : arme (`WEAPON_OF`, la dernière prise gagne), bouclier (le meilleur selon `SHIELD_RANK` : bois < pointes < scutum < égide), `net, helmet, chest, cuir, galerus, greaves, manica, lion, aura` (Dernier rempart doré, Berserker rouge), `skull` (Exécution), `emperor`.
+`computeLook(f)` traduit l'équipement en champs de look, emplacement par emplacement : arme (`WEAPON_OF`), main gauche (`SHIELD_OF` → `shield`, ou `net` pour le filet ; remplace le bouclier/filet de base des adversaires), tête (`helmet` / `lion`), corps (`chest` / `cuir`), bras (`manica` / `galerus`), jambes (`greaves`). Les aptitudes donnent `aura` (Dernier rempart doré, Berserker rouge) et `skull` (Exécution). Caligae et accessoires n'ont pas de visuel sur le corps.
 
 Deux tables décrivent les images de `assets/items/` (toutes listées dans `ITEM_FILES`) :
 
@@ -138,7 +159,11 @@ Deux tables décrivent les images de `assets/items/` (toutes listées dans `ITEM
 
 Si l'image d'un objet manque, les fonctions `gearBack/Front/Head/Weapon` le dessinent en vectoriel puis `pixelize()` le convertit en pixel art (1 pixel = `PX` = 5 unités, contour sombre, relief haut/bas), mis en cache par `getGear` (la clé inclut le nombre d'images chargées pour invalider le cache après chargement).
 
-Pour l'interface, `augArt(g)` montre l'image d'objet (`AUG_IMG[id]` ou `WEAPON_OF[id]`), sinon une icône pixel 12×12 (`AUG_ICON[id]`, défaut `burst`).
+Pour l'interface, `augArt(g)` montre l'image `g.f`, sinon l'icône pixel `g.ic` (palette recolorée par `g.ico`), défaut `burst`.
+
+## Inventaire (sous le combat et dans l'écran Stats)
+
+`renderInv(el, p)` dessine la silhouette du gladiateur (`paintFig`, avec son équipement) entre deux colonnes d'emplacements : à gauche Tête, Corps, Bras, Jambes (`INV_LEFT`), à droite Accessoire, Arme, Main gauche (`INV_RIGHT`). Chaque case montre l'objet et une pastille de niveau (bronze 1, argent 2, or 3), ou une case vide en pointillés. Sous la silhouette, les panoplies entamées (`Mirmillon 2/3`), dorées une fois complètes. Dessous, la rangée des 5 aptitudes. Un appui ouvre la fiche (`itemSheet` : niveau, effet actuel, niveau suivant, bonus de niveau 3, panoplie ; `setSheet` pour une panoplie).
 
 ## Arènes
 
@@ -146,12 +171,15 @@ Pour l'interface, `augArt(g)` montre l'image d'objet (`AUG_IMG[id]` ou `WEAPON_O
 
 ## Ajouter de nouveaux éléments
 
-### Un augment
-1. Ajouter l'entrée dans `AUGS` (id court unique, type, rareté, texte `d` exact et en français, `u:1` si légendaire ou non cumulable).
-2. Nouvelle stat ? La déclarer avec sa valeur par défaut dans `baseFighter()`, l'implémenter dans `strikeInner` / `step` / `effSpd` / `postWin` (bloc logique), et la plafonner si besoin.
-3. La montrer dans `statsHTML` (liste `extra` si elle est souvent à 0).
-4. Visuel : arme → `WEAPON_OF` (+ `WEAPON_IMG`) ; pièce portée → champ dans `computeLook`, `WEAR`, appel `wear()` sur le bon calque dans `drawSpriteGlad`, et ajout à la clé de `getGear` si un secours vectoriel existe. Image de carte → `AUG_IMG`, sinon icône dans `AUG_ICON` (nouvelle icône : grille 12×12 dans `ICON_DEF`, `o` = contour).
-5. Vérifier que l'augment reste sensé chez les adversaires (sinon l'exclure comme `foule` dans `makeEnemy`).
+### Un objet d'équipement
+1. Ajouter l'entrée dans `GEAR` (id court unique, `slot`, rareté, `d(L)` exact en français pour L = 1, 2, 3, bonus `b` de niveau 3 codé dans `a` avec `if(L>=3)`). Donner une identité de combat distincte (surtout pour une arme).
+2. Nouvelle stat ? La déclarer avec sa valeur par défaut dans `baseFighter()` (elle entre alors dans `STAT_KEYS` et est remise à zéro par `recalc`), l'implémenter dans `strikeInner` / `step` / `effSpd` / `newFight` (bloc logique), la plafonner dans `recalc` si besoin, et la montrer dans `statsHTML` (liste `extra`).
+3. Visuel : arme → `WEAPON_OF` (+ `WEAPON_IMG`) ; pièce portée → champ dans `computeLook` pour son emplacement, `WEAR`, appel `wear()` sur le bon calque dans `drawSpriteGlad`, et ajout à la clé de `getGear` si un secours vectoriel existe. Image → `f`, sinon icône `ic` (nouvelle icône : grille 12×12 dans `ICON_DEF`, `o` = contour).
+4. Panoplie éventuelle : l'ajouter à `SETS` (3 pièces dans 3 emplacements différents).
+5. Vérifier qu'il reste sensé chez les adversaires (sinon l'exclure comme `foule` dans `makeEnemy`), puis passer le simulateur.
+
+### Une aptitude
+- Entrée dans `APTS` avec `d(L)` / `a(p, L)` qui montent du niveau 1 au niveau 3, et une icône `ic`. Mêmes règles de nouvelle stat que ci-dessus.
 
 ### Une image d'objet
 - PNG à fond transparent dans `assets/items/<nom>.png`, nom en minuscules avec tirets, et ajout dans `ITEM_FILES`.
@@ -178,7 +206,7 @@ Pour l'interface, `augArt(g)` montre l'image d'objet (`AUG_IMG[id]` ou `WEAPON_O
 - **Un seul fichier** `index.html`, JS vanilla, pas de framework, pas de build, pas de nouvelle dépendance externe.
 - **Tout en français** : textes du jeu, commentaires, noms de fichiers d'assets, messages de commit (courts, descriptifs, sans préfixe, ex. « Nouveaux objets dessinés : Sica, Scissor… »).
 - **Le bloc `LOGIC-START`/`LOGIC-END` reste sans DOM ni rendu** et utilise le `rnd` passé en paramètre plutôt que `Math.random` quand une fonction le reçoit : il est extrait tel quel par le simulateur d'équilibrage. Toute nouvelle constante d'équilibrage va dans `TUNE`.
-- Après un changement d'équilibrage, un nouvel augment ou un nouveau perso, lancer `node tools/simulate.js` et comparer les taux de victoire par perso avant/après plutôt que juger au feeling.
+- Après un changement d'équilibrage, un nouvel objet, une nouvelle aptitude ou un nouveau perso, lancer `node tools/simulate.js` et comparer les taux de victoire par perso (stratégie « choix sensés ») avant/après plutôt que juger au feeling.
 - **Remplacer une image sous le même nom** (sprite, objet, décor) : augmenter `ASSET_V` (ex. `'?v=3'` → `'?v=4'`), sinon les navigateurs des joueurs gardent l'ancienne en cache et la découpe ne correspond plus. Toute nouvelle URL d'asset doit finir par `+ ASSET_V`.
 - Toujours prévoir un repli quand une image n'est pas chargée (`hasImg`, `SPR[...]`, `ARENA_IMG.complete`) : le jeu doit rester jouable sans assets.
 - Les dessins en pixel art désactivent le lissage (`imageSmoothingEnabled = false`), les images peintes l'activent en qualité haute : conserver ce basculement autour de chaque `drawImage`.

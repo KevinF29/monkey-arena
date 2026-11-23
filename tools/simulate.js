@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Simulateur d'équilibrage de Monkey Arena (Node, sans dépendance).
 // Extrait le bloc //LOGIC-START … //LOGIC-END d'index.html et joue des runs complètes
-// (42 combats, augments choisis automatiquement) pour chaque gladiateur.
+// (42 combats, récompenses choisies automatiquement) pour chaque gladiateur.
 //
-// Usage : node tools/simulate.js [--runs 500] [--seed 1] [--perso darkkus]
+// Usage : node tools/simulate.js [--runs 500] [--seed 1] [--perso darkkus] [--tune '{"eHp":55}']
 
 const fs = require('fs');
 const path = require('path');
@@ -29,18 +29,32 @@ SimMath.random = () => rnd();
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const m = html.match(/\/\/LOGIC-START([\s\S]*?)\/\/LOGIC-END/);
 if(!m){ console.error('Bloc //LOGIC-START … //LOGIC-END introuvable dans index.html'); process.exit(1); }
-const EXPORTS = ['CHARS','AUGS','NB_ACTS','PER_ACT','TOTAL','ACT_NAMES','actOf','isBoss','makePlayer','makeEnemy','newFight','step','rollChoices','applyAug','postWin','shuffle'];
+const EXPORTS = ['TUNE','CHARS','AUGS','ITEM','SETS','activeSets','NB_ACTS','PER_ACT','TOTAL','ACT_NAMES','actOf','isBoss','makePlayer','makeEnemy','newFight','step','rollChoices','applyAug','postWin','shuffle'];
 const G = new Function('Math', m[1] + `\nreturn {${EXPORTS.join(',')}};`)(SimMath);
+// --tune '{"eHp":55}' : essaie d'autres réglages sans toucher index.html
+const TUNE_OVR = opt('tune', null);
+if(TUNE_OVR) Object.assign(G.TUNE, JSON.parse(TUNE_OVR));
 
-// --- stratégies de choix d'augment ---
+// --- stratégies de choix de récompense ---
 const RANK = {C:0, R:1, L:2};
+const randOf = a => a[Math.floor(rnd() * a.length)];
+const bestBy = (choices, score) => { const m = Math.max(...choices.map(score)); return randOf(choices.filter(g => score(g) === m)); };
+// nature d'un choix pour le joueur p : nouvel emplacement / montée de niveau / remplacement
+function kindOf(p, g){
+  if(g.slot){ const cur = p.gear[g.slot]; return !cur ? 'new' : cur.id === g.id ? 'up' : 'rep'; }
+  return p.apts.some(a => a.id === g.id) ? 'up' : 'new';
+}
 const STRATEGIES = {
-  hasard: choices => choices[Math.floor(rnd() * choices.length)],
-  rare: choices => {
-    const best = Math.max(...choices.map(g => RANK[g.r]));
-    const top = choices.filter(g => RANK[g.r] === best);
-    return top[Math.floor(rnd() * top.length)];
-  }
+  hasard: {label: 'récompenses au hasard', pick: (p, c) => randOf(c)},
+  rare: {label: 'récompenses les plus rares', pick: (p, c) => bestBy(c, g => RANK[g.r])},
+  // joueur raisonnable : remplir un emplacement vide ou monter de niveau, ne remplacer que par plus rare
+  sense: {label: 'choix sensés (nouveau / niveau +1, remplacement seulement par plus rare)', pick: (p, c) => bestBy(c, g => {
+    const k = kindOf(p, g), r = RANK[g.r];
+    if(k === 'new') return 10 + r;
+    if(k === 'up') return 9 + r;
+    const cur = G.ITEM[p.gear[g.slot].id];
+    return RANK[g.r] > RANK[cur.r] && p.gear[g.slot].lvl === 1 ? 8 + r : r - 5;
+  })}
 };
 
 // --- une run complète ---
@@ -56,7 +70,7 @@ function playRun(ch, pick){
     if(n === G.TOTAL) return {win: true, n};
     G.postWin(P, n);
     const choices = G.rollChoices(n, P, rnd).filter(Boolean);
-    if(choices.length) G.applyAug(P, pick(choices));
+    if(choices.length) G.applyAug(P, pick(P, choices));
   }
 }
 
@@ -69,14 +83,14 @@ const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 const t0 = Date.now();
 
 console.log(`Monkey Arena — ${RUNS} runs par perso et par stratégie, graine ${SEED}\n`);
-for(const [sname, pick] of Object.entries(STRATEGIES)){
-  console.log(`=== Stratégie : ${sname === 'hasard' ? 'augments au hasard' : 'augments les plus rares'} ===`);
+for(const [sname, {label, pick}] of Object.entries(STRATEGIES)){
+  console.log(`=== Stratégie : ${label} ===`);
   const head = ['Perso'.padEnd(14), 'Victoire'.padStart(8)]
     .concat(Array.from({length: G.NB_ACTS}, (_, i) => ('†' + ROMAN[i]).padStart(7)), ['dont boss'.padStart(10)]);
   console.log(head.join(' '));
   let totW = 0, totR = 0;
   for(const ch of chars){
-    rnd = mulberry32(SEED * 1000 + G.CHARS.indexOf(ch) * 7 + (sname === 'rare' ? 1 : 0));
+    rnd = mulberry32(SEED * 1000 + G.CHARS.indexOf(ch) * 7 + Object.keys(STRATEGIES).indexOf(sname));
     let wins = 0, bossDeaths = 0;
     const deaths = new Array(G.NB_ACTS).fill(0);
     for(let r = 0; r < RUNS; r++){
